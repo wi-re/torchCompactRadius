@@ -1,0 +1,87 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+*.hdf5
+
+.DS_STORE
+
+x64/
+.vs/
+.vscode/
+build
+/data
+
+__pycache__/
+.ipynb_checkpoints/
+output/
+
+trace.json
+traceGPU.json
+profile.txt
+
+paperData*
+
+Cconv/trainingData*/
+Cconv/convertedData*/
+export*/
+export/
+output*/
+out/
+.VSCodeCounter/
+images/
+Cconv/train_log
+Cconv/logs
+Cconv/DMCF
+paperData*/
+Cconv/paper
+Cconv/DeepLagrangianFluids/
+
+ablationStudy_*
+
+datasets/test_case_I/
+datasets/test_case_II/
+datasets/test_case_III/
+old/
+trainingData/
+
+TGVnetwork/eval*/
+TGVNetwork/eval2/
+TGVNetwork/eval3/
+
+eval.csv
+test.csv
+
+*.tar.gz
+*egg
+*.egg*
+*.whl

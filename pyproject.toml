@@ -1,0 +1,20 @@
+[project]
+name = "torchCompactRadius"
+version = "0.0.1"
+authors = [
+  { name="Example Author", email="author@example.com" },
+]
+description = "A small example package"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"] # <-- this changed
+
+[tool.setuptools.package-data]
+"*" = ["*.*"] # <-- this changed
