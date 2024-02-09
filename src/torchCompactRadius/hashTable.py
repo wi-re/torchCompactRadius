@@ -57,7 +57,7 @@ def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax 
     hashedIndices = hashCellIndices(cellGridIndices, hashMapLength)
     hashIndexSorting = torch.argsort(hashedIndices)
     hashMap, hashMapCounters = torch.unique_consecutive(hashedIndices[hashIndexSorting], return_counts=True, return_inverse=False)
-    hashMapCounters = hashMapCounters.to(torch.int32)
+    hashMapCounters = hashMapCounters.to(torch.int64)
     # Resort the entries based on the hashIndexSorting so they can be accessed through the hashmap
     sortedCellIndices = cellIndices[hashIndexSorting]
     sortedCellTable = torch.stack([c[hashIndexSorting] for c in cellTable.unbind(1)], dim = 1)
@@ -67,10 +67,10 @@ def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax 
 
     # Same construction as for the cell list but this time we create a more direct table
     # The table contains the start and length for each cell in the hash table and -1 if the cell is empty
-    hashTable = hashMap.new_ones(hashMapLength,2) * -1
+    hashTable = hashMap.new_ones(hashMapLength,2, dtype = torch.int64) * -1
     hashTable[:,1] = 0
     hashMap64 = hashMap.to(torch.int64)
-    hashTable[hashMap64,0] = torch.hstack((torch.tensor([0], device = sortedCellIndices.device, dtype=sortedCellIndices.dtype),torch.cumsum(hashMapCounters,dim=0)))[:-1].to(torch.int32) #torch.cumsum(hashMapCounters, dim = 0) #torch.arange(hashMap.shape[0], device=hashMap.device)
+    hashTable[hashMap64,0] = torch.hstack((torch.tensor([0], device = sortedCellIndices.device, dtype=torch.int64),torch.cumsum(hashMapCounters,dim=0)))[:-1].to(torch.int64) #torch.cumsum(hashMapCounters, dim = 0) #torch.arange(hashMap.shape[0], device=hashMap.device)
 
     hashTable[hashMap64,1] = hashMapCounters
 

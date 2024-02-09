@@ -156,13 +156,20 @@ def queryCell(cellIndex, hashTable, hashMapLength : int, numCells, cellTable):
         # print('cellEntries:', cell[:,1])
         # print('cellLengths:', cell[:,2])
         # print('cellLinearIndices:', cell[:,0])
-        if torch.isin(cell[:,0], linearIndex):
-            # print('found')
-            # print('cell', cell)
-            cBegin = cell[cell[:,0] == linearIndex, 1][0]
-            cLength = cell[cell[:,0] == linearIndex, 2][0]
-            particlesInCell = torch.arange(cBegin, cBegin + cLength, device = hashTable.device, dtype = hashTable.dtype)
-            # print(particlesInCell)
-            return particlesInCell
+        for c in range(cell.shape[0]):
+            if cell[c,0] == linearIndex:
+                cBegin = cell[c,1]
+                cLength = cell[c,2]
+                particlesInCell = torch.arange(cBegin, cBegin + cLength, device = hashTable.device, dtype = hashTable.dtype)
+                # print(particlesInCell)
+                return particlesInCell
+        # if torch.isin(cell[:,0], linearIndex):
+        #     # print('found')
+        #     # print('cell', cell)
+        #     cBegin = cell[cell[:,0] == linearIndex, 1][0]
+        #     cLength = cell[cell[:,0] == linearIndex, 2][0]
+        #     particlesInCell = torch.arange(cBegin, cBegin + cLength, device = hashTable.device, dtype = hashTable.dtype)
+        #     # print(particlesInCell)
+        #     return particlesInCell
 
     return torch.empty(0, dtype = hashTable.dtype, device = hashTable.device)

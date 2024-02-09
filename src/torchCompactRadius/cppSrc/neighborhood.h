@@ -49,9 +49,9 @@ enum struct supportMode{
  * @param exponent The exponent.
  * @return The calculated power.
 */
-hostDeviceInline constexpr int power(const int base, const int exponent) {
-    int result = 1;
-    for (int i = 0; i < exponent; i++) {
+hostDeviceInline constexpr int32_t power(const int32_t base, const int32_t exponent) {
+    int32_t result = 1;
+    for (int32_t i = 0; i < exponent; i++) {
         result *= base;
     }
     return result;
@@ -64,7 +64,7 @@ hostDeviceInline constexpr int power(const int base, const int exponent) {
  * @param m The modulus.
  * @return The calculated modulo.
  */
-hostDeviceInline constexpr auto pymod(const int n, const int m) {
+hostDeviceInline constexpr auto pymod(const int32_t n, const int32_t m) {
     return n >= 0 ? n % m : ((n % m) + m) % m;
 }
 /**
@@ -165,7 +165,7 @@ hostDeviceInline auto linearIndexing(std::array<int32_t, dim> cellIndices, cptr_
 template<std::size_t dim>
 hostDeviceInline std::pair<int32_t, int32_t> queryHashMap(
     std::array<int32_t, dim> cellID,
-    cptr_t<int32_t, 2> hashTable, int32_t hashMapLength,
+    cptr_t<int64_t, 2> hashTable, int32_t hashMapLength,
     cptr_t<int64_t, 2> cellTable,
     cptr_t<int32_t, 1> numCells) {
     auto linearIndex = linearIndexing(cellID, numCells);
@@ -203,7 +203,7 @@ hostDeviceInline std::pair<int32_t, int32_t> queryHashMap(
 template<typename Func, std::size_t dim = 2>
 hostDeviceInline auto iterateOffsetCells(
     std::array<int32_t, dim> centralCell, ptr_t<int32_t, 2> cellOffsets, 
-    cptr_t<int32_t, 2> hashTable, int32_t hashMapLength, 
+    cptr_t<int64_t, 2> hashTable, int32_t hashMapLength, 
     cptr_t<int64_t, 2> cellTable, cptr_t<int32_t, 1> numCells, cptr_t<int32_t,1> periodicity, Func&& queryFunction){
     auto nOffsets = cellOffsets.size(0);
     // auto dim = centralCell.size(0);
@@ -229,33 +229,33 @@ void cuda_error_check();
 
 // Define the python bindings for the C++ functions
 torch::Tensor countNeighbors(
-    torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int32_t searchRange, 
     torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
-    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor hashTable_, int32_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
 torch::Tensor countNeighborsFixed(
-    torch::Tensor queryPositions_, int searchRange, 
+    torch::Tensor queryPositions_, int32_t searchRange, 
     torch::Tensor sortedPositions_, double support,
-    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor hashTable_, int32_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
 
 std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
-    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int neighborListLength,
-    torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int32_t neighborListLength,
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int32_t searchRange, 
     torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
-    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor hashTable_, int32_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
 std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed(
-    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int neighborListLength,
-    torch::Tensor queryPositions_, int searchRange, 
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int32_t neighborListLength,
+    torch::Tensor queryPositions_, int32_t searchRange, 
     torch::Tensor sortedPositions_, double support,
-    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor hashTable_, int32_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
