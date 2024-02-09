@@ -1,4 +1,5 @@
 #include "neighborhood.h"
+#include "neighborhoodDynamic.h"
 /**
  * @brief Returns a packed accessor for a given tensor.
  * 
@@ -62,12 +63,13 @@ auto getAccessor(const torch::Tensor &t, const std::string &name, bool cuda = fa
  * @param verbose Flag indicating whether to print verbose information.
  * @return The number of neighbors for each particle in the query set.
  */
-torch::Tensor countNeighbors(
+template<typename float_t = float>
+torch::Tensor countNeighbors_t(
     torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
     torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
     torch::Tensor hashTable_, int hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
-    torch::Tensor qMin_, float hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    torch::Tensor qMin_, float_t hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false){
     if(verbose)
         std::cout << "C++: countNeighbors" << std::endl;
@@ -86,10 +88,10 @@ torch::Tensor countNeighbors(
 
 
     // Check if the input tensors are defined and contiguous and have the correct dimensions
-    auto queryPositions = getAccessor<float, 2>(queryPositions_, "queryPositions", useCuda, verbose);
-    auto querySupport = getAccessor<float, 1>(querySupport_, "querySupport", useCuda, verbose, supportMode::scatter == searchMode);
-    auto sortedPositions = getAccessor<float, 2>(sortedPositions_, "sortedPositions", useCuda, verbose);
-    auto sortedSupport = getAccessor<float, 1>(sortedSupport_, "sortedSupport", useCuda, verbose, supportMode::gather == searchMode);
+    auto queryPositions = getAccessor<float_t, 2>(queryPositions_, "queryPositions", useCuda, verbose);
+    auto querySupport = getAccessor<float_t, 1>(querySupport_, "querySupport", useCuda, verbose, supportMode::scatter == searchMode);
+    auto sortedPositions = getAccessor<float_t, 2>(sortedPositions_, "sortedPositions", useCuda, verbose);
+    auto sortedSupport = getAccessor<float_t, 1>(sortedSupport_, "sortedSupport", useCuda, verbose, supportMode::gather == searchMode);
 
     // Get the dimensions of the input tensors
     int nQuery = queryPositions.size(0);
@@ -100,9 +102,9 @@ torch::Tensor countNeighbors(
     auto hashTable = getAccessor<int, 2>(hashTable_, "hashTable", useCuda, verbose);
     auto numCells = getAccessor<int, 1>(numCells_, "numCells", useCuda, verbose);
     auto cellTable = getAccessor<int64_t, 2>(cellTable_, "cellTable", useCuda, verbose);
-    auto qMin = getAccessor<float, 1>(qMin_, "qMin", useCuda, verbose);
-    auto maxDomain = getAccessor<float, 1>(maxDomain_, "maxDomain", useCuda, verbose);
-    auto minDomain = getAccessor<float, 1>(minDomain_, "minDomain", useCuda, verbose);
+    auto qMin = getAccessor<float_t, 1>(qMin_, "qMin", useCuda, verbose);
+    auto maxDomain = getAccessor<float_t, 1>(maxDomain_, "maxDomain", useCuda, verbose);
+    auto minDomain = getAccessor<float_t, 1>(minDomain_, "minDomain", useCuda, verbose);
 
     auto periodicBoolHost = periodicity_.to(at::kCPU).to(at::kBool);
     auto periodicityBool = getAccessor<bool, 1>(periodicBoolHost, "periodicity", false, verbose);
@@ -177,10 +179,10 @@ torch::Tensor countNeighbors(
     auto neighborCounters = torch::zeros({nQuery}, defaultOptions.dtype(torch::kInt32));
 
     // Create the accessors for the input tensors as packed accessors
-    auto queryPositionAccessor = queryPositions_.packed_accessor32<float, 2, traits>();
-    auto querySupportAccessor = querySupport_.packed_accessor32<float, 1, traits>();
-    auto referencePositionAccessor = sortedPositions_.packed_accessor32<float, 2, traits>();
-    auto referenceSupportAccessor = sortedSupport_.packed_accessor32<float, 1, traits>();
+    auto queryPositionAccessor = queryPositions_.packed_accessor32<float_t, 2, traits>();
+    auto querySupportAccessor = querySupport_.packed_accessor32<float_t, 1, traits>();
+    auto referencePositionAccessor = sortedPositions_.packed_accessor32<float_t, 2, traits>();
+    auto referenceSupportAccessor = sortedSupport_.packed_accessor32<float_t, 1, traits>();
     auto hashTableAccessor = hashTable_.packed_accessor32<int32_t, 2, traits>();
     auto celTableAccessor = cellTable_.packed_accessor32<int64_t, 2, traits>();
     auto offsetAccessor = offsets.packed_accessor32<int32_t, 2, traits>();
@@ -211,11 +213,11 @@ torch::Tensor countNeighbors(
                     offsetAccessor,\
                     hCell, minDomain, maxDomain, periodicity, searchMode
                 if(dim == 1)
-                    countNeighborsForParticle<1>(args);
+                    countNeighborsForParticle<1, float_t>(args);
                 else if(dim == 2)
-                    countNeighborsForParticle<2>(args);
+                    countNeighborsForParticle<2, float_t>(args);
                 else if(dim == 3)
-                    countNeighborsForParticle<3>(args);
+                    countNeighborsForParticle<3, float_t>(args);
                 else
                     throw std::runtime_error("Unsupported dimension: " + std::to_string(dim));
                 #undef args
@@ -225,6 +227,9 @@ torch::Tensor countNeighbors(
     // Return the neighbor counters
     return neighborCounters;
 }
+
+
+
 
 /**
  * 
@@ -250,13 +255,14 @@ torch::Tensor countNeighbors(
  * @param verbose Flag indicating whether to print verbose information.
  * @return The neighbor list as a pair of tensors
  */
-std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
+template<typename float_t = float>
+std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
     torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int neighborListLength,
     torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
     torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
     torch::Tensor hashTable_, int hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
-    torch::Tensor qMin_, float hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    torch::Tensor qMin_, float_t hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false){
     if(verbose)
         std::cout << "C++: countNeighbors" << std::endl;
@@ -274,18 +280,18 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
     bool useCuda = queryPositions_.is_cuda();
 
     // Check if the input tensors are defined and contiguous and have the correct dimensions
-    auto queryPositions = getAccessor<float, 2>(queryPositions_, "queryPositions", useCuda, verbose);
-    auto querySupport = getAccessor<float, 1>(querySupport_, "querySupport", useCuda, verbose, supportMode::scatter == searchMode);
-    auto sortedPositions = getAccessor<float, 2>(sortedPositions_, "sortedPositions", useCuda, verbose);
-    auto sortedSupport = getAccessor<float, 1>(sortedSupport_, "sortedSupport", useCuda, verbose, supportMode::gather == searchMode);
+    auto queryPositions = getAccessor<float_t, 2>(queryPositions_, "queryPositions", useCuda, verbose);
+    auto querySupport = getAccessor<float_t, 1>(querySupport_, "querySupport", useCuda, verbose, supportMode::scatter == searchMode);
+    auto sortedPositions = getAccessor<float_t, 2>(sortedPositions_, "sortedPositions", useCuda, verbose);
+    auto sortedSupport = getAccessor<float_t, 1>(sortedSupport_, "sortedSupport", useCuda, verbose, supportMode::gather == searchMode);
 
     // Check if the datastructure tensors are defined and contiguous and have the correct dimensions
     auto hashTable = getAccessor<int, 2>(hashTable_, "hashTable", useCuda, verbose);
     auto numCells = getAccessor<int, 1>(numCells_, "numCells", useCuda, verbose);
     auto cellTable = getAccessor<int64_t, 2>(cellTable_, "cellTable", useCuda, verbose);
-    auto qMin = getAccessor<float, 1>(qMin_, "qMin", useCuda, verbose);
-    auto maxDomain = getAccessor<float, 1>(maxDomain_, "maxDomain", useCuda, verbose);
-    auto minDomain = getAccessor<float, 1>(minDomain_, "minDomain", useCuda, verbose);
+    auto qMin = getAccessor<float_t, 1>(qMin_, "qMin", useCuda, verbose);
+    auto maxDomain = getAccessor<float_t, 1>(maxDomain_, "maxDomain", useCuda, verbose);
+    auto minDomain = getAccessor<float_t, 1>(minDomain_, "minDomain", useCuda, verbose);
 
 
 
@@ -380,8 +386,8 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
     auto neighborList_j = torch::zeros({neighborListLength}, defaultOptions.dtype(torch::kInt32));
 
     // Create the accessors for the input tensors as packed accessors
-    auto referencePositionAccessor = sortedPositions_.packed_accessor32<float, 2, traits>();
-    auto referenceSupportAccessor = sortedSupport_.packed_accessor32<float, 1, traits>();
+    auto referencePositionAccessor = sortedPositions_.packed_accessor32<float_t, 2, traits>();
+    auto referenceSupportAccessor = sortedSupport_.packed_accessor32<float_t, 1, traits>();
     auto hashTableAccessor = hashTable_.packed_accessor32<int32_t, 2, traits>();
     auto cellTableAccessor = cellTable_.packed_accessor32<int64_t, 2, traits>();
     auto offsetAccessor = offsets.packed_accessor32<int32_t, 2, traits>();
@@ -419,11 +425,11 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
                     offsetAccessor,\
                     hCell, minDomain, maxDomain, periodicity, searchMode
                 if(dim == 1)
-                    buildNeighborhood<1>(args);
+                    buildNeighborhood<1, float_t>(args);
                 else if(dim == 2)
-                    buildNeighborhood<2>(args);
+                    buildNeighborhood<2, float_t>(args);
                 else if(dim == 3)
-                    buildNeighborhood<3>(args);
+                    buildNeighborhood<3, float_t>(args);
                 else
                     throw std::runtime_error("Unsupported dimension: " + std::to_string(dim));
 
@@ -434,8 +440,45 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
     return std::make_pair(neighborList_i, neighborList_j);
 }
 
-// Create the python bindings for the C++ functions
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("countNeighbors", &countNeighbors, "Count the Number of Neighbors (C++) using a precomputed hash table and cell map");
-  m.def("buildNeighborList", &buildNeighborList, "Build the Neighborlist (C++) using a precomputed hash table and cell map as well as neighbor counts");
-}
+// Define the python bindings for the C++ functions
+torch::Tensor countNeighbors(
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
+    torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
+    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor numCells_, torch::Tensor cellTable_,
+    torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    std::string mode, bool verbose){
+        torch::Tensor returnTensor;
+    AT_DISPATCH_FLOATING_TYPES(queryPositions_.scalar_type(), "countNeighbors", [&] {
+        returnTensor =  countNeighbors_t<scalar_t>(
+            queryPositions_, querySupport_, searchRange, 
+            sortedPositions_, sortedSupport_,
+            hashTable_, hashMapLength, 
+            numCells_, cellTable_,
+            qMin_, hCell, maxDomain_, minDomain_, periodicity_,
+            mode, verbose);
+    });
+    return returnTensor;
+    }
+
+std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int neighborListLength,
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
+    torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
+    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor numCells_, torch::Tensor cellTable_,
+    torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    std::string mode, bool verbose){
+    std::pair<torch::Tensor, torch::Tensor> returnPair;
+    AT_DISPATCH_FLOATING_TYPES(queryPositions_.scalar_type(), "buildNeighborList", [&] {
+        returnPair = buildNeighborList_t<scalar_t>(
+            neighborCounter_, neighborOffsets_, neighborListLength,
+            queryPositions_, querySupport_, searchRange, 
+            sortedPositions_, sortedSupport_,
+            hashTable_, hashMapLength, 
+            numCells_, cellTable_,
+            qMin_, hCell, maxDomain_, minDomain_, periodicity_,
+            mode, verbose);
+    });
+    return returnPair;
+    }

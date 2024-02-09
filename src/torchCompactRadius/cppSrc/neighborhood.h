@@ -1,3 +1,4 @@
+#pragma once
 // #define _OPENMP
 #include <algorithm>
 #include <ATen/Parallel.h>
@@ -74,7 +75,8 @@ hostDeviceInline constexpr auto pymod(const int n, const int m) {
  * @param m The modulus.
  * @return The calculated modulo.
  */
-hostDeviceInline auto moduloOp(const float p, const float q, const float h){
+template<typename scalar_t>
+hostDeviceInline auto moduloOp(const scalar_t p, const scalar_t q, const scalar_t h){
     return ((p - q + h / 2.0) - std::floor((p - q + h / 2.0) / h) * h) - h / 2.0;
 }
 
@@ -88,14 +90,23 @@ hostDeviceInline auto moduloOp(const float p, const float q, const float h){
  * @param periodicity The periodicity flags.
  * @return The calculated distance.
  */
-template<std::size_t dim>
-hostDeviceInline auto modDistance(ctensor_t<float,1> x_i, ctensor_t<float,1> x_j, cptr_t<float,1> minDomain, cptr_t<float,1> maxDomain, cptr_t<int32_t,1> periodicity){
-    float sum = 0.f;
+template<std::size_t dim, typename scalar_t>
+hostDeviceInline auto modDistance(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<int32_t,1> periodicity){
+    scalar_t sum(0.0);
     for(int32_t i = 0; i < dim; i++){
         auto diff = periodicity[i] != 0 ? moduloOp(x_i[i], x_j[i], maxDomain[i] - minDomain[i]) : x_i[i] - x_j[i];
         sum += diff * diff;
     }
     return std::sqrt(sum);
+}
+template<std::size_t dim, typename scalar_t>
+hostDeviceInline auto modDistance2(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<int32_t,1> periodicity){
+    scalar_t sum(0.0);
+    for(int32_t i = 0; i < dim; i++){
+        auto diff = periodicity[i] != 0 ? moduloOp(x_i[i], x_j[i], maxDomain[i] - minDomain[i]) : x_i[i] - x_j[i];
+        sum += diff * diff;
+    }
+    return sum;
 }
 
 /**
@@ -212,122 +223,39 @@ hostDeviceInline auto iterateOffsetCells(
     }
 }
 
-                       
-
-/***
- * @brief Counts the number of neighbors for a given particle.
- * 
- * This function counts the number of neighbors for a given particle based on the given search mode.
- * 
- * @param xi The position of the particle.
- * @param hi The support radius of the particle.
- * @param searchRange The search range.
- * @param sortedPositions The sorted positions of the particles.
- * @param sortedSupport The sorted support radii of the particles.
- * @param hashTable The hash table.
- * @param hashMapLength The length of the hash map.
- * @param cellTable The cell table.
- * @param numCellsVec The number of cells.
- * @param offsets The cell offsets.
- * @param hCell The cell size.
- * @param minDomain The minimum domain bounds.
- * @param maxDomain The maximum domain bounds.
- * @param periodicity The periodicity flags.
- * @param searchMode The search mode.
- * @return The number of neighbors.
-*/
-template<std::size_t dim>
-hostDeviceInline auto countNeighborsForParticle(int32_t i,
-    ptr_t<int32_t, 1> neighborCounters, 
-    cptr_t<float, 2> queryPositions, cptr_t<float, 1> querySupport, int searchRange, 
-    cptr_t<float, 2> sortedPositions, cptr_t<float,1> sortedSupport,
-    cptr_t<int32_t, 2> hashTable, int hashMapLength,
-    cptr_t<int64_t, 2> cellTable, cptr_t<int32_t,1> numCellsVec, 
-    cptr_t<int32_t, 2> offsets,
-    float hCell, cptr_t<float,1> minDomain, cptr_t<float,1> maxDomain, cptr_t<int32_t,1> periodicity,
-    supportMode searchMode){
-        auto xi = queryPositions[i];
-    // auto dim = xi.size(0);
-    // auto queryCell = torch::zeros({dim}, defaultOptions.dtype(torch::kInt32));
-    std::array<int32_t, dim> queryCell;
-    for(int d = 0; d < dim; d++)
-        queryCell[d] = std::floor((xi[d] - minDomain[d]) / hCell);
-    int32_t neighborCounter = 0;
-    iterateOffsetCells(queryCell, offsets, 
-        hashTable, hashMapLength, 
-        cellTable, numCellsVec, periodicity,
-        [&](int32_t cBegin, int32_t cEnd){
-            // std::cout << "queried: " << cBegin << " " << cEnd << " -> " << cEnd - cBegin << std::endl;
-
-            for(int32_t j = cBegin; j < cEnd; j++){
-                auto xj = sortedPositions[j];
-                auto dist = modDistance<dim>(xi, xj, minDomain, maxDomain, periodicity);
-                if( searchMode == supportMode::scatter && dist < sortedSupport[j])
-                    neighborCounter++;
-                else if( searchMode == supportMode::gather && dist < querySupport[i])
-                    neighborCounter++;
-                else if(searchMode == supportMode::symmetric && dist < (querySupport[i] + sortedSupport[j]) / 2.f)
-                    neighborCounter++;
-            }
-        });
-    neighborCounters[i] = neighborCounter;
-}
+void cuda_error_check();
 
 
-void countNeighborsForParticleCuda(
-    torch::Tensor neighborCounters, 
-    torch::Tensor queryPositions, torch::Tensor querySupport, int searchRange, 
-    torch::Tensor sortedPositions, torch::Tensor sortedSupport,
-    torch::Tensor hashTable, int hashMapLength,
-    torch::Tensor cellTable, torch::Tensor numCellsVec, 
-    torch::Tensor offsets,
-    float hCell, torch::Tensor minDomain, torch::Tensor maxDomain, torch::Tensor periodicity,
-    supportMode searchMode) ;
-    
-template<std::size_t dim>
-hostDeviceInline auto buildNeighborhood(int32_t i,
-                       cptr_t<int32_t, 1> neighborOffsets, ptr_t<int32_t, 1> neighborList_i, ptr_t<int32_t, 1> neighborList_j,
-                       cptr_t<float, 2> queryPositions, cptr_t<float, 1> querySupport, int searchRange,
-                       cptr_t<float, 2> sortedPositions, cptr_t<float, 1> sortedSupport,
-                       cptr_t<int32_t, 2> hashTable, int hashMapLength,
-                       cptr_t<int64_t, 2> cellTable, cptr_t<int32_t, 1> numCells,
-                       cptr_t<int32_t, 2> offsets, float hCell, cptr_t<float, 1> minDomain, cptr_t<float, 1> maxDomain, cptr_t<int32_t, 1> periodicity,
-                       supportMode searchMode) {
-    auto nQuery = queryPositions.size(0);
-    // auto dim = queryPositions.size(1);
-    auto xi = queryPositions[i];
 
-    int32_t offset = neighborOffsets[i];
-    int32_t currentOffset = offset;
+// Define the python bindings for the C++ functions
+torch::Tensor countNeighbors(
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
+    torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
+    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor numCells_, torch::Tensor cellTable_,
+    torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    std::string mode, bool verbose = false);
+torch::Tensor countNeighborsFixed(
+    torch::Tensor queryPositions_, int searchRange, 
+    torch::Tensor sortedPositions_, double support,
+    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor numCells_, torch::Tensor cellTable_,
+    torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    std::string mode, bool verbose = false);
 
-    // auto dim = xi.size(0);
-    // auto queryCell = torch::zeros({dim}, defaultOptions.dtype(torch::kInt32));
-    std::array<int32_t, dim> queryCell;
-    for(int d = 0; d < dim; d++)
-        queryCell[d] = std::floor((xi[d] - minDomain[d]) / hCell);
-
-    iterateOffsetCells(
-        queryCell, offsets, hashTable,
-        hashMapLength, cellTable, numCells, periodicity,
-        [&](int32_t cBegin, int32_t cEnd) {
-            for (int32_t j = cBegin; j < cEnd; j++) {
-                auto xj = sortedPositions[j];
-                auto dist = modDistance<dim>(xi, xj, minDomain, maxDomain, periodicity);
-                if ((searchMode == supportMode::scatter && dist < sortedSupport[j]) ||
-                    (searchMode == supportMode::gather && dist < querySupport[i]) ||
-                    (searchMode == supportMode::symmetric && dist < (querySupport[i] + sortedSupport[j]) / 2.f)) {
-                    neighborList_i[currentOffset] = i;
-                    neighborList_j[currentOffset] = j;
-                    currentOffset++;
-                }
-            }
-        });
-}
-void buildNeighborhoodCuda(
-    torch::Tensor neighborOffsets, torch::Tensor neighborList_i, torch::Tensor neighborList_j,
-    torch::Tensor queryPositions, torch::Tensor querySupport, int searchRange,
-    torch::Tensor sortedPositions, torch::Tensor sortedSupport,
-    torch::Tensor hashTable, int hashMapLength,
-    torch::Tensor cellTable, torch::Tensor numCells,
-    torch::Tensor offsets, float hCell, torch::Tensor minDomain, torch::Tensor maxDomain, torch::Tensor periodicity,
-    supportMode searchMode);
+std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int neighborListLength,
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int searchRange, 
+    torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
+    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor numCells_, torch::Tensor cellTable_,
+    torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    std::string mode, bool verbose = false);
+std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed(
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int neighborListLength,
+    torch::Tensor queryPositions_, int searchRange, 
+    torch::Tensor sortedPositions_, double support,
+    torch::Tensor hashTable_, int hashMapLength, 
+    torch::Tensor numCells_, torch::Tensor cellTable_,
+    torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
+    std::string mode, bool verbose = false);

@@ -1,7 +1,6 @@
-import torch
+from typing import Optional
 import numpy as np
-from typing import Optional, Tuple
-
+import torch
 
 @torch.jit.script
 def volumeToSupport(volume : float, targetNeighbors : int, dim : int):
@@ -58,13 +57,13 @@ def getDomainExtents(positions, minDomain : Optional[torch.Tensor], maxDomain : 
         Tuple[torch.Tensor, torch.Tensor]: A tuple containing the minimum and maximum domain extents.
     """
     if minDomain is not None and isinstance(minDomain, list):
-        minD = torch.tensor(minDomain).to(x.device).type(x.dtype)
+        minD = torch.tensor(minDomain).to(positions.device).type(positions.dtype)
     elif minDomain is not None:
         minD = minDomain
     else:
         minD = torch.min(positions, dim = 0)[0]
     if maxDomain is not None and isinstance(minDomain, list):
-        maxD = torch.tensor(maxDomain).to(x.device).type(x.dtype)
+        maxD = torch.tensor(maxDomain).to(positions.device).type(positions.dtype)
     elif maxDomain is not None:
         maxD = maxDomain
     else:
@@ -138,7 +137,7 @@ def linearIndexing(cellIndices, cellCounts):
 @torch.jit.script
 def queryCell(cellIndex, hashTable, hashMapLength : int, numCells, cellTable):
     # print('cellIndex:', cellIndex)
-    linearIndex = linearIndexing(cellIndex, numCells) #cellIndex[0] + numCells[0] * cellIndex[1]
+    linearIndex = linearIndexing(cellIndex.view(-1,cellIndex.shape[0]), numCells)# * cellIndex[1]
     # print('linearIndex:', linearIndex)
     hashedIndex = hashCellIndices(cellIndex.view(-1,cellIndex.shape[0]), hashMapLength)
     # print('hashedIndex:', hashedIndex)

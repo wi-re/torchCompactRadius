@@ -1,6 +1,6 @@
 import torch
 from torchCompactRadius.util import compute_h, linearIndexing
-from typing import List, Tuple, Optional
+from typing import Optional
 from torch.profiler import record_function
 
 @torch.jit.script

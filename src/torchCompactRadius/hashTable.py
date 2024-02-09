@@ -1,10 +1,8 @@
-import torch
-from torchCompactRadius.util import compute_h, getDomainExtents, countUniqueEntries
-from typing import List, Tuple, Optional
-from torch.profiler import record_function
-
+from torchCompactRadius.util import getDomainExtents
 from torchCompactRadius.cellTable import sortReferenceParticles
 from torchCompactRadius.util import hashCellIndices
+from typing import List
+import torch
 
 @torch.jit.script
 def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax : float, hashMapLength : int):

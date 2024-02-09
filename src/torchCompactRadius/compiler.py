@@ -1,14 +1,15 @@
 
 from pathlib import Path
-import os
-
-directory = Path(__file__).resolve().parent
-# print(directory)
-
 import subprocess
 import sys
-import torch
 import glob
+import os
+from typing import Optional
+import platform
+import torch
+from torch.utils.cpp_extension import load
+
+directory = Path(__file__).resolve().parent
 
 IS_WINDOWS = sys.platform == 'win32'
 
@@ -46,15 +47,10 @@ def find_cuda_home():
     return cuda_home
 
 find_cuda_home()
-import platform
 
 def getComputeCapability(device):
     return int(''.join([str(s) for s in torch.cuda.get_device_capability(device)]))
 
-import os
-from torch.utils.cpp_extension import load
-from typing import Optional
-import platform
 
 def build_cpp_standard_arg(cpp_standard):
     if platform.system() == "Windows":
