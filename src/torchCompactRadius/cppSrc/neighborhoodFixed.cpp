@@ -24,7 +24,7 @@ auto getAccessor(const torch::Tensor &t, const std::string &name, bool cuda = fa
         throw std::runtime_error(name + " is not defined");
     }
     if (optional && !t.defined()) {
-        return t.template packed_accessor32<scalar_t, dim>();
+        return t.template packed_accessor32<scalar_t, dim, traits>();
     }
     if (!t.is_contiguous()) {
         throw std::runtime_error(name + " is not contiguous");
@@ -36,7 +36,7 @@ auto getAccessor(const torch::Tensor &t, const std::string &name, bool cuda = fa
     if (t.dim() != dim) {
         throw std::runtime_error(name + " is not of the correct dimension " + std::to_string(t.dim()) + " vs " + std::to_string(dim));
     }
-    return t.template packed_accessor32<scalar_t, dim>();
+    return t.template packed_accessor32<scalar_t, dim, traits>();
 }
 
 /**
@@ -451,12 +451,3 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed(
     });
     return returnPair;
     }
-
-// Create the python bindings for the C++ functions
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("countNeighbors", &countNeighbors, "Count the Number of Neighbors (C++) using a precomputed hash table and cell map");
-  m.def("buildNeighborList", &buildNeighborList, "Build the Neighborlist (C++) using a precomputed hash table and cell map as well as neighbor counts");
-    
-  m.def("countNeighborsFixed", &countNeighborsFixed, "Count the Number of Neighbors (C++) using a precomputed hash table and cell map (fixed support radius)");
-  m.def("buildNeighborListFixed", &buildNeighborListFixed, "Build the Neighborlist (C++) using a precomputed hash table and cell map as well as neighbor counts (fixed support radius)");
-}

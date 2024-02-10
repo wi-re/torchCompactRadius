@@ -24,7 +24,7 @@ auto getAccessor(const torch::Tensor &t, const std::string &name, bool cuda = fa
         throw std::runtime_error(name + " is not defined");
     }
     if (optional && !t.defined()) {
-        return t.template packed_accessor32<scalar_t, dim>();
+        return t.template packed_accessor32<scalar_t, dim, traits>();
     }
     if (!t.is_contiguous()) {
         throw std::runtime_error(name + " is not contiguous");
@@ -36,7 +36,7 @@ auto getAccessor(const torch::Tensor &t, const std::string &name, bool cuda = fa
     if (t.dim() != dim) {
         throw std::runtime_error(name + " is not of the correct dimension " + std::to_string(t.dim()) + " vs " + std::to_string(dim));
     }
-    return t.template packed_accessor32<scalar_t, dim>();
+    return t.template packed_accessor32<scalar_t, dim, traits>();
 }
 
 /**
