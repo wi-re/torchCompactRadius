@@ -1,20 +1,11 @@
 from torchCompactRadius.util import getDomainExtents, countUniqueEntries
 from torchCompactRadius.cellTable import computeGridSupport
-from torchCompactRadius.hashTable import buildCompactHashMap
+from torchCompactRadius.hashTable import buildCompactHashMap, buildCompactHashMap_compat
 from torchCompactRadius.compiler import compileSourceFiles
 from typing import Optional, List
 import torch
 from torch.profiler import record_function
-
-neighborSearch_cpp = compileSourceFiles(
-    ['cppSrc/neighborhoodDynamic.cpp', 'cppSrc/neighborhoodDynamic.cu', 
-     'cppSrc/neighborhoodFixed.cpp', 'cppSrc/neighborhoodFixed.cu',
-     'cppSrc/hashing.cpp', 'cppSrc/hashing.cu',
-     'cppSrc/cppWrapper.cpp'], module_name = 'neighborSearch', verbose = False, openMP = False, verboseCuda = False, cuda_arch = None)
-countNeighbors_cpp = neighborSearch_cpp.countNeighbors
-buildNeighborList_cpp = neighborSearch_cpp.buildNeighborList
-countNeighborsFixed_cpp = neighborSearch_cpp.countNeighborsFixed
-buildNeighborListFixed_cpp = neighborSearch_cpp.buildNeighborListFixed
+from torchCompactRadius.cppWrapper import countNeighbors_cpp, buildNeighborList_cpp, countNeighborsFixed_cpp, buildNeighborListFixed_cpp
 
 # @torch.jit.script
 def neighborSearch_cpp(
@@ -62,16 +53,16 @@ def neighborSearch_cpp(
             x = torch.vstack([component if not periodic else torch.remainder(component - minD[i], maxD[i] - minD[i]) + minD[i] for i, (component, periodic) in enumerate(zip(referencePositions.mT, periodicity))]).mT
             # print(x.min(), x.max())
             # Build hash table and cell table
-            sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap(x, minD, maxD, periodicity, hMax, hashMapLength)
+            sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap_compat(x, minD, maxD, periodicity, hMax, hashMapLength)
             sortedSupports = referenceSupports[sortIndex] if referenceSupports is not None else None
 
-        print('What is going on here?')
-        print('Current device:', queryPositions.device)
+        # print('What is going on here?')
+        # print('Current device:', queryPositions.device)
 
 
         # mps workaround
         if queryPositions.device.type == 'mps':
-            print('mps')
+            # print('mps')
             with record_function("neighborSearch - transfer from MPS"):
                 queryPositions_cpu = queryPositions.detach().cpu()
                 if queryParticleSupports is not None:

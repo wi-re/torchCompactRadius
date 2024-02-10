@@ -89,6 +89,27 @@ def countUniqueEntries(indices, positions):
 
 
 
+from torchCompactRadius.cppWrapper import hashCells_cpp
+# @torch.jit.script
+def hashCellIndices_cpp(cellIndices, hashMapLength : int):
+    """
+    Hashes the cell indices using a hash function.
+
+    Args:
+        cellIndices (torch.Tensor): Tensor containing the cell indices.
+        hashMapLength (int): Length of the hash map.
+
+    Returns:
+        torch.Tensor: Hashed cell indices.
+
+    Raises:
+        ValueError: If the dimension of cellIndices is not 1, 2, or 3.
+    """
+    if cellIndices.device.type == 'mps':
+        hashed = hashCells_cpp(cellIndices.detach().cpu(), hashMapLength)
+        return hashed.to(cellIndices.device)
+    return hashCells_cpp(cellIndices, hashMapLength)
+
 @torch.jit.script
 def hashCellIndices(cellIndices, hashMapLength : int):
     """
