@@ -1,5 +1,5 @@
 
-from torchCompactRadius.util import queryCell, getDomainExtents, countUniqueEntries
+from torchCompactRadius.util import queryCell, getDomainExtents, countUniqueEntries, getOffsets
 from torchCompactRadius.hashTable import buildCompactHashMap
 from torchCompactRadius.pythonSearch import findNeighbors
 from torchCompactRadius.cellTable import computeGridSupport
@@ -15,34 +15,34 @@ def findNeighborsFixedFixed(queryPosition,
     centerCell = torch.floor((queryPosition - qMin) / hCell).to(torch.int32)
     neighborhood = torch.zeros(bufferSize, dtype = centerCell.dtype, device = centerCell.device)
     counter = 0
-    for xx in range(-searchRange,searchRange + 1):
-        for yy in range(-searchRange,searchRange + 1):
-            cellIndex = centerCell + torch.tensor([xx,yy], device = centerCell.device, dtype = centerCell.dtype)
-            cellIndex = cellIndex % numCells
-            particlesInCell = queryCell(cellIndex, hashTable, hashMapLength, numCells, cellTable)
+    prod = getOffsets(searchRange, queryPosition.shape[0]).to(queryPosition.device)
+    for cellOffset in prod:
+        cellIndex = centerCell + cellOffset
+        cellIndex = cellIndex % numCells
+        particlesInCell = queryCell(cellIndex, hashTable, hashMapLength, numCells, cellTable)
 
-            if particlesInCell.numel() > 0:
-                referencePositions = sortedPositions[particlesInCell,:]
-                # referenceSupports = sortedSupport[particlesInCell]
+        if particlesInCell.numel() > 0:
+            referencePositions = sortedPositions[particlesInCell,:]
+            # referenceSupports = sortedSupport[particlesInCell]
 
-                
-                if torch.any(periodicity):
-                    distances = []
-                    for i in range(queryPosition.shape[0]):
-                        if periodicity[i]:
-                            domainLength = (maxDomain[i] - minDomain[i])
-                            distances.append((referencePositions[:,i] - queryPosition[i] + domainLength/2) % domainLength - domainLength/2)
-                        else:
-                            distances.append(referencePositions[:,i] - queryPosition[i])
-                    relPositions = torch.stack(distances, dim = 1)
-                else:
-                    relPositions = referencePositions - queryPosition
+            
+            if torch.any(periodicity):
+                distances = []
+                for i in range(queryPosition.shape[0]):
+                    if periodicity[i]:
+                        domainLength = (maxDomain[i] - minDomain[i])
+                        distances.append((referencePositions[:,i] - queryPosition[i] + domainLength/2) % domainLength - domainLength/2)
+                    else:
+                        distances.append(referencePositions[:,i] - queryPosition[i])
+                relPositions = torch.stack(distances, dim = 1)
+            else:
+                relPositions = referencePositions - queryPosition
 
-                distances = torch.norm(relPositions, dim=1, p=2)
-                hij = support
-                neighbors = particlesInCell[distances < hij]
-                neighborhood[counter:counter + neighbors.numel()] = neighbors
-                counter += neighbors.numel()
+            distances = torch.norm(relPositions, dim=1, p=2)
+            hij = support
+            neighbors = particlesInCell[distances < hij]
+            neighborhood[counter:counter + neighbors.numel()] = neighbors
+            counter += neighbors.numel()
 
     return neighborhood[:counter]
 
@@ -52,41 +52,41 @@ def countNeighborsFixed(queryPosition,
             cellTable, qMin, hCell : float, maxDomain, minDomain, periodicity, mode : str):
     centerCell = torch.floor((queryPosition - qMin) / hCell).to(torch.int32)
     counter = torch.tensor(0, dtype = centerCell.dtype, device = centerCell.device)
-    for xx in range(-searchRange,searchRange + 1):
-        for yy in range(-searchRange,searchRange + 1):
-            cellIndex = centerCell + torch.tensor([xx,yy], device = centerCell.device, dtype = centerCell.dtype)
-            cellIndex = cellIndex % numCells
-            particlesInCell = queryCell(cellIndex, hashTable, hashMapLength, numCells, cellTable)
-            # print('offset:', xx, yy, 'cellIndex:', cellIndex, 'particlesInCell:', particlesInCell)
+    prod = getOffsets(searchRange, queryPosition.shape[0]).to(queryPosition.device)
+    for cellOffset in prod:
+        cellIndex = centerCell + cellOffset
+        cellIndex = cellIndex % numCells
+        particlesInCell = queryCell(cellIndex, hashTable, hashMapLength, numCells, cellTable)
+        # print('offset:', xx, yy, 'cellIndex:', cellIndex, 'particlesInCell:', particlesInCell)
 
-            if particlesInCell.numel() > 0:
-                referencePositions = sortedPositions[particlesInCell,:]
-                # referenceSupports = sortedSupport[particlesInCell]
+        if particlesInCell.numel() > 0:
+            referencePositions = sortedPositions[particlesInCell,:]
+            # referenceSupports = sortedSupport[particlesInCell]
 
-                
-                if torch.any(periodicity):
-                    distances = []
-                    for i in range(queryPosition.shape[0]):
-                        if periodicity[i]:
-                            domainLength = (maxDomain[i] - minDomain[i])
-                            distances.append((referencePositions[:,i] - queryPosition[i] + domainLength/2) % domainLength - domainLength/2)
-                            # print('.')
-                        else:
-                            distances.append(referencePositions[:,i] - queryPosition[i])
-                    relPositions = torch.stack(distances, dim = 1)
-                    # print(relPositions)
-                else:
-                    relPositions = referencePositions - queryPosition
+            
+            if torch.any(periodicity):
+                distances = []
+                for i in range(queryPosition.shape[0]):
+                    if periodicity[i]:
+                        domainLength = (maxDomain[i] - minDomain[i])
+                        distances.append((referencePositions[:,i] - queryPosition[i] + domainLength/2) % domainLength - domainLength/2)
+                        # print('.')
+                    else:
+                        distances.append(referencePositions[:,i] - queryPosition[i])
+                relPositions = torch.stack(distances, dim = 1)
                 # print(relPositions)
-                # print(particlesInCell)
-                    # domainLength = (maxDomain - minDomain)
-                # relPosition = (relPosition + domainLength/2) % domainLength - domainLength/2
-                distances = torch.norm(relPositions, dim=1, p=2)
-                # print('offset:', xx, yy, distances)
-                hij = support
-                counter += torch.sum(distances < hij)
-                # neighbors = particlesInCell[distances < querySupport]
-                # neighborhood.append(neighbors)
+            else:
+                relPositions = referencePositions - queryPosition
+            # print(relPositions)
+            # print(particlesInCell)
+                # domainLength = (maxDomain - minDomain)
+            # relPosition = (relPosition + domainLength/2) % domainLength - domainLength/2
+            distances = torch.norm(relPositions, dim=1, p=2)
+            # print('offset:', xx, yy, distances)
+            hij = support
+            counter += torch.sum(distances < hij)
+            # neighbors = particlesInCell[distances < querySupport]
+            # neighborhood.append(neighbors)
     return counter
 
 @torch.jit.script

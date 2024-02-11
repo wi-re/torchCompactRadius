@@ -24,8 +24,11 @@ def sortReferenceParticles(referenceParticles, referenceSupport : float, domainM
             hCell = compute_h(domainMin, domainMax, referenceSupport)
             qExtent = domainMax - domainMin
             cellCount = torch.ceil(qExtent / (hCell)).to(torch.int32)
-            indices = torch.floor((referenceParticles - domainMin) / hCell).to(torch.int32)
+            # print('cellCount', cellCount.shape, cellCount)
+            indices = torch.floor((referenceParticles - domainMin) / hCell).to(torch.int32).view(-1, referenceParticles.shape[1])
+            # print('indices', indices.shape, indices)
             linearIndices = linearIndexing(indices, cellCount) #indices[:,0] + cellCount[0] * indices[:,1]
+            # print('linearIndices', linearIndices)
         with record_function("sort - actual argsort"): 
             sortingIndices = torch.argsort(linearIndices)
         with record_function("sort - sorting data"): 

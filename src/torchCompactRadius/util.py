@@ -127,7 +127,7 @@ def hashCellIndices(cellIndices, hashMapLength : int):
     """
     primes = [73856093, 19349663, 83492791] # arbitrary primes but they should be large and different and these have been used in literature before
     if cellIndices.shape[1] == 1:
-        return cellIndices % hashMapLength
+        return cellIndices[:,0] % hashMapLength
     elif cellIndices.shape[1]  == 2:
         return (cellIndices[:,0] * primes[0] + cellIndices[:,1] * primes[1]) % hashMapLength
     elif cellIndices.shape[1]  == 3:
@@ -145,17 +145,22 @@ def hashCellIndices(cellIndices, hashMapLength : int):
 #         product *= cellCounts[i]
 #     return linearIndex
 
-@torch.jit.script
+# @torch.jit.script
 def linearIndexing(cellIndices, cellCounts):
+    # print('cellIndices:', cellIndices.shape, cellIndices)
+    # print('cellCounts:', cellCounts.shape, cellCounts)
     dim = cellIndices.shape[1]
     linearIndex = torch.zeros(cellIndices.shape[0], dtype = cellIndices.dtype, device = cellIndices.device)
     product = 1
     for i in range(dim):
         linearIndex += cellIndices[:,i] * product
-        product *= cellCounts[i]
+        # print('linearIndex:', linearIndex)
+        # print('product', product)
+        # print('cellCounts[i]', cellCounts[i])
+        product = product * cellCounts[i].item()
     return linearIndex
 
-@torch.jit.script
+# @torch.jit.script
 def queryCell(cellIndex, hashTable, hashMapLength : int, numCells, cellTable):
     # print('cellIndex:', cellIndex)
     linearIndex = linearIndexing(cellIndex.view(-1,cellIndex.shape[0]), numCells)# * cellIndex[1]
@@ -194,3 +199,28 @@ def queryCell(cellIndex, hashTable, hashMapLength : int, numCells, cellTable):
         #     return particlesInCell
 
     return torch.empty(0, dtype = hashTable.dtype, device = hashTable.device)
+
+
+
+@torch.jit.script
+def iPower(x : int, n : int):
+    res : int = 1
+    for i in range(n):
+        res *= x
+    return res
+
+@torch.jit.script
+def getOffsets(searchRange : int, dim : int):
+    offsets = torch.zeros([iPower(1 + 2 * searchRange, dim), dim], dtype=torch.int32)
+    for d in range(dim):
+        itr = -searchRange
+        ctr = 0
+        for o in range(offsets.size(0)):
+            c = o % pow(1 + 2 * searchRange, d)
+            if c == 0 and ctr > 0:
+                itr += 1
+            if itr > searchRange:
+                itr = -searchRange
+            offsets[o][dim - d - 1] = itr
+            ctr += 1
+    return offsets

@@ -61,8 +61,19 @@ def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax 
     hashMapCounters = hashMapCounters.to(torch.int64)
     # Resort the entries based on the hashIndexSorting so they can be accessed through the hashmap
     sortedCellIndices = cellIndices[hashIndexSorting]
+
+    # print('cellGridIndices', cellGridIndices)
+    # print('cellTable', cellTable)
+    # print('hashedIndices', hashedIndices)
+
+    # for i in hashIndexSorting:
+        # print(i, cellTable[i])
+
+    # sortedCellTable = torch.stack([cellTable[i] for i in hashIndexSorting], dim=1)
+
     sortedCellTable = torch.stack([c[hashIndexSorting] for c in cellTable.unbind(1)], dim = 1)
-    # print(sortedCellTable)
+
+    # print('sortedCellTable', sortedCellTable)
     # sortedCumCell = cellCounters[hashIndexSorting]
     # cellSpan = cellTable[hashIndexSorting,0][hashIndexSorting]
 
