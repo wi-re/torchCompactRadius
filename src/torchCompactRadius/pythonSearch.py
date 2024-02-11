@@ -206,8 +206,15 @@ def buildNeighborOffsetList(queryPositions, queryParticleSupports : Optional[tor
         Tuple[torch.Tensor, torch.Tensor, int]: A tuple containing the neighbor counter, neighbor offsets, and neighbor list length.
     """
     neighborCounter = torch.zeros(queryPositions.shape[0], dtype = torch.int32, device = queryPositions.device)
+
+    # vm = torch.func.vmap(lambda x, h: countNeighbors(x, h, searchRadius, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, torch.tensor(periodicity), mode))
+
+    # neighborCounter = vm(queryPositions, queryParticleSupports if queryParticleSupports is not None else torch.zeros(1, device = queryPositions.device, dtype = queryPositions.dtype))
+
     for index in range(queryPositions.shape[0]):
         neighborCounter[index] = countNeighbors(queryPositions[index,:], queryParticleSupports[index] if queryParticleSupports is not None else None, searchRadius, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, torch.tensor(periodicity), mode)
+
+    # neighborCounter = torch.hstack([countNeighbors(queryPositions[index,:], queryParticleSupports[index] if queryParticleSupports is not None else None, searchRadius, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, torch.tensor(periodicity), mode) for index in range(queryPositions.shape[0])])
 
     neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int32, device = queryPositions.device), torch.cumsum(neighborCounter, dim = 0)))[:-1]
     neighborListLength = neighborOffsets[-1] + neighborCounter[-1]

@@ -38,13 +38,18 @@ def buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports : 
     i = []
     j = []
 
-    for index in range(queryPositions.shape[0]):
-        neighborhood = findNeighbors(queryPositions[index,:], queryParticleSupports[index] if queryParticleSupports is not None else None, searchRadius, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, torch.tensor(periodicity), mode)
-        i.append(torch.ones(neighborhood.shape[0], dtype = torch.int32, device = queryPositions.device) * index)
-        j.append(neighborhood)
+    neighborhood = [findNeighbors(queryPositions[index,:], queryParticleSupports[index] if queryParticleSupports is not None else None, searchRadius, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, torch.tensor(periodicity), mode) for index in range(queryPositions.shape[0])]
 
-    i = torch.hstack(i)
-    j = sortIndex[torch.hstack(j)]
+    i = torch.hstack([torch.ones(len(neighbors), dtype = torch.int32, device = queryPositions.device) * index for index, neighbors in enumerate(neighborhood)])
+    j = sortIndex[torch.hstack(neighborhood)]
+
+    # for index in range(queryPositions.shape[0]):
+    #     neighborhood = findNeighbors(queryPositions[index,:], queryParticleSupports[index] if queryParticleSupports is not None else None, searchRadius, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, torch.tensor(periodicity), mode)
+    #     i.append(torch.ones(neighborhood.shape[0], dtype = torch.int32, device = queryPositions.device) * index)
+    #     j.append(neighborhood)
+
+    # i = torch.hstack(i)
+    # j = sortIndex[torch.hstack(j)]
 
     return i.to(queryPositions.device), j.to(queryPositions.device)
 
