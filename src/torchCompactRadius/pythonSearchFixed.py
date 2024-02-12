@@ -164,6 +164,22 @@ def buildNeighborListFixedFixed(neighborListLength, sortIndex, queryPositions, s
     return i, j
 
 @torch.jit.script
+def searchNeighborsFixedPython(
+    queryPositions, support :float, sortedPositions, hashTable, hashMapLength: int, sortedCellTable, numCells,
+        qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : List[bool], mode : str = 'symmetric', searchRadius : int = 1):
+    with record_function("neighborSearch - buildNeighborOffsetList"):
+        # Build neighbor list by first building a list of offsets and then the actual neighbor list
+        neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetListFixed(queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
+    with record_function("neighborSearch - buildNeighborListFixed"):
+        i,j = buildNeighborListFixedFixed(neighborListLength, sortIndex, queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, neighborCounter, neighborOffsets, mode, searchRadius)
+    with record_function("neighborSearch - countUniqueEntries"):        
+        # compute number of neighbors per particle for convenience
+        ii, ni = countUniqueEntries(i, queryPositions)
+        jj, nj = countUniqueEntries(j, sortedPositions)
+
+    return (i,j), ni, nj
+
+@torch.jit.script
 def neighborSearchFixed(
     queryPositions, 
     referencePositions, support : float, 
@@ -210,14 +226,9 @@ def neighborSearchFixed(
             # print(x.min(), x.max())
             # Build hash table and cell table
             sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap(x, minD, maxD, periodicity, hMax, hashMapLength)
-        with record_function("neighborSearch - buildNeighborOffsetList"):
-            # Build neighbor list by first building a list of offsets and then the actual neighbor list
-            neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetListFixed(queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
-        with record_function("neighborSearch - buildNeighborListFixed"):
-            i,j = buildNeighborListFixedFixed(neighborListLength, sortIndex, queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, neighborCounter, neighborOffsets, mode, searchRadius)
-        with record_function("neighborSearch - countUniqueEntries"):        
-            # compute number of neighbors per particle for convenience
-            ii, ni = countUniqueEntries(i, queryPositions)
-            jj, nj = countUniqueEntries(j, referencePositions)
 
-    return (i,j), ni, nj, sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex
+
+    (i,j), ni, nj = searchNeighborsFixedPython(queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+
+    return (i,j), ni, nj, sortedPositions, None, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
+  

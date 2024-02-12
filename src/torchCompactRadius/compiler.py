@@ -11,10 +11,16 @@ from torch.utils.cpp_extension import load
 
 directory = Path(__file__).resolve().parent
 
-IS_WINDOWS = sys.platform == 'win32'
-
 def find_cuda_home():
-    '''Finds the CUDA install path.'''
+    """
+    Finds the CUDA home directory by checking various possible locations.
+    Based on the original script from PyTorch
+    
+    Returns:
+        str: The path to the CUDA home directory, or None if it is not found.
+    """
+    IS_WINDOWS = sys.platform == 'win32'
+
     # Guess #1
     cuda_home = os.environ.get('CUDA_HOME') or os.environ.get('CUDA_PATH')
     if cuda_home is None:
@@ -49,20 +55,58 @@ def find_cuda_home():
 find_cuda_home()
 
 def getComputeCapability(device):
+    """
+    Get the compute capability of the specified CUDA device.
+
+    Args:
+        device (int): The index of the CUDA device.
+
+    Returns:
+        int: The compute capability of the device.
+
+    """
     return int(''.join([str(s) for s in torch.cuda.get_device_capability(device)]))
 
 
 def build_cpp_standard_arg(cpp_standard):
+    """
+    Build the argument for the C++ standard based on the given cpp_standard.
+    Arguments are in the form of 'c++17'.
+
+    Args:
+        cpp_standard (str): The desired C++ standard.
+
+    Returns:
+        str: The argument for the C++ standard based on the platform.
+    """
     if platform.system() == "Windows":
         return "/std:" + cpp_standard
     else:
         return "-std=" + cpp_standard
 
 def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None, verbose = False, additionalFlags = [""], openMP : bool = False, verboseCuda : bool = False, cpp_standard : str = "c++17", cuda_arch : Optional[int] = None):
+    """
+    Compiles the given source files into a module.
+
+    Args:
+        sourceFiles (List[str]): List of source file paths.
+        module_name (str): Name of the module.
+        directory (Optional[str], optional): Directory path where the source files are located. Defaults to None.
+        verbose (bool, optional): Whether to print verbose output. Defaults to False.
+        additionalFlags (List[str], optional): Additional compilation flags. Defaults to [""].
+        openMP (bool, optional): Whether to enable OpenMP support. Defaults to False.
+        verboseCuda (bool, optional): Whether to print verbose output for CUDA. Defaults to False.
+        cpp_standard (str, optional): C++ standard version. Defaults to "c++17".
+        cuda_arch (Optional[int], optional): CUDA architecture version. Defaults to None.
+
+    Returns:
+        torch.utils.cpp_extension.CppExtension: Compiled module.
+    """
     cpp_standard_arg = build_cpp_standard_arg(cpp_standard)
 
     hostFlags = [cpp_standard_arg, "-fPIC", "-O3", "-fopenmp"] if openMP else [cpp_standard_arg, "-fPIC", "-O3"]
     cudaFlags = [cpp_standard_arg,'-O3']
+    
     if torch.cuda.is_available():
         computeCapability = getComputeCapability(torch.cuda.current_device()) if cuda_arch is None else cuda_arch
         if verbose:
@@ -108,12 +152,12 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
     for sourceFile in sourceFiles:
         if verbose:
             print('sourceFile:', sourceFile)
-            if os.path.exists(sourceFile) or os.path.exists(os.path.join(directory, sourceFile)):
-                if verbose:
-                    print('source file exists:', sourceFile)
-                continue
-            else:
-                raise RuntimeError('source file does not exist:', sourceFile)
+        if os.path.exists(sourceFile) or os.path.exists(os.path.join(directory, sourceFile)):
+            if verbose:
+                print('source file exists:', sourceFile)
+            continue
+        else:
+            raise RuntimeError('source file does not exist:', sourceFile)
     sourceFiles = [os.path.abspath(os.path.join(directory, sourceFile)) if os.path.exists(os.path.join(directory, sourceFile)) else sourceFile for sourceFile in sourceFiles]
     cppFiles = [sourceFile for sourceFile in sourceFiles if sourceFile.endswith('.cpp')]
     cuFiles = ['"%s"' % (sourceFile) for sourceFile in sourceFiles if sourceFile.endswith('.cu')]

@@ -53,6 +53,19 @@ def buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports : 
 
     return i.to(queryPositions.device), j.to(queryPositions.device)
 
+@torch.jit.script
+def searchNeighborsDynamicPython(
+    queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength: int, sortedCellTable, numCells,
+    qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : List[bool], mode : str = 'symmetric', searchRadius : int = 1):
+    with record_function("neighborSearch - buildNeighborListFixed"):
+        i,j = buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
+    with record_function("neighborSearch - countUniqueEntries"):        
+        # compute number of neighbors per particle for convenience
+        ii, ni = countUniqueEntries(i, queryPositions)
+        jj, nj = countUniqueEntries(j, sortedPositions)
+
+    return (i,j), ni, nj
+
 
 @torch.jit.script
 def neighborSearchDynamic(
@@ -105,11 +118,6 @@ def neighborSearchDynamic(
         # with record_function("neighborSearch - buildNeighborOffsetList"):
             # Build neighbor list by first building a list of offsets and then the actual neighbor list
             # neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetList(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode)
-        with record_function("neighborSearch - buildNeighborListFixed"):
-            i,j = buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
-        with record_function("neighborSearch - countUniqueEntries"):        
-            # compute number of neighbors per particle for convenience
-            ii, ni = countUniqueEntries(i, queryPositions)
-            jj, nj = countUniqueEntries(j, referencePositions)
+    (i,j), ni, nj = searchNeighborsDynamicPython(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
 
-    return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex
+    return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex

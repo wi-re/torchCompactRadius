@@ -263,6 +263,35 @@ def buildNeighborListFixed(neighborListLength, sortIndex, queryPositions, queryP
 
 
 @torch.jit.script
+def searchNeighborsPython(
+    queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength: int, sortedCellTable, numCells,
+    qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : List[bool], mode : str = 'symmetric', searchRadius : int = 1):
+
+    with record_function("neighborSearch - buildNeighborOffsetList"):
+        # Build neighbor list by first building a list of offsets and then the actual neighbor list
+        neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetList(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
+        # if verbose:
+        #     print('neighborCounter:', neighborCounter.shape, neighborCounter)
+        #     print('neighborOffsets:', neighborOffsets.shape, neighborOffsets)
+        #     print('neighborListLength:', neighborListLength)
+    with record_function("neighborSearch - buildNeighborListFixed"):
+        i,j = buildNeighborListFixed(neighborListLength, sortIndex, queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, neighborCounter, neighborOffsets, mode, searchRadius)
+        # if verbose:
+        #     print('i:', i.shape, i)
+        #     print('j:', j.shape, j)
+    with record_function("neighborSearch - countUniqueEntries"):        
+        # compute number of neighbors per particle for convenience
+        ii, ni = countUniqueEntries(i, queryPositions)
+        jj, nj = countUniqueEntries(j, sortedPositions)
+        # if verbose:
+        #     print('ii:', ii.shape, ii)
+        #     print('ni:', ni.shape, ni)
+        #     print('jj:', jj.shape, jj)
+        #     print('nj:', nj.shape, nj)
+
+    return (i,j), ni, nj
+
+@torch.jit.script
 def neighborSearchPython(
     queryPositions, queryParticleSupports : Optional[torch.Tensor], 
     referencePositions, referenceSupports : Optional[torch.Tensor], 
@@ -344,26 +373,7 @@ def neighborSearchPython(
             #     print('qMax:', qMax)
             #     print('numCells:', numCells)
             #     print('sortIndex:', sortIndex.shape, sortIndex)
-        with record_function("neighborSearch - buildNeighborOffsetList"):
-            # Build neighbor list by first building a list of offsets and then the actual neighbor list
-            neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetList(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
-            # if verbose:
-            #     print('neighborCounter:', neighborCounter.shape, neighborCounter)
-            #     print('neighborOffsets:', neighborOffsets.shape, neighborOffsets)
-            #     print('neighborListLength:', neighborListLength)
-        with record_function("neighborSearch - buildNeighborListFixed"):
-            i,j = buildNeighborListFixed(neighborListLength, sortIndex, queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, neighborCounter, neighborOffsets, mode, searchRadius)
-            # if verbose:
-            #     print('i:', i.shape, i)
-            #     print('j:', j.shape, j)
-        with record_function("neighborSearch - countUniqueEntries"):        
-            # compute number of neighbors per particle for convenience
-            ii, ni = countUniqueEntries(i, queryPositions)
-            jj, nj = countUniqueEntries(j, referencePositions)
-            # if verbose:
-            #     print('ii:', ii.shape, ii)
-            #     print('ni:', ni.shape, ni)
-            #     print('jj:', jj.shape, jj)
-            #     print('nj:', nj.shape, nj)
+            
+        (i,j), ni, nj = searchNeighborsPython(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
 
-    return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex
+        return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex

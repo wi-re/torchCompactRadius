@@ -61,21 +61,7 @@ def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax 
     hashMapCounters = hashMapCounters.to(torch.int64)
     # Resort the entries based on the hashIndexSorting so they can be accessed through the hashmap
     sortedCellIndices = cellIndices[hashIndexSorting]
-
-    # print('cellGridIndices', cellGridIndices)
-    # print('cellTable', cellTable)
-    # print('hashedIndices', hashedIndices)
-
-    # for i in hashIndexSorting:
-        # print(i, cellTable[i])
-
-    # sortedCellTable = torch.stack([cellTable[i] for i in hashIndexSorting], dim=1)
-
     sortedCellTable = torch.stack([c[hashIndexSorting] for c in cellTable.unbind(1)], dim = 1)
-
-    # print('sortedCellTable', sortedCellTable)
-    # sortedCumCell = cellCounters[hashIndexSorting]
-    # cellSpan = cellTable[hashIndexSorting,0][hashIndexSorting]
 
     # Same construction as for the cell list but this time we create a more direct table
     # The table contains the start and length for each cell in the hash table and -1 if the cell is empty
@@ -92,7 +78,9 @@ def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax 
 # @torch.jit.script
 def buildCompactHashMap_compat(x, minDomain, maxDomain, periodicity : List[bool], hMax : float, hashMapLength : int):
     """Builds a compact hash map for efficient neighborhood search.
-
+    This version uses a C++ implementation of the hash function for compatibility.
+    This is needed primarily for the C++/MPS version as integer overflow behavior differes on these devices
+    
     Args:
         x (torch.Tensor): The positions of the particles.
         minDomain (float): The minimum domain extent.
@@ -141,19 +129,12 @@ def buildCompactHashMap_compat(x, minDomain, maxDomain, periodicity : List[bool]
     # Hash the cell indices and sort them to get a compact list of occupied cells with unique_consecutive, same as for the cells
     hashedIndices = hashCellIndices_cpp(cellGridIndices.to(torch.int32), hashMapLength)
 
-    # print('cellGridIndices', cellGridIndices)
-    # print('cellTable', cellTable)
-    # print('hashedIndices', hashedIndices)
-
     hashIndexSorting = torch.argsort(hashedIndices)
     hashMap, hashMapCounters = torch.unique_consecutive(hashedIndices[hashIndexSorting], return_counts=True, return_inverse=False)
     hashMapCounters = hashMapCounters.to(torch.int64)
     # Resort the entries based on the hashIndexSorting so they can be accessed through the hashmap
     sortedCellIndices = cellIndices[hashIndexSorting]
     sortedCellTable = torch.stack([c[hashIndexSorting] for c in cellTable.unbind(1)], dim = 1)
-    # print(sortedCellTable)
-    # sortedCumCell = cellCounters[hashIndexSorting]
-    # cellSpan = cellTable[hashIndexSorting,0][hashIndexSorting]
 
     # Same construction as for the cell list but this time we create a more direct table
     # The table contains the start and length for each cell in the hash table and -1 if the cell is empty

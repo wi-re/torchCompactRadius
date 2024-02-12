@@ -135,82 +135,91 @@ def hashCellIndices(cellIndices, hashMapLength : int):
     else: 
         raise ValueError('Only 1D, 2D and 3D supported')
     
-# @torch.jit.script
-# def linearIndexing(cellIndices, cellCounts):
-#     dim = len(cellIndices)
-#     linearIndex = 0
-#     product = 1
-#     for i in range(dim):
-#         linearIndex += cellIndices[i] * product
-#         product *= cellCounts[i]
-#     return linearIndex
-
-# @torch.jit.script
+@torch.jit.script
 def linearIndexing(cellIndices, cellCounts):
-    # print('cellIndices:', cellIndices.shape, cellIndices)
-    # print('cellCounts:', cellCounts.shape, cellCounts)
+    """
+    Compute the linear index based on the given cell indices and cell counts.
+
+    Args:
+        cellIndices (torch.Tensor): Tensor containing the cell indices.
+        cellCounts (torch.Tensor): Tensor containing the cell counts.
+
+    Returns:
+        torch.Tensor: Tensor containing the linear indices.
+    """
     dim = cellIndices.shape[1]
-    linearIndex = torch.zeros(cellIndices.shape[0], dtype = cellIndices.dtype, device = cellIndices.device)
+    linearIndex = torch.zeros(cellIndices.shape[0], dtype=cellIndices.dtype, device=cellIndices.device)
     product = 1
     for i in range(dim):
-        linearIndex += cellIndices[:,i] * product
-        # print('linearIndex:', linearIndex)
-        # print('product', product)
-        # print('cellCounts[i]', cellCounts[i])
+        linearIndex += cellIndices[:, i] * product
         product = product * cellCounts[i].item()
     return linearIndex
 
-# @torch.jit.script
+@torch.jit.script
 def queryCell(cellIndex, hashTable, hashMapLength : int, numCells, cellTable):
-    # print('cellIndex:', cellIndex)
+    """
+    Queries a cell in the hash table and returns the indices of particles in that cell.
+
+    Args:
+        cellIndex (Tensor): The index of the cell to query.
+        hashTable (Tensor): The hash table containing cell information.
+        hashMapLength (int): The length of the hash map.
+        numCells: The number of cells in the hash table.
+        cellTable: The table containing cell information.
+
+    Returns:
+        Tensor: The indices of particles in the queried cell. If the cell is empty, returns an empty tensor.
+    """
+
     linearIndex = linearIndexing(cellIndex.view(-1,cellIndex.shape[0]), numCells)# * cellIndex[1]
-    # print('linearIndex:', linearIndex)
     hashedIndex = hashCellIndices(cellIndex.view(-1,cellIndex.shape[0]), hashMapLength)
-    # print('hashedIndex:', hashedIndex)
 
     tableEntry = hashTable[hashedIndex,:]
-    # print(tableEntry)
     hBegin = tableEntry[:,0][0]
     hLength = tableEntry[:,1][0]
-    # print('hBegin:', hBegin, 'hLength:', hLength)
 
     if hBegin != -1:
         cell = cellTable[hBegin:hBegin + hLength]
-        # cellEntries = cellSpan[hBegin:hBegin + hLength]
-        # cellLengths = sortedCumCell[hBegin:hBegin + hLength]
-        # cellLinearIndices = sortedCellIndices[hBegin:hBegin + hLength]
-        # print('cellEntries:', cell[:,1])
-        # print('cellLengths:', cell[:,2])
-        # print('cellLinearIndices:', cell[:,0])
         for c in range(cell.shape[0]):
             if cell[c,0] == linearIndex:
                 cBegin = cell[c,1]
                 cLength = cell[c,2]
                 particlesInCell = torch.arange(cBegin, cBegin + cLength, device = hashTable.device, dtype = hashTable.dtype)
-                # print(particlesInCell)
                 return particlesInCell
-        # if torch.isin(cell[:,0], linearIndex):
-        #     # print('found')
-        #     # print('cell', cell)
-        #     cBegin = cell[cell[:,0] == linearIndex, 1][0]
-        #     cLength = cell[cell[:,0] == linearIndex, 2][0]
-        #     particlesInCell = torch.arange(cBegin, cBegin + cLength, device = hashTable.device, dtype = hashTable.dtype)
-        #     # print(particlesInCell)
-        #     return particlesInCell
 
     return torch.empty(0, dtype = hashTable.dtype, device = hashTable.device)
 
 
 
 @torch.jit.script
-def iPower(x : int, n : int):
+def iPower(x: int, n: int):
+    """
+    Calculates the power of an integer.
+
+    Args:
+        x (int): The base number.
+        n (int): The exponent.
+
+    Returns:
+        int: The result of x raised to the power of n.
+    """
     res : int = 1
     for i in range(n):
         res *= x
     return res
 
 @torch.jit.script
-def getOffsets(searchRange : int, dim : int):
+def getOffsets(searchRange: int, dim: int):
+    """
+    Generates a tensor of offsets based on the search range and dimension.
+
+    Args:
+        searchRange (int): The range of values to generate offsets from.
+        dim (int): The dimension of the offsets tensor.
+
+    Returns:
+        torch.Tensor: A tensor of offsets with shape [iPower(1 + 2 * searchRange, dim), dim].
+    """
     offsets = torch.zeros([iPower(1 + 2 * searchRange, dim), dim], dtype=torch.int32)
     for d in range(dim):
         itr = -searchRange

@@ -6,32 +6,32 @@ from torch.profiler import record_function
 @torch.jit.script
 def sortReferenceParticles(referenceParticles, referenceSupport : float, domainMin, domainMax):
     """
-    Sorts the reference particles based on their positions within a given domain.
+    Sorts the reference particles based on their linear indices.
 
     Args:
-        referenceParticles (torch.Tensor): Tensor containing the reference particles' positions.
-        referenceSupport (float): The support radius for the reference particles.
-        domainMin (torch.Tensor): Tensor containing the minimum coordinates of the domain.
-        domainMax (torch.Tensor): Tensor containing the maximum coordinates of the domain.
+        referenceParticles (torch.Tensor): The reference particles to be sorted.
+        referenceSupport (float): The reference support value.
+        domainMin: The minimum value of the domain.
+        domainMax: The maximum value of the domain.
 
     Returns:
-        Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, float]: 
-        A tuple containing the sorted linear indices, sorting indices, cell count, domain minimum, 
-        domain maximum, and the computed hCell value.
+        sortedLinearIndices (torch.Tensor): The sorted linear indices of the reference particles.
+        sortingIndices (torch.Tensor): The indices that sort the linear indices.
+        cellCount (torch.Tensor): The number of cells in each dimension.
+        domainMin: The minimum value of the domain.
+        domainMax: The maximum value of the domain.
+        hCell (float): The computed h value for the cells.
     """
-    with record_function("sort"): 
-        with record_function("sort - index Calculation"): 
+    with record_function("neighborSearch - sortReferenceParticles"): 
+        with record_function("neighborSearch - sortReferenceParticles[index Calculation]"): 
             hCell = compute_h(domainMin, domainMax, referenceSupport)
             qExtent = domainMax - domainMin
             cellCount = torch.ceil(qExtent / (hCell)).to(torch.int32)
-            # print('cellCount', cellCount.shape, cellCount)
             indices = torch.floor((referenceParticles - domainMin) / hCell).to(torch.int32).view(-1, referenceParticles.shape[1])
-            # print('indices', indices.shape, indices)
-            linearIndices = linearIndexing(indices, cellCount) #indices[:,0] + cellCount[0] * indices[:,1]
-            # print('linearIndices', linearIndices)
-        with record_function("sort - actual argsort"): 
+            linearIndices = linearIndexing(indices, cellCount)
+        with record_function("neighborSearch - sortReferenceParticles[argsort]"): 
             sortingIndices = torch.argsort(linearIndices)
-        with record_function("sort - sorting data"): 
+        with record_function("neighborSearch - sortReferenceParticles[resort]"): 
             sortedLinearIndices = linearIndices[sortingIndices]
     return sortedLinearIndices, sortingIndices, \
             cellCount, domainMin, domainMax, float(hCell)
@@ -57,6 +57,7 @@ def computeGridSupport(queryParticleSupports : Optional[torch.Tensor], reference
     device = queryParticleSupports.device if queryParticleSupports is not None else (referenceSupports.device if referenceSupports is not None else torch.device('cpu'))
     dtype = queryParticleSupports.dtype if queryParticleSupports is not None else (referenceSupports.dtype if referenceSupports is not None else torch.float32)
     hMax = torch.tensor(0.0, device = device, dtype = dtype)
+    
     if mode == 'scatter':
         assert referenceSupports is not None, 'referenceSupports must be provided for scatter mode'
         hMax = torch.max(referenceSupports) if referenceSupports is not None else 0.0
