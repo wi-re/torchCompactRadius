@@ -2,7 +2,7 @@ from torchCompactRadius.util import getDomainExtents, countUniqueEntries
 from torchCompactRadius.cellTable import computeGridSupport
 from torchCompactRadius.hashTable import buildCompactHashMap, buildCompactHashMap_compat
 from torchCompactRadius.compiler import compileSourceFiles
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import torch
 from torch.profiler import record_function
 from torchCompactRadius.cppWrapper import countNeighbors_cpp, buildNeighborList_cpp, countNeighborsFixed_cpp, buildNeighborListFixed_cpp
@@ -37,7 +37,7 @@ def searchNeighbors_cpp(
                     numCells_cpu, sortedCellTable_cpu, 
                     qMin_cpu, hCell, maxD_cpu, minD_cpu, 
                     torch.tensor(periodicity).to('cpu'), mode, False)
-                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int64, device = 'cpu'), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int64)))[:-1]
+                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int32, device = 'cpu'), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int32)))[:-1]
                 neighborListLength = neighborOffsets[-1] + neighborCounter_cpp[-1]
             with record_function("neighborSearch - searchNeighbors_cpp[build NeighborList]"):
                 neighbors_cpp = buildNeighborList_cpp(
@@ -57,6 +57,20 @@ def searchNeighbors_cpp(
                 j = sortIndex[j]
         else:
             with record_function("neighborSearch - searchNeighbors_cpp[build NeighborOffsetList]"):
+                # print('queryPositions', queryPositions.device, queryPositions.dtype, queryPositions.shape)
+                # print('queryParticleSupports', queryParticleSupports.device, queryParticleSupports.dtype, queryParticleSupports.shape)
+                # print('sortedPositions', sortedPositions.device, sortedPositions.dtype, sortedPositions.shape)
+                # print('sortedSupports', sortedSupports.device, sortedSupports.dtype, sortedSupports.shape)
+                # print('hashTable', hashTable.device, hashTable.dtype, hashTable.shape)
+                # print('sortedCellTable', sortedCellTable.device, sortedCellTable.dtype, sortedCellTable.shape)
+                # print('hCell', hCell)
+                # print('qMin', qMin.device, qMin.dtype, qMin.shape)
+                # print('qMax', qMax.device, qMax.dtype, qMax.shape)
+                # print('numCells', numCells.device, numCells.dtype, numCells.shape)
+                # print('sortIndex', sortIndex.device, sortIndex.dtype, sortIndex.shape)
+                # print('periodicity', periodicity)
+                # print('mode', mode)
+                
                 neighborCounter_cpp = countNeighbors_cpp(
                     queryPositions, queryParticleSupports if queryParticleSupports is not None else None, searchRadius, 
                     sortedPositions, sortedSupports, 
@@ -64,8 +78,12 @@ def searchNeighbors_cpp(
                     numCells, sortedCellTable, 
                     qMin, hCell, maxD, minD, 
                     torch.tensor(periodicity).to(queryPositions.device), mode, False)
-                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int64, device = queryPositions.device), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int64)))[:-1]
+                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int32, device = queryPositions.device), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int32)))[:-1]
                 neighborListLength = neighborOffsets[-1] + neighborCounter_cpp[-1]
+
+                # print('neighborCounter_cpp', neighborCounter_cpp.device, neighborCounter_cpp.dtype, neighborCounter_cpp.shape)
+                # print('neighborOffsets', neighborOffsets.device, neighborOffsets.dtype, neighborOffsets.shape)
+                # print('neighborListLength', neighborListLength.device, neighborListLength.dtype, neighborListLength.shape)
             with record_function("neighborSearch - searchNeighbors_cpp[build NeighborList]"):
                 neighbors_cpp = buildNeighborList_cpp(
                     neighborCounter_cpp, neighborOffsets, int(neighborListLength.item()),
@@ -76,12 +94,8 @@ def searchNeighbors_cpp(
                     qMin, hCell, maxD, minD, 
                     torch.tensor(periodicity).to(queryPositions.device), mode, False)   
                 i,j = neighbors_cpp
-                j = sortIndex[j]
-        with record_function("neighborSearch - searchNeighbors_cpp[count entries]"):  
-            ii, ni = countUniqueEntries(i, queryPositions)
-            jj, nj = countUniqueEntries(j, sortedPositions)
-            
-    return (i,j), ni, nj
+                j = sortIndex[j]            
+    return (i,j)
 
 def searchNeighborsFixed_cpp(
     queryPositions, support : float, sortedPositions, hashTable, hashMapLength: int, sortedCellTable, numCells,
@@ -107,7 +121,7 @@ def searchNeighborsFixed_cpp(
                     numCells_cpu, sortedCellTable_cpu, 
                     qMin_cpu, hCell, maxD_cpu, minD_cpu, 
                     torch.tensor(periodicity).to('cpu'), mode, False)
-                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int64, device = 'cpu'), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int64)))[:-1]
+                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int32, device = 'cpu'), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int32)))[:-1]
                 neighborListLength = neighborOffsets[-1] + neighborCounter_cpp[-1]
             with record_function("neighborSearch - searchNeighborsFixed_cpp[build NeighborList]"):
                 neighbors_cpp = buildNeighborList_cpp(
@@ -134,7 +148,7 @@ def searchNeighborsFixed_cpp(
                     numCells, sortedCellTable, 
                     qMin, hCell, maxD, minD, 
                     torch.tensor(periodicity).to(queryPositions.device), mode, False)
-                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int64, device = queryPositions.device), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int64)))[:-1]
+                neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int32, device = queryPositions.device), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int32)))[:-1]
                 neighborListLength = neighborOffsets[-1] + neighborCounter_cpp[-1]
             with record_function("neighborSearch - searchNeighborsFixed_cpp[build NeighborList]"):
                 neighbors_cpp = buildNeighborListFixed_cpp(
@@ -147,11 +161,8 @@ def searchNeighborsFixed_cpp(
                     torch.tensor(periodicity).to(queryPositions.device), mode, False)   
                 i,j = neighbors_cpp
                 j = sortIndex[j]
-        with record_function("neighborSearch - searchNeighborsFixed_cpp[count entries]"):     
-            ii, ni = countUniqueEntries(i, queryPositions)
-            jj, nj = countUniqueEntries(j, sortedPositions)
             
-    return (i,j), ni, nj
+    return (i,j)
 
 # @torch.jit.script
 def neighborSearch_cpp(
@@ -200,8 +211,26 @@ def neighborSearch_cpp(
             # Build hash table and cell table
             sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap_compat(x, minD, maxD, periodicity, hMax, hashMapLength)
             sortedSupports = referenceSupports[sortIndex] if referenceSupports is not None else None
-        (i,j), ni, nj =  searchNeighbors_cpp(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
-        return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
+
+        # print("searching")
+        # print('queryPositions', queryPositions.device, queryPositions.dtype, queryPositions.shape)
+        # print('queryParticleSupports', queryParticleSupports.device, queryParticleSupports.dtype, queryParticleSupports.shape)
+        # print('sortedPositions', sortedPositions.device, sortedPositions.dtype, sortedPositions.shape)
+        # print('sortedSupports', sortedSupports.device, sortedSupports.dtype, sortedSupports.shape)
+        # print('hashTable', hashTable.device, hashTable.dtype, hashTable.shape)
+        # print('sortedCellTable', sortedCellTable.device, sortedCellTable.dtype, sortedCellTable.shape)
+        # print('hCell', hCell)
+        # print('qMin', qMin.device, qMin.dtype, qMin.shape)
+        # print('qMax', qMax.device, qMax.dtype, qMax.shape)
+        # print('numCells', numCells.device, numCells.dtype, numCells.shape)
+        # print('sortIndex', sortIndex.device, sortIndex.dtype, sortIndex.shape)
+        # print('periodicity', periodicity)
+        # print('mode', mode)
+        # print('searchRadius', searchRadius)
+
+
+        (i,j) =  searchNeighbors_cpp(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+        return (i,j), sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
 
 # @torch.jit.script
 def neighborSearchFixed_cpp(
@@ -248,7 +277,7 @@ def neighborSearchFixed_cpp(
             # Wrap x positions around periodic boundaries
             x = torch.vstack([component if not periodic else torch.remainder(component - minD[i], maxD[i] - minD[i]) + minD[i] for i, (component, periodic) in enumerate(zip(referencePositions.mT, periodicity))]).mT
             # Build hash table and cell table
-            sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap(x, minD, maxD, periodicity, hMax, hashMapLength)
+            sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap_compat(x, minD, maxD, periodicity, hMax, hashMapLength)
             sortedSupports = None 
-        (i,j), ni, nj = searchNeighborsFixed_cpp(queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
-        return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
+        (i,j) = searchNeighborsFixed_cpp(queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+        return (i,j), sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex

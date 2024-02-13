@@ -4,7 +4,7 @@ from torchCompactRadius.hashTable import buildCompactHashMap
 from torchCompactRadius.pythonSearch import findNeighbors
 from torchCompactRadius.cellTable import computeGridSupport
 from torch.profiler import record_function
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import torch
 
 
@@ -59,12 +59,7 @@ def searchNeighborsDynamicPython(
     qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : List[bool], mode : str = 'symmetric', searchRadius : int = 1):
     with record_function("neighborSearch - buildNeighborListFixed"):
         i,j = buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
-    with record_function("neighborSearch - countUniqueEntries"):        
-        # compute number of neighbors per particle for convenience
-        ii, ni = countUniqueEntries(i, queryPositions)
-        jj, nj = countUniqueEntries(j, sortedPositions)
-
-    return (i,j), ni, nj
+    return (i,j)
 
 
 @torch.jit.script
@@ -118,6 +113,6 @@ def neighborSearchDynamic(
         # with record_function("neighborSearch - buildNeighborOffsetList"):
             # Build neighbor list by first building a list of offsets and then the actual neighbor list
             # neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetList(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode)
-    (i,j), ni, nj = searchNeighborsDynamicPython(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+    (i,j) = searchNeighborsDynamicPython(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
 
-    return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
+    return (i,j), sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex

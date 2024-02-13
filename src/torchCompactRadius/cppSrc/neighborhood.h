@@ -2,78 +2,6 @@
 #include "common.h"
 #include "hashing.h"
 
-// Simple enum to specify the support mode
-enum struct supportMode{
-    symmetric, gather, scatter
-};
-
-// Simple helper math functions
-/**
- * Calculates an integer power of a given base and exponent.
- * 
- * @param base The base.
- * @param exponent The exponent.
- * @return The calculated power.
-*/
-hostDeviceInline constexpr int32_t power(const int32_t base, const int32_t exponent) {
-    int32_t result = 1;
-    for (int32_t i = 0; i < exponent; i++) {
-        result *= base;
-    }
-    return result;
-}
-/**
- * Calculates the modulo of a given number n with respect to a given modulus m.
- * Works using python modulo semantics NOT C++ modulo semantics.
- * 
- * @param n The number.
- * @param m The modulus.
- * @return The calculated modulo.
- */
-hostDeviceInline constexpr auto pymod(const int32_t n, const int32_t m) {
-    return n >= 0 ? n % m : ((n % m) + m) % m;
-}
-/**
- * Calculates the modulo of a given number n with respect to a given modulus m.
- * Works using python modulo semantics NOT C++ modulo semantics.
- * 
- * @param n The number.
- * @param m The modulus.
- * @return The calculated modulo.
- */
-template<typename scalar_t>
-hostDeviceInline auto moduloOp(const scalar_t p, const scalar_t q, const scalar_t h){
-    return ((p - q + h / 2.0) - std::floor((p - q + h / 2.0) / h) * h) - h / 2.0;
-}
-
-/**
- * Calculates the distance between two points in a periodic domain.
- * 
- * @param x_i The first point.
- * @param x_j The second point.
- * @param minDomain The minimum domain bounds.
- * @param maxDomain The maximum domain bounds.
- * @param periodicity The periodicity flags.
- * @return The calculated distance.
- */
-template<std::size_t dim, typename scalar_t>
-hostDeviceInline auto modDistance(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<int32_t,1> periodicity){
-    scalar_t sum(0.0);
-    for(int32_t i = 0; i < dim; i++){
-        auto diff = periodicity[i] != 0 ? moduloOp(x_i[i], x_j[i], maxDomain[i] - minDomain[i]) : x_i[i] - x_j[i];
-        sum += diff * diff;
-    }
-    return std::sqrt(sum);
-}
-template<std::size_t dim, typename scalar_t>
-hostDeviceInline auto modDistance2(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<int32_t,1> periodicity){
-    scalar_t sum(0.0);
-    for(int32_t i = 0; i < dim; i++){
-        auto diff = periodicity[i] != 0 ? moduloOp(x_i[i], x_j[i], maxDomain[i] - minDomain[i]) : x_i[i] - x_j[i];
-        sum += diff * diff;
-    }
-    return sum;
-}
 
 /**
  * Calculates the linear index based on the given cell indices and cell counts.
@@ -107,8 +35,8 @@ hostDeviceInline auto linearIndexing(std::array<int32_t, dim> cellIndices, cptr_
 template<std::size_t dim>
 hostDeviceInline std::pair<int32_t, int32_t> queryHashMap(
     std::array<int32_t, dim> cellID,
-    cptr_t<int64_t, 2> hashTable, int32_t hashMapLength,
-    cptr_t<int64_t, 2> cellTable,
+    cptr_t<int32_t, 2> hashTable, int32_t hashMapLength,
+    cptr_t<int32_t, 2> cellTable,
     cptr_t<int32_t, 1> numCells) {
     auto linearIndex = linearIndexing(cellID, numCells);
     auto hashedIndex = hashIndexing<dim>(cellID, hashMapLength);
@@ -145,8 +73,8 @@ hostDeviceInline std::pair<int32_t, int32_t> queryHashMap(
 template<typename Func, std::size_t dim = 2>
 hostDeviceInline auto iterateOffsetCells(
     std::array<int32_t, dim> centralCell, ptr_t<int32_t, 2> cellOffsets, 
-    cptr_t<int64_t, 2> hashTable, int32_t hashMapLength, 
-    cptr_t<int64_t, 2> cellTable, cptr_t<int32_t, 1> numCells, cptr_t<int32_t,1> periodicity, Func&& queryFunction){
+    cptr_t<int32_t, 2> hashTable, int32_t hashMapLength, 
+    cptr_t<int32_t, 2> cellTable, cptr_t<int32_t, 1> numCells, cptr_t<bool,1> periodicity, Func&& queryFunction){
     auto nOffsets = cellOffsets.size(0);
     // auto dim = centralCell.size(0);
 
@@ -156,7 +84,7 @@ hostDeviceInline auto iterateOffsetCells(
         // auto offsetCell = torch::zeros({centralCell.size(0)}, defaultOptions.dtype(torch::kInt32));
 
         for(int32_t d = 0; d < dim; ++d){
-            offsetCell[d] = periodicity[d] != 0 ? pymod(centralCell[d] + offset[d],  numCells[d]) : centralCell[d] + offset[d];
+            offsetCell[d] = periodicity[d] ? pymod(centralCell[d] + offset[d],  numCells[d]) : centralCell[d] + offset[d];
         }
         auto queried = queryHashMap(offsetCell, hashTable, hashMapLength, cellTable, numCells);
         if(queried.first != -1){

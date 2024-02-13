@@ -36,13 +36,13 @@
 */
 template<std::size_t dim, typename scalar_t>
 hostDeviceInline auto countNeighborsForParticle(int32_t i,
-    ptr_t<int64_t, 1> neighborCounters, 
+    ptr_t<int32_t, 1> neighborCounters, 
     cptr_t<scalar_t, 2> queryPositions, cptr_t<scalar_t, 1> querySupport, int32_t searchRange, 
     cptr_t<scalar_t, 2> sortedPositions, cptr_t<scalar_t,1> sortedSupport,
-    cptr_t<int64_t, 2> hashTable, int32_t hashMapLength,
-    cptr_t<int64_t, 2> cellTable, cptr_t<int32_t,1> numCellsVec, 
+    cptr_t<int32_t, 2> hashTable, int32_t hashMapLength,
+    cptr_t<int32_t, 2> cellTable, cptr_t<int32_t,1> numCellsVec, 
     cptr_t<int32_t, 2> offsets,
-    scalar_t hCell, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<int32_t,1> periodicity,
+    scalar_t hCell, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<bool,1> periodicity,
     supportMode searchMode){
         auto xi = queryPositions[i];
     // auto dim = xi.size(0);
@@ -73,12 +73,12 @@ hostDeviceInline auto countNeighborsForParticle(int32_t i,
     
 template<std::size_t dim, typename scalar_t>
 hostDeviceInline auto buildNeighborhood(int32_t i,
-                       cptr_t<int64_t, 1> neighborOffsets, ptr_t<int64_t, 1> neighborList_i, ptr_t<int64_t, 1> neighborList_j,
+                       cptr_t<int32_t, 1> neighborOffsets, ptr_t<int64_t, 1> neighborList_i, ptr_t<int64_t, 1> neighborList_j,
                        cptr_t<scalar_t, 2> queryPositions, cptr_t<scalar_t, 1> querySupport, int32_t searchRange,
                        cptr_t<scalar_t, 2> sortedPositions, cptr_t<scalar_t, 1> sortedSupport,
-                       cptr_t<int64_t, 2> hashTable, int64_t hashMapLength,
-                       cptr_t<int64_t, 2> cellTable, cptr_t<int32_t, 1> numCells,
-                       cptr_t<int32_t, 2> offsets, scalar_t hCell, cptr_t<scalar_t, 1> minDomain, cptr_t<scalar_t, 1> maxDomain, cptr_t<int32_t, 1> periodicity,
+                       cptr_t<int32_t, 2> hashTable, int32_t hashMapLength,
+                       cptr_t<int32_t, 2> cellTable, cptr_t<int32_t, 1> numCells,
+                       cptr_t<int32_t, 2> offsets, scalar_t hCell, cptr_t<scalar_t, 1> minDomain, cptr_t<scalar_t, 1> maxDomain, cptr_t<bool, 1> periodicity,
                        supportMode searchMode) {
     auto nQuery = queryPositions.size(0);
     // auto dim = queryPositions.size(1);

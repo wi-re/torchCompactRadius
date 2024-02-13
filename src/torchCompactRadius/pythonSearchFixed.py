@@ -4,7 +4,7 @@ from torchCompactRadius.hashTable import buildCompactHashMap
 from torchCompactRadius.pythonSearch import findNeighbors
 from torchCompactRadius.cellTable import computeGridSupport
 from torch.profiler import record_function
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import torch
 
 
@@ -172,12 +172,7 @@ def searchNeighborsFixedPython(
         neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetListFixed(queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
     with record_function("neighborSearch - buildNeighborListFixed"):
         i,j = buildNeighborListFixedFixed(neighborListLength, sortIndex, queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, neighborCounter, neighborOffsets, mode, searchRadius)
-    with record_function("neighborSearch - countUniqueEntries"):        
-        # compute number of neighbors per particle for convenience
-        ii, ni = countUniqueEntries(i, queryPositions)
-        jj, nj = countUniqueEntries(j, sortedPositions)
-
-    return (i,j), ni, nj
+    return (i,j)
 
 @torch.jit.script
 def neighborSearchFixed(
@@ -228,7 +223,7 @@ def neighborSearchFixed(
             sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap(x, minD, maxD, periodicity, hMax, hashMapLength)
 
 
-    (i,j), ni, nj = searchNeighborsFixedPython(queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+    (i,j) = searchNeighborsFixedPython(queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
 
-    return (i,j), ni, nj, sortedPositions, None, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
+    return (i,j), sortedPositions, None, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
   

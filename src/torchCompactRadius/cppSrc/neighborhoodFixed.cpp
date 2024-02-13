@@ -10,7 +10,7 @@
  * @param t The input tensor.
  * @param name The name of the accessor.
  * @param cuda Flag indicating whether the tensor should be on CUDA.
- * @param verbose Flag indicating whether to print64_t verbose information.
+ * @param verbose Flag indicating whether to print32_t verbose information.
  * @param optional Flag indicating whether the tensor is optional.
  * @return The packed accessor for the tensor.
  * @throws std::runtime_error If the tensor is not defined (and not optional), not contiguous, not on CUDA (if cuda=true), or has an incorrect dimension.
@@ -60,7 +60,7 @@ auto getAccessor(const torch::Tensor &t, const std::string &name, bool cuda = fa
  * @param minDomain_ The minimum domain bounds.
  * @param periodicity_ The periodicity flags.
  * @param mode The support mode.
- * @param verbose Flag indicating whether to print64_t verbose information.
+ * @param verbose Flag indicating whether to print32_t verbose information.
  * @return The number of neighbors for each particle in the query set.
  */
 template<typename float_t = float>
@@ -87,20 +87,21 @@ torch::Tensor countNeighborsFixed_t(
     int32_t nSorted = sortedPositions.size(0);
     
     // Check if the datastructure tensors are defined and contiguous and have the correct dimensions
-    auto hashTable = getAccessor<int64_t, 2>(hashTable_, "hashTable", useCuda, verbose);
-    auto numCells = getAccessor<int64_t, 1>(numCells_, "numCells", useCuda, verbose);
-    auto cellTable = getAccessor<int64_t, 2>(cellTable_, "cellTable", useCuda, verbose);
+    auto hashTable = getAccessor<int32_t, 2>(hashTable_, "hashTable", useCuda, verbose);
+    auto numCells = getAccessor<int32_t, 1>(numCells_, "numCells", useCuda, verbose);
+    auto cellTable = getAccessor<int32_t, 2>(cellTable_, "cellTable", useCuda, verbose);
     auto qMin = getAccessor<float_t, 1>(qMin_, "qMin", useCuda, verbose);
     auto maxDomain = getAccessor<float_t, 1>(maxDomain_, "maxDomain", useCuda, verbose);
     auto minDomain = getAccessor<float_t, 1>(minDomain_, "minDomain", useCuda, verbose);
 
-    auto periodicBoolHost = periodicity_.to(at::kCPU).to(at::kBool);
-    auto periodicityBool = getAccessor<bool, 1>(periodicBoolHost, "periodicity", false, verbose);
-    auto periodicTensor = torch::zeros({dim}, torch::TensorOptions().dtype(torch::kInt32));
-    for (int32_t d = 0; d < dim; d++)
-        periodicTensor[d] = periodicityBool[d] ? 1 : 0;
-    periodicTensor = periodicTensor.to(queryPositions_.device());
-    auto periodicity = periodicTensor.packed_accessor32<int32_t,1, traits>();
+
+    // auto periodicBoolHost = periodicity_.to(at::kCPU).to(at::kBool);
+    // auto periodicityBool = getAccessor<bool, 1>(periodicBoolHost, "periodicity", false, verbose);
+    // auto periodicTensor = torch::zeros({dim}, torch::TensorOptions().dtype(torch::kBool));
+    // for (int32_t d = 0; d < dim; d++)
+    //     periodicTensor[d] = periodicityBool[d] ? 1 : 0;
+    // periodicTensor = periodicTensor.to(queryPositions_.device());
+    auto periodicity = periodicity_.packed_accessor32<bool, 1, traits>();
 
     // Output input state to console for debugging, enable via verbose flag
     if (verbose) {
@@ -126,7 +127,7 @@ torch::Tensor countNeighborsFixed_t(
         std::cout << "\tqMin: " << qMin.size(0) << std::endl;
         std::cout << "\tmaxDomain: " << maxDomain.size(0) << std::endl;
         std::cout << "\tminDomain: " << minDomain.size(0) << std::endl;
-        std::cout << "\tperiodicity: " << periodicity.size(0) << std::endl;
+        // std::cout << "\tperiodicity: " << periodicity.size(0) << std::endl;
 
         std::cout << "\n";
     }
@@ -134,22 +135,32 @@ torch::Tensor countNeighborsFixed_t(
     auto defaultOptions = at::TensorOptions().device(queryPositions_.device());
     auto hostOptions = at::TensorOptions();
 
+    auto offsetCount = power(1 + 2 * searchRange, dim);
+    static torch::Tensor t = torch::zeros({1, 1}, hostOptions.dtype(torch::kInt32));
+    if(
+        t.size(0) != offsetCount ||
+        t.size(1) != dim ||
+        t.device() != queryPositions_.device()
+    ){// recompute offsets
     // Create the cell offsets on CPU and move them to the device afterwards to avoid overhead
-    auto offsets = torch::zeros({power(1 + 2 * searchRange, dim), dim}, hostOptions.dtype(torch::kInt32));
-    for (int32_t d = 0; d < dim; d++){
-        int32_t itr = -searchRange;
-        int32_t ctr = 0;
-        for(int32_t o = 0; o < offsets.size(0); ++o){
-            int32_t c = o % power(1 + 2 * searchRange, d);
-            if(c == 0 && ctr > 0)
-                itr++;
-            if(itr > searchRange)
-                itr = -searchRange;
-            offsets[o][dim - d - 1] = itr;
-            ctr++;
+        auto offsets = torch::zeros({power(1 + 2 * searchRange, dim), dim}, hostOptions.dtype(torch::kInt32));
+        for (int32_t d = 0; d < dim; d++){
+            int32_t itr = -searchRange;
+            int32_t ctr = 0;
+            for(int32_t o = 0; o < offsets.size(0); ++o){
+                int32_t c = o % power(1 + 2 * searchRange, d);
+                if(c == 0 && ctr > 0)
+                    itr++;
+                if(itr > searchRange)
+                    itr = -searchRange;
+                offsets[o][dim - d - 1] = itr;
+                ctr++;
+            }
         }
+        offsets = offsets.to(queryPositions_.device());
+        t = offsets;
     }
-    offsets = offsets.to(queryPositions_.device());
+    auto offsets = t;
     // Output the cell offsets to the console for debugging, enable via verbose flag
     if(verbose){
         std::cout << "Cell Offsets:" << std::endl;
@@ -162,16 +173,16 @@ torch::Tensor countNeighborsFixed_t(
         }
     }
     // Allocate output tensor for the neighbor counters
-    auto neighborCounters = torch::zeros({nQuery}, defaultOptions.dtype(torch::kInt64));
+    auto neighborCounters = torch::zeros({nQuery}, defaultOptions.dtype(torch::kInt32));
 
     // Create the accessors for the input tensors as packed accessors
     auto queryPositionAccessor = queryPositions_.packed_accessor32<float_t, 2, traits>();
     auto referencePositionAccessor = sortedPositions_.packed_accessor32<float_t, 2, traits>();
-    auto hashTableAccessor = hashTable_.packed_accessor32<int64_t, 2, traits>();
-    auto celTableAccessor = cellTable_.packed_accessor32<int64_t, 2, traits>();
+    auto hashTableAccessor = hashTable_.packed_accessor32<int32_t, 2, traits>();
+    auto celTableAccessor = cellTable_.packed_accessor32<int32_t, 2, traits>();
     auto offsetAccessor = offsets.packed_accessor32<int32_t, 2, traits>();
     auto numCellsAccessor = numCells_.packed_accessor32<int32_t, 1, traits>();
-    auto neighborCounterAccessor = neighborCounters.packed_accessor32<int64_t, 1, traits>();
+    auto neighborCounterAccessor = neighborCounters.packed_accessor32<int32_t, 1, traits>();
 
     // Loop over all query particles and count the number of neighbors per particle
     if(queryPositions_.is_cuda()){
@@ -184,7 +195,7 @@ torch::Tensor countNeighborsFixed_t(
                     hashTable_, hashMapLength, 
                     cellTable_, numCells_,
                     offsets,
-                    hCell, minDomain_, maxDomain_, periodicTensor);
+                    hCell, minDomain_, maxDomain_, periodicity_);
             #endif
     }else{
         at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
@@ -236,15 +247,15 @@ torch::Tensor countNeighborsFixed_t(
  * @param minDomain_ The minimum domain bounds.
  * @param periodicity_ The periodicity flags.
  * @param mode The support mode.
- * @param verbose Flag indicating whether to print64_t verbose information.
+ * @param verbose Flag indicating whether to print32_t verbose information.
  * @return The neighbor list as a pair of tensors
  */
 template<typename float_t = float>
 std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
-    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int64_t neighborListLength,
-    torch::Tensor queryPositions_, int64_t searchRange, 
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int32_t neighborListLength,
+    torch::Tensor queryPositions_, int32_t searchRange, 
     torch::Tensor sortedPositions_, float_t support,
-    torch::Tensor hashTable_, int64_t hashMapLength, 
+    torch::Tensor hashTable_, int32_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, float_t hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false){
@@ -258,9 +269,9 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
     auto sortedPositions = getAccessor<float_t, 2>(sortedPositions_, "sortedPositions", useCuda, verbose);
 
     // Check if the datastructure tensors are defined and contiguous and have the correct dimensions
-    auto hashTable = getAccessor<int64_t, 2>(hashTable_, "hashTable", useCuda, verbose);
+    auto hashTable = getAccessor<int32_t, 2>(hashTable_, "hashTable", useCuda, verbose);
     auto numCells = getAccessor<int32_t, 1>(numCells_, "numCells", useCuda, verbose);
-    auto cellTable = getAccessor<int64_t, 2>(cellTable_, "cellTable", useCuda, verbose);
+    auto cellTable = getAccessor<int32_t, 2>(cellTable_, "cellTable", useCuda, verbose);
     auto qMin = getAccessor<float_t, 1>(qMin_, "qMin", useCuda, verbose);
     auto maxDomain = getAccessor<float_t, 1>(maxDomain_, "maxDomain", useCuda, verbose);
     auto minDomain = getAccessor<float_t, 1>(minDomain_, "minDomain", useCuda, verbose);
@@ -268,8 +279,8 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
 
 
     // Check if the neighbor counter tensor is defined and contiguous
-    auto neighborCounter = getAccessor<int64_t, 1>(neighborCounter_, "neighborCounter", useCuda, verbose);
-    auto neighborOffsets = getAccessor<int64_t, 1>(neighborOffsets_, "neighborOffsets", useCuda, verbose);
+    auto neighborCounter = getAccessor<int32_t, 1>(neighborCounter_, "neighborCounter", useCuda, verbose);
+    auto neighborOffsets = getAccessor<int32_t, 1>(neighborOffsets_, "neighborOffsets", useCuda, verbose);
 
     // Get the dimensions of the input tensors
     int32_t nQuery = queryPositions.size(0);
@@ -277,13 +288,13 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
     int32_t nSorted = sortedPositions.size(0);
 
     
-    auto periodicBoolHost = periodicity_.to(at::kCPU).to(at::kBool);
-    auto periodicityBool = getAccessor<bool, 1>(periodicBoolHost, "periodicity", false, verbose);
-    auto periodicTensor = torch::zeros({dim}, torch::TensorOptions().dtype(torch::kInt32));
-    for (int32_t d = 0; d < dim; d++)
-        periodicTensor[d] = periodicityBool[d] ? 1 : 0;
-    periodicTensor = periodicTensor.to(queryPositions_.device());
-    auto periodicity = periodicTensor.packed_accessor32<int32_t,1, traits>();
+    // auto periodicBoolHost = periodicity_.to(at::kCPU).to(at::kBool);
+    // auto periodicityBool = getAccessor<bool, 1>(periodicBoolHost, "periodicity", false, verbose);
+    // auto periodicTensor = torch::zeros({dim}, torch::TensorOptions().dtype(torch::kBool));
+    // for (int32_t d = 0; d < dim; d++)
+    //     periodicTensor[d] = periodicityBool[d] ? 1 : 0;
+    // periodicTensor = periodicTensor.to(queryPositions_.device());
+    auto periodicity = periodicity_.packed_accessor32<bool, 1, traits>();
 
     // Output input state to console for debugging, enable via verbose flag
     if (verbose) {
@@ -310,7 +321,7 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
         std::cout << "\tqMin: " << qMin.size(0) << std::endl;
         std::cout << "\tmaxDomain: " << maxDomain.size(0) << std::endl;
         std::cout << "\tminDomain: " << minDomain.size(0) << std::endl;
-        std::cout << "\tperiodicity: " << periodicityBool.size(0) << std::endl;
+        // std::cout << "\tperiodicity: " << periodicityBool.size(0) << std::endl;
 
         std::cout << "\nOffsets Tensors:" << std::endl;
         std::cout << "\tneighborCounter: " << neighborCounter.size(0) << std::endl;
@@ -324,21 +335,32 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
     auto hostOptions = at::TensorOptions();
 
     // Create the cell offsets on CPU and move them to the device afterwards to avoid overhead
-    auto offsets = torch::zeros({power(1 + 2 * searchRange, dim), dim}, hostOptions.dtype(torch::kInt32));
-    for (int32_t d = 0; d < dim; d++){
-        int32_t itr = -searchRange;
-        int32_t ctr = 0;
-        for(int32_t o = 0; o < offsets.size(0); ++o){
-            int32_t c = o % power(1 + 2 * searchRange, d);
-            if(c == 0 && ctr > 0)
-                itr++;
-            if(itr > searchRange)
-                itr = -searchRange;
-            offsets[o][dim - d - 1] = itr;
-            ctr++;
+    auto offsetCount = power(1 + 2 * searchRange, dim);
+    static torch::Tensor t = torch::zeros({1, 1}, hostOptions.dtype(torch::kInt32));
+    if(
+        t.size(0) != offsetCount ||
+        t.size(1) != dim ||
+        t.device() != queryPositions_.device()
+    ){// recompute offsets
+    // Create the cell offsets on CPU and move them to the device afterwards to avoid overhead
+        auto offsets = torch::zeros({power(1 + 2 * searchRange, dim), dim}, hostOptions.dtype(torch::kInt32));
+        for (int32_t d = 0; d < dim; d++){
+            int32_t itr = -searchRange;
+            int32_t ctr = 0;
+            for(int32_t o = 0; o < offsets.size(0); ++o){
+                int32_t c = o % power(1 + 2 * searchRange, d);
+                if(c == 0 && ctr > 0)
+                    itr++;
+                if(itr > searchRange)
+                    itr = -searchRange;
+                offsets[o][dim - d - 1] = itr;
+                ctr++;
+            }
         }
+        offsets = offsets.to(queryPositions_.device());
+        t = offsets;
     }
-    offsets = offsets.to(queryPositions_.device());
+    auto offsets = t;
     // Output the cell offsets to the console for debugging, enable via verbose flag
     if(verbose){
         std::cout << "Cell Offsets:" << std::endl;
@@ -357,12 +379,12 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
 
     // Create the accessors for the input tensors as packed accessors
     auto referencePositionAccessor = sortedPositions_.packed_accessor32<float_t, 2, traits>();
-    auto hashTableAccessor = hashTable_.packed_accessor32<int64_t, 2, traits>();
-    auto cellTableAccessor = cellTable_.packed_accessor32<int64_t, 2, traits>();
+    auto hashTableAccessor = hashTable_.packed_accessor32<int32_t, 2, traits>();
+    auto cellTableAccessor = cellTable_.packed_accessor32<int32_t, 2, traits>();
     auto offsetAccessor = offsets.packed_accessor32<int32_t, 2, traits>();
     auto numCellsAccessor = numCells_.packed_accessor32<int32_t, 1, traits>();
-    auto neighborCounterAccessor = neighborCounter_.packed_accessor32<int64_t, 1, traits>();
-    auto neighborOffsetsAccessor = neighborOffsets_.packed_accessor32<int64_t, 1, traits>();
+    auto neighborCounterAccessor = neighborCounter_.packed_accessor32<int32_t, 1, traits>();
+    auto neighborOffsetsAccessor = neighborOffsets_.packed_accessor32<int32_t, 1, traits>();
 
     auto neighborList_iAccessor = neighborList_i.packed_accessor32<int64_t, 1, traits>();
     auto neighborList_jAccessor = neighborList_j.packed_accessor32<int64_t, 1, traits>();
@@ -381,7 +403,7 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed_t(
                     hashTable_, hashMapLength, 
                     cellTable_, numCells_,
                     offsets,
-                    hCell, minDomain_, maxDomain_, periodicTensor);
+                    hCell, minDomain_, maxDomain_, periodicity_);
         #endif
     }else{
         at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){

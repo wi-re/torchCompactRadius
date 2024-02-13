@@ -11,7 +11,7 @@ def neighborSearch(
         supports : Union[float, torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
         domain : Optional[Tuple[torch.Tensor, torch.Tensor]] = None, 
         periodicity : Optional[List[bool]] = None, 
-        hashMapLength : int = -1, mode : str = 'symmetric', variant: str = 'cpp', verbose: bool = False, searchRadius : int = 1):
+        hashMapLength : int = -1, mode : str = 'symmetric', variant: str = 'cpp', verbose: bool = False, searchRadius : int = 1) -> Tuple[Tuple[torch.Tensor, torch.Tensor], dict]:
     """
     Performs neighbor search based on the given parameters.
 
@@ -116,7 +116,7 @@ def neighborSearch(
     else:
         raise ValueError('variant must be either cpp, python or pythonDynamic')
     
-    (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex = neighborList
+    (i,j), sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex = neighborList
 
     neighborDict = {}
     neighborDict['mode'] = mode
@@ -141,14 +141,14 @@ def neighborSearch(
     neighborDict['minDomain'] = minD
     neighborDict['maxDomain'] = maxD
     
-    return (i, j), ni, nj, neighborDict
+    return (i, j), neighborDict
 
 
     
 def neighborSearchExisting(
         queryPositions : torch.Tensor,
         querySupports : Optional[Union[float, torch.Tensor]],
-        neighborDict, mode : str = 'symmetric', searchRadius : int = 1, variant: str = 'cpp', verbose : bool = False):
+        neighborDict, mode : str = 'symmetric', searchRadius : int = 1, variant: str = 'cpp', verbose : bool = False) -> Tuple[Tuple[torch.Tensor, torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
     """
     Perform a neighbor search using existing data.
 
@@ -223,3 +223,4 @@ def neighborSearchExisting(
     else:
         raise ValueError('variant must be either cpp, python or pythonDynamic')
     
+

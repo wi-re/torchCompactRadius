@@ -84,7 +84,7 @@ def build_cpp_standard_arg(cpp_standard):
     else:
         return "-std=" + cpp_standard
 
-def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None, verbose = False, additionalFlags = [""], openMP : bool = False, verboseCuda : bool = False, cpp_standard : str = "c++17", cuda_arch : Optional[int] = None):
+def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None, verbose = True, additionalFlags = [""], openMP : bool = False, verboseCuda : bool = False, cpp_standard : str = "c++17", cuda_arch : Optional[int] = None):
     """
     Compiles the given source files into a module.
 

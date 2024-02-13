@@ -3,7 +3,7 @@ from torchCompactRadius.util import queryCell, getDomainExtents, countUniqueEntr
 from torchCompactRadius.cellTable import computeGridSupport
 from torchCompactRadius.hashTable import buildCompactHashMap
 from torch.profiler import record_function
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import torch
 
 from itertools import product
@@ -279,17 +279,7 @@ def searchNeighborsPython(
         # if verbose:
         #     print('i:', i.shape, i)
         #     print('j:', j.shape, j)
-    with record_function("neighborSearch - countUniqueEntries"):        
-        # compute number of neighbors per particle for convenience
-        ii, ni = countUniqueEntries(i, queryPositions)
-        jj, nj = countUniqueEntries(j, sortedPositions)
-        # if verbose:
-        #     print('ii:', ii.shape, ii)
-        #     print('ni:', ni.shape, ni)
-        #     print('jj:', jj.shape, jj)
-        #     print('nj:', nj.shape, nj)
-
-    return (i,j), ni, nj
+    return (i,j)
 
 @torch.jit.script
 def neighborSearchPython(
@@ -374,6 +364,6 @@ def neighborSearchPython(
             #     print('numCells:', numCells)
             #     print('sortIndex:', sortIndex.shape, sortIndex)
             
-        (i,j), ni, nj = searchNeighborsPython(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+        (i,j) = searchNeighborsPython(queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
 
-        return (i,j), ni, nj, sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
+        return (i,j), sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex
