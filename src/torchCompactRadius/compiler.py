@@ -84,7 +84,10 @@ def build_cpp_standard_arg(cpp_standard):
     else:
         return "-std=" + cpp_standard
 
-def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None, verbose = True, additionalFlags = [""], openMP : bool = False, verboseCuda : bool = False, cpp_standard : str = "c++17", cuda_arch : Optional[int] = None):
+def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None, 
+                verbose = True, additionalFlags = [""], 
+                openMP : bool = False, tbb : bool = False,
+                verboseCuda : bool = False, cpp_standard : str = "c++17", cuda_arch : Optional[int] = None):
     """
     Compiles the given source files into a module.
 
@@ -120,13 +123,17 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
         cudaFlags.append('-DCUDA_VERSION')
         hostFlags.append('-DCUDA_VERSION')
     
-    ldFlags = ['fopenmp'] if openMP else []
+    # ldFlags = ['openmp'] if openMP else []
+    ldFlags = []
     if verboseCuda:
         cudaFlags.append('--ptxas-options="-v "')
 
     if verbose:
         print('hostFlags:', hostFlags)
         print('cudaFlags:', cudaFlags)
+    if tbb:
+        cudaFlags.append('-DTBB_VERSION')
+        hostFlags.append('-DTBB_VERSION')
 
     if openMP:
         # clang under macos does not support fopenmp so check for existence of clang via homebrew
@@ -143,6 +150,9 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             os.environ['CXX'] = '/opt/homebrew/opt/llvm/bin/clang'
             nvcc = subprocess.check_output(
                 ['which', 'clang'], env = dict(PATH='%s:%s/bin' % (os.environ['PATH'], sys.exec_prefix))).decode().rstrip('\r\n')
+        
+        cudaFlags.append('-DOMP_VERSION')
+        hostFlags.append('-DOMP_VERSION')
     if directory is None:
         directory = Path(__file__).resolve().parent
     if verbose:

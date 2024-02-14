@@ -9,3 +9,17 @@ The main usage of this code is similar to the radius search in torch_cluster's r
 
 
 ## Performance
+
+Compute Performance on GPUs for small scale problems:
+
+3090 | A5000
+---|---
+![](figures/Benchmark_3090.png) | ![](figures/Benchmark_A5000.png)
+
+CPU perforamnce:
+
+![](figures/Benchmark_CPU.png)
+
+Overall GPU based performance for larger scale problems:
+
+![](figures/Overall.png)

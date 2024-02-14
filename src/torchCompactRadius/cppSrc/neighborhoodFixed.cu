@@ -29,8 +29,9 @@ __global__ void countNeighborsForParticleCudaFixedDispatcher(int32_t numParticle
     }
 }
 
+#ifdef CUDA_VERSION
 #include <cuda_runtime.h>
-
+#endif
 template<typename Func, typename... Ts>
 void launchKernel(Func kernel, int32_t numParticles, Ts&&... args) {
     int32_t blockSize;  // Number of threads per block

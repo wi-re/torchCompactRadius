@@ -140,8 +140,13 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
     auto jPtr = neighborList_j.data_ptr<int64_t>();
 
     if(!useCuda){
-    at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
-        for(int32_t i = start; i < end; ++i){
+#ifdef OMP_VERSION
+#pragma omp parallel for
+            for(int32_t i = 0; i < nQuery; ++i){
+#else
+        at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
+            for(int32_t i = start; i < end; ++i){
+#endif
             auto curOffset = i > 0 ? neighborOffsetsPtr[i - 1] : 0;
             auto counter = 0;
             scalar_t* xi = queryPositionsPtr + i * dim;
@@ -156,8 +161,10 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
                     counter++;
             }
         }
-    }}
-    );
+    }
+#ifndef OMP_VERSION
+        });
+#endif  
     } else {
         #ifndef CUDA_VERSION
             throw std::runtime_error("CUDA support is not available in this build");
@@ -204,8 +211,13 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmallFixed(torch::Tensor q
     int32_t* neighborCountersPtr = neighborCounters.data_ptr<int32_t>();
     auto h2 = support * support;
     if(!useCuda){
+#ifdef OMP_VERSION
+#pragma omp parallel for
+            for(int32_t i = 0; i < nQuery; ++i){
+#else
         at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
             for(int32_t i = start; i < end; ++i){
+#endif
                 auto counter = 0;
                 scalar_t* xi = queryPositionsPtr + i * dim;
                 for(int32_t j = 0; j < nReference; ++j){
@@ -216,8 +228,10 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmallFixed(torch::Tensor q
                 }
                 neighborCountersPtr[i] = counter;
             }
-        }}
-        );
+        }
+#ifndef OMP_VERSION
+        });
+#endif
     } else {
         
         #ifndef CUDA_VERSION
@@ -250,8 +264,13 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmallFixed(torch::Tensor q
     auto jPtr = neighborList_j.data_ptr<int64_t>();
 
     if(!useCuda){
-    at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
-        for(int32_t i = start; i < end; ++i){
+#ifdef OMP_VERSION
+#pragma omp parallel for
+            for(int32_t i = 0; i < nQuery; ++i){
+#else
+        at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
+            for(int32_t i = start; i < end; ++i){
+#endif
             auto curOffset = i > 0 ? neighborOffsetsPtr[i - 1] : 0;
             auto counter = 0;
             scalar_t* xi = queryPositionsPtr + i * dim;
@@ -264,8 +283,10 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmallFixed(torch::Tensor q
                     counter++;
             }
         }
-    }}
-    );
+    }
+#ifndef OMP_VERSION
+        });
+#endif
     } else {
         #ifndef CUDA_VERSION
             throw std::runtime_error("CUDA support is not available in this build");

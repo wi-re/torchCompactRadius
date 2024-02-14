@@ -31,7 +31,10 @@ __global__ void countNeighborsForParticleCudaDispatcher(int32_t numParticles,
     }
 }
 
+// #ifdef CUUDA_VERSION
+#ifdef CUDA_VERSION
 #include <cuda_runtime.h>
+
 void cuda_error_check() {
     cudaError_t error = cudaGetLastError();
     if (error != cudaSuccess) {
@@ -42,6 +45,7 @@ void cuda_error_check() {
         throw std::runtime_error(cudaGetErrorString(error));
     }
 }
+#endif
 
 template<typename Func, typename... Ts>
 void launchKernel(Func kernel, int32_t numParticles, Ts&&... args) {

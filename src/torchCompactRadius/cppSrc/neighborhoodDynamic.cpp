@@ -213,8 +213,13 @@ torch::Tensor countNeighbors_t(
                     hCell, minDomain_, maxDomain_, periodicity_, searchMode);
             #endif
     }else{
+#ifdef OMP_VERSION
+#pragma omp parallel for
+            for(int32_t i = 0; i < nQuery; ++i){
+#else
         at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
             for(int32_t i = start; i < end; ++i){
+#endif
 #define args i, neighborCounterAccessor,\
                     queryPositionAccessor, querySupportAccessor, searchRange, \
                     referencePositionAccessor, referenceSupportAccessor,\
@@ -232,7 +237,9 @@ torch::Tensor countNeighbors_t(
                     throw std::runtime_error("Unsupported dimension: " + std::to_string(dim));
                 #undef args
             }
+#ifndef OMP_VERSION
         });
+#endif
     }
     // Return the neighbor counters
     return neighborCounters;
@@ -437,8 +444,13 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
                     hCell, minDomain_, maxDomain_, periodicity_, searchMode);
         #endif
     }else{
+#ifdef OMP_VERSION
+#pragma omp parallel for
+            for(int32_t i = 0; i < nQuery; ++i){
+#else
         at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end){
             for(int32_t i = start; i < end; ++i){
+#endif
                 #define args i, neighborOffsetsAccessor, neighborList_iAccessor, neighborList_jAccessor,\
                     queryPositions, querySupport, searchRange, \
                     sortedPositions, sortedSupport,\
@@ -457,7 +469,9 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
 
                 #undef args
                 }
-            });
+#ifndef OMP_VERSION
+        });
+#endif
     }
     return std::make_pair(neighborList_i, neighborList_j);
 }

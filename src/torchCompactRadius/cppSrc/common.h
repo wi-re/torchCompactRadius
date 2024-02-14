@@ -1,9 +1,19 @@
 #pragma once
+
+#ifdef __INTELLISENSE__
+#define OMP_VERSION
+#endif
+
 // #define _OPENMP
 #include <algorithm>
+#ifdef OMP_VERSION
+#include <omp.h>
+// #include <ATen/ParallelOpenMP.h>
+#endif
+#ifdef TBB_VERSION
+#include <ATen/ParallelNativeTBB.h>
+#endif
 #include <ATen/Parallel.h>
-#include <ATen/ParallelOpenMP.h>
-// #include <ATen/ParallelNativeTBB.h>
 #include <torch/extension.h>
 
 #include <vector>

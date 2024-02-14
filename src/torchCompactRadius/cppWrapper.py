@@ -8,7 +8,7 @@ neighborSearch_cpp = compileSourceFiles(
      'cppSrc/neighborhoodFixed.cpp', 'cppSrc/neighborhoodFixed.cu',
      'cppSrc/hashing.cpp', 'cppSrc/hashing.cu',
      'cppSrc/neighborhoodSmall.cpp', 'cppSrc/neighborhoodSmall.cu',
-     'cppSrc/cppWrapper.cpp'], module_name = 'neighborSearch', verbose = False, openMP = False, verboseCuda = False, cuda_arch = None)
+     'cppSrc/cppWrapper.cpp'], module_name = 'neighborSearch', verbose = False, openMP = True, verboseCuda = False, cuda_arch = None)
 
 countNeighbors_cpp = neighborSearch_cpp.countNeighbors
 buildNeighborList_cpp = neighborSearch_cpp.buildNeighborList
