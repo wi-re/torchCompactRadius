@@ -14,4 +14,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("computeHashIndices", &computeHashIndices, "Compute the Hash Indices (C++)");
 
   m.def("neighborSearchSmall", &neighborSearchSmall, "Neighbor Search (C++)");
+  m.def("neighborSearchSmallFixed", &neighborSearchSmallFixed, "Neighbor Search (C++) (fixed support radius)");
 }

@@ -29,33 +29,15 @@ __global__ void countNeighborsSmallKernel( int32_t* __restrict__ neighborCounter
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= nQuery) return;
 
-    // int32_t offset = 0;
-    // bool* periodicity = (bool*) array;
-    // offset += dim * sizeof(bool);
-    // float* maxDomain = (float*) (periodicity + offset);
-    // offset += dim * sizeof(float);
-    // float* minDomain = (float*) (maxDomain + offset);
-    // offset += dim * sizeof(float);
-
-    // if(threadIdx.x == 0){
-    //     for (int32_t i = 0; i < dim; i++){
-    //         periodicity[i] = periodicityPtr[i];
-    //         maxDomain[i] = maxDomainPtr[i];
-    //         minDomain[i] = minDomainPtr[i];
-    //     }
-    // }
-    // __syncthreads();
-
-
-    
     const float* __restrict__ queryPosition = queryPositionsPtr + idx * dim;
-    float querySupport = querySupportPtr[idx];
     int32_t neighborCounter = 0;
-    float h2 = querySupport * querySupport;
+    auto requires_hj = searchMode == supportMode::scatter || searchMode == supportMode::symmetric;
+    auto requires_hi = searchMode == supportMode::gather || searchMode == supportMode::symmetric;
+    float querySupport = requires_hi ? querySupportPtr[idx] : 0.f;
 
     for (int32_t j = 0; j < nReference; j++){
         const float* __restrict__  referencePosition = referencePositionsPtr + j * dim;
-        float referenceSupport = referenceSupportPtr[j];
+        float referenceSupport = requires_hj ? referenceSupportPtr[j] : 0.f;
         scalar_t dist = modDistancePtrCUDA<scalar_t, dim>(queryPosition, referencePosition, minDomainPtr, maxDomainPtr, periodicityPtr);
         // if(dist < h2){
             // neighborCounter++;
@@ -69,68 +51,6 @@ __global__ void countNeighborsSmallKernel( int32_t* __restrict__ neighborCounter
     neighborCounterPtr[idx] = neighborCounter;
 }
 
-
-
-
-__global__ void countNeighborsSmallKernelCached( int32_t* neighborCounterPtr,
-    float* queryPositionsPtr, float* querySupportPtr,
-    float* referencePositionsPtr, float* referenceSupportPtr,
-    float* maxDomainPtr, float* minDomainPtr, bool* periodicityPtr,
-    int32_t nQuery, int32_t nReference, int32_t dim, supportMode searchMode, int32_t cacheSize, int32_t globalOffset){
-    extern __shared__ char array[];
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= nQuery) return;
-
-    int32_t offset = 0;
-    bool* periodicity = (bool*) array;
-    offset += dim * sizeof(bool);
-    float* maxDomain = (float*) (periodicity + offset);
-    offset += dim * sizeof(float);
-    float* minDomain = (float*) (maxDomain + offset);
-    offset += dim * sizeof(float);
-
-    if(threadIdx.x == 0){
-        for (int32_t i = 0; i < dim; i++){
-            periodicity[i] = periodicityPtr[i];
-            maxDomain[i] = maxDomainPtr[i];
-            minDomain[i] = minDomainPtr[i];
-        }
-    }
-    __syncthreads();
-
-    float* referencePositionCache = (float*) (minDomain + offset);
-    offset += cacheSize * dim * sizeof(float);
-    float* referenceSupportCache = (float*) (referencePositionCache + offset);
-    offset += cacheSize * sizeof(float);
-
-    for(int32_t i = 0; i < dim; i++){
-        if (offset + threadIdx.x < nReference){
-            referencePositionCache[threadIdx.x * dim + i] = referencePositionsPtr[(globalOffset + threadIdx.x) * dim + i];
-            referenceSupportCache[threadIdx.x] = referenceSupportPtr[globalOffset + threadIdx.x];
-        }
-    }
-
-    float* queryPosition = queryPositionsPtr + idx * dim;
-    float querySupport = querySupportPtr[idx];
-    int32_t neighborCounter = neighborCounterPtr[idx];
-
-    for (int32_t j = 0; j < cacheSize; j++){
-        if (offset + j >= nReference) break;
-        float* referencePosition = referencePositionCache + j * dim;
-        float referenceSupport = referenceSupportCache[j];
-
-        scalar_t dist = modDistancePtr<scalar_t>(queryPosition, referencePosition, minDomainPtr, maxDomainPtr, periodicityPtr, dim);
-
-        if ((searchMode == supportMode::scatter && dist < referenceSupport) ||
-                (searchMode == supportMode::gather && dist < querySupport) ||
-                (searchMode == supportMode::symmetric && dist < (querySupport + referenceSupport) / 2.f)) {
-                neighborCounter++;
-                }
-    }
-    neighborCounterPtr[idx] = neighborCounter;
-}
-
-
 void countNeighborsSmallCUDA( int32_t* neighborCounterPtr,
     float* queryPositionsPtr, float* querySupportPtr,
     float* referencePositionsPtr, float* referenceSupportPtr,
@@ -140,18 +60,6 @@ void countNeighborsSmallCUDA( int32_t* neighborCounterPtr,
     int blocks = (nQuery + threads - 1) / threads;
 
     int32_t sharedMemorySize = dim * sizeof(bool) + 2 * dim * sizeof(float);
-    // int32_t cacheSize = 512;
-
-    // sharedMemorySize += cacheSize * sizeof(float) * dim;
-
-    // int32_t referenceSteps = (nReference + cacheSize - 1) / cacheSize;
-    // for(int32_t i = 0; i < referenceSteps; i++){
-    //     countNeighborsSmallKernelCached<<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr,
-    //         queryPositionsPtr, querySupportPtr,
-    //         referencePositionsPtr, referenceSupportPtr,
-    //         minDomainPtr, maxDomainPtr, periodicityPtr,
-    //         nQuery, nReference, dim, mode, cacheSize, i * cacheSize);
-    // }
     switch(dim){
         case 1: countNeighborsSmallKernel<1><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr,
             queryPositionsPtr, querySupportPtr,
@@ -173,53 +81,29 @@ void countNeighborsSmallCUDA( int32_t* neighborCounterPtr,
             break;
         
     }
-    // countNeighborsSmallKernel<<<blocks, threads>>>(neighborCounterPtr,
-    //     queryPositionsPtr, querySupportPtr,
-    //     referencePositionsPtr, referenceSupportPtr,
-    //     minDomainPtr, maxDomainPtr, periodicityPtr,
-    //     nQuery, nReference, dim, mode);
-    }
+}
 
 
-
-__global__ void neighborSearchSmallCUDAKernel( int32_t* neighborCounterPtr, int64_t* neighborList_iPtr, int64_t* neighborList_jPtr,
-    float* queryPositionsPtr, float* querySupportPtr,
-    float* referencePositionsPtr, float* referenceSupportPtr,
-    float* maxDomainPtr, float* minDomainPtr, bool* periodicityPtr,
-    int32_t nQuery, int32_t nReference, int32_t dim, supportMode searchMode){
-    extern __shared__ char array[];
+template<int32_t dim = 2>
+__global__ void neighborSearchSmallCUDAKernel( int32_t* __restrict__ neighborCounterPtr, int64_t* __restrict__ neighborList_iPtr, int64_t* __restrict__ neighborList_jPtr,
+    float* __restrict__ queryPositionsPtr, float* __restrict__ querySupportPtr,
+    float* __restrict__ referencePositionsPtr, float* __restrict__ referenceSupportPtr,
+    float* __restrict__ maxDomainPtr, float* __restrict__ minDomainPtr, bool* __restrict__ periodicityPtr,
+    int32_t nQuery, int32_t nReference, supportMode searchMode){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= nQuery) return;
-
-    // int32_t offset = 0;
-    // bool* periodicity = (bool*) array;
-    // offset += dim * sizeof(bool);
-    // float* maxDomain = (float*) (periodicity + offset);
-    // offset += dim * sizeof(float);
-    // float* minDomain = (float*) (maxDomain + offset);
-    // offset += dim * sizeof(float);
-
-    // if(threadIdx.x == 0){
-    //     for (int32_t i = 0; i < dim; i++){
-    //         periodicity[i] = periodicityPtr[i];
-    //         maxDomain[i] = maxDomainPtr[i];
-    //         minDomain[i] = minDomainPtr[i];
-    //     }
-    // }
-    // __syncthreads();
-
-
-
-    float* queryPosition = queryPositionsPtr + idx * dim;
-    float querySupport = querySupportPtr[idx];
-    int32_t neighborOffset = idx > 0 ? neighborCounterPtr[idx - 1] : 0;
+    
+    const float* __restrict__ queryPosition = queryPositionsPtr + idx * dim;
     int32_t neighborCounter = 0;
+    auto requires_hj = searchMode == supportMode::scatter || searchMode == supportMode::symmetric;
+    auto requires_hi = searchMode == supportMode::gather || searchMode == supportMode::symmetric;
+    float querySupport = requires_hi ? querySupportPtr[idx] : 0.f;
 
+    int32_t neighborOffset = idx > 0 ? neighborCounterPtr[idx - 1] : 0;
     for (int32_t j = 0; j < nReference; j++){
-        float* referencePosition = referencePositionsPtr + j * dim;
-        float referenceSupport = referenceSupportPtr[j];
-        scalar_t dist = modDistancePtr<scalar_t>(queryPosition, referencePosition, minDomainPtr, maxDomainPtr, periodicityPtr, dim);
-
+        const float* __restrict__  referencePosition = referencePositionsPtr + j * dim;
+        float referenceSupport = requires_hj ? referenceSupportPtr[j] : 0.f;
+        scalar_t dist = modDistancePtrCUDA<scalar_t, dim>(queryPosition, referencePosition, minDomainPtr, maxDomainPtr, periodicityPtr);
         if ((searchMode == supportMode::scatter && dist < referenceSupport) ||
                 (searchMode == supportMode::gather && dist < querySupport) ||
                 (searchMode == supportMode::symmetric && dist < (querySupport + referenceSupport) / 2.f)) {
@@ -228,12 +112,10 @@ __global__ void neighborSearchSmallCUDAKernel( int32_t* neighborCounterPtr, int6
                 neighborCounter++;
                 }
     }
-    // neighborCounterPtr[idx] = neighborCounter;
 }
 
-
 void neighborSearchSmallCUDA( 
-    int64_t* neighborList_iPtr, int64_t* neighborList_jPtr, int32_t* neighborCounterPtr,
+    int32_t* neighborCounterPtr, int64_t* neighborList_iPtr, int64_t* neighborList_jPtr, 
     float* queryPositionsPtr, float* querySupportPtr,
     float* referencePositionsPtr, float* referenceSupportPtr,
     float* minDomainPtr, float* maxDomainPtr, bool* periodicityPtr,
@@ -242,11 +124,142 @@ void neighborSearchSmallCUDA(
     int blocks = (nQuery + threads - 1) / threads;
 
     int32_t sharedMemorySize = dim * sizeof(bool) + 2 * dim * sizeof(float);
+    switch(dim){
+        case 1: neighborSearchSmallCUDAKernel<1><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr, neighborList_iPtr, neighborList_jPtr,
+            queryPositionsPtr, querySupportPtr,
+            referencePositionsPtr, referenceSupportPtr,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference, mode);
+            break;
+        case 2: neighborSearchSmallCUDAKernel<2><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr, neighborList_iPtr, neighborList_jPtr,
+            queryPositionsPtr, querySupportPtr,
+            referencePositionsPtr, referenceSupportPtr,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference, mode);
+            break;
+        case 3: neighborSearchSmallCUDAKernel<3><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr, neighborList_iPtr, neighborList_jPtr,
+            queryPositionsPtr, querySupportPtr,
+            referencePositionsPtr, referenceSupportPtr,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference, mode);
+            break;
+        
+    }
+}
 
-    neighborSearchSmallCUDAKernel<<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr, neighborList_iPtr, neighborList_jPtr,
-        queryPositionsPtr, querySupportPtr,
-        referencePositionsPtr, referenceSupportPtr,
-        minDomainPtr, maxDomainPtr, periodicityPtr,
-        nQuery, nReference, dim, mode);
 
+
+template<int32_t dim>
+__global__ void countNeighborsSmallFixedKernel( int32_t* __restrict__ neighborCounterPtr,
+    const float* __restrict__ queryPositionsPtr, 
+    const float* __restrict__ referencePositionsPtr, const float support,
+    const float* __restrict__ minDomainPtr, const float* __restrict__ maxDomainPtr, const bool* __restrict__ periodicityPtr,
+    int32_t nQuery, int32_t nReference){
+    extern __shared__ char array[];
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= nQuery) return;
+
+    const float* __restrict__ queryPosition = queryPositionsPtr + idx * dim;
+    int32_t neighborCounter = 0;
+    float h2 = support * support;
+
+    for (int32_t j = 0; j < nReference; j++){
+        const float* __restrict__  referencePosition = referencePositionsPtr + j * dim;
+        scalar_t dist = modDistancePtrCUDA2<scalar_t, dim>(queryPosition, referencePosition, minDomainPtr, maxDomainPtr, periodicityPtr);
+        if(dist < h2){
+            neighborCounter++;
+        }
+    }
+    neighborCounterPtr[idx] = neighborCounter;
+}
+
+void countNeighborsSmallFixedCUDA( int32_t* neighborCounterPtr,
+    float* queryPositionsPtr,
+    float* referencePositionsPtr, float support,
+    float* minDomainPtr, float* maxDomainPtr, bool* periodicityPtr,
+    int32_t nQuery, int32_t nReference, int32_t dim){
+    int threads = 512;
+    int blocks = (nQuery + threads - 1) / threads;
+
+    int32_t sharedMemorySize = dim * sizeof(bool) + 2 * dim * sizeof(float);
+    switch(dim){
+        case 1: countNeighborsSmallFixedKernel<1><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr,
+            queryPositionsPtr,
+            referencePositionsPtr, support,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference);
+            break;
+        case 2: countNeighborsSmallFixedKernel<2><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr,
+            queryPositionsPtr, 
+            referencePositionsPtr, support,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference);
+            break;
+        case 3: countNeighborsSmallFixedKernel<3><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr,
+            queryPositionsPtr, 
+            referencePositionsPtr, support,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference);
+            break;
+        
+    }
+}
+
+
+template<int32_t dim = 2>
+__global__ void neighborSearchSmallFixedCUDAKernel( int32_t* __restrict__ neighborCounterPtr, int64_t* __restrict__ neighborList_iPtr, int64_t* __restrict__ neighborList_jPtr,
+    float* __restrict__ queryPositionsPtr, 
+    float* __restrict__ referencePositionsPtr, float support,
+    float* __restrict__ maxDomainPtr, float* __restrict__ minDomainPtr, bool* __restrict__ periodicityPtr,
+    int32_t nQuery, int32_t nReference){
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= nQuery) return;
+    
+    const float* __restrict__ queryPosition = queryPositionsPtr + idx * dim;
+    int32_t neighborCounter = 0;
+    float h2 = support * support;
+
+    int32_t neighborOffset = idx > 0 ? neighborCounterPtr[idx - 1] : 0;
+    for (int32_t j = 0; j < nReference; j++){
+        const float* __restrict__  referencePosition = referencePositionsPtr + j * dim;
+        scalar_t dist = modDistancePtrCUDA2<scalar_t, dim>(queryPosition, referencePosition, minDomainPtr, maxDomainPtr, periodicityPtr);
+        if(dist < h2){
+                    neighborList_jPtr[neighborOffset + neighborCounter] = j;
+                    neighborList_iPtr[neighborOffset + neighborCounter] = idx;
+                neighborCounter++;
+                }
+    }
+}
+
+void neighborSearchSmallFixedCUDA( 
+    int32_t* neighborCounterPtr, int64_t* neighborList_iPtr, int64_t* neighborList_jPtr, 
+    float* queryPositionsPtr,
+    float* referencePositionsPtr, float support,
+    float* minDomainPtr, float* maxDomainPtr, bool* periodicityPtr,
+    int32_t nQuery, int32_t nReference, int32_t dim){
+    int threads = 512;
+    int blocks = (nQuery + threads - 1) / threads;
+
+    int32_t sharedMemorySize = dim * sizeof(bool) + 2 * dim * sizeof(float);
+    switch(dim){
+        case 1: neighborSearchSmallFixedCUDAKernel<1><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr, neighborList_iPtr, neighborList_jPtr,
+            queryPositionsPtr, 
+            referencePositionsPtr, support,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference);
+            break;
+        case 2: neighborSearchSmallFixedCUDAKernel<2><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr, neighborList_iPtr, neighborList_jPtr,
+            queryPositionsPtr, 
+            referencePositionsPtr, support,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference);
+            break;
+        case 3: neighborSearchSmallFixedCUDAKernel<3><<<blocks, threads, sharedMemorySize>>>(neighborCounterPtr, neighborList_iPtr, neighborList_jPtr,
+            queryPositionsPtr, 
+            referencePositionsPtr, support,
+            minDomainPtr, maxDomainPtr, periodicityPtr,
+            nQuery, nReference);
+            break;
+        
+    }
     }
