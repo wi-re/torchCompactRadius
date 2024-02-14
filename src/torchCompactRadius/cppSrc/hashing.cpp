@@ -14,7 +14,7 @@ torch::Tensor computeHashIndices_t(torch::Tensor cellIndices, uint32_t hashMapLe
         throw std::runtime_error("CUDA support is not available in this build");
     #else
         hashCellsCuda(hashIndices, cellIndices, hashMapLength);
-    #endif
+    #endif 
     } else {
         at::parallel_for(0, nQuery, 0, [&](int32_t start, int32_t end) {
             for (int32_t cellIdx = start; cellIdx < end; ++cellIdx) {

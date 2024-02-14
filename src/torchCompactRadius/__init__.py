@@ -1,2 +1,2 @@
-from .neighborhood import neighborSearch, neighborSearchExisting
+from .neighborhood import radiusSearch, neighborSearchExisting
 from .util import volumeToSupport

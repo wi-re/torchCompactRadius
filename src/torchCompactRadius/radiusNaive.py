@@ -17,11 +17,11 @@ def radiusNaive(x, y, hx, hy, periodic : Optional[List[bool]] = None, minDomain 
     
     indexI, indexJ = torch.meshgrid(torch.arange(x.shape[0]).to(x.device), torch.arange(y.shape[0]).to(y.device), indexing = 'xy')
     if mode == 'gather':        
-        gatherMatrix = hx.repeat(hy.shape[0],1)
+        gatherMatrix = hx.repeat(y.shape[0],1)
         adjacencyDense = distanceMatrix <= gatherMatrix
         # supports = gatherMatrix[adjacencyDense]
     elif mode == 'scatter':        
-        scatterMatrix = hy.repeat(hx.shape[0],1).mT
+        scatterMatrix = hy.repeat(x.shape[0],1).mT
         adjacencyDense = distanceMatrix <= scatterMatrix
         # supports = scatterMatrix[adjacencyDense]
     else:

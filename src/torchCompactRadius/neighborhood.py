@@ -224,3 +224,155 @@ def neighborSearchExisting(
         raise ValueError('variant must be either cpp, python or pythonDynamic')
     
 
+from typing import Union, Tuple, Optional, List
+
+
+from torchCompactRadius.cppWrapper import neighborSearchSmallFixed, neighborSearchSmall
+from torchCompactRadius.radiusNaive import radiusNaive, radiusNaiveFixed
+import numpy as np
+
+def radiusSearch( 
+        queryPositions : torch.Tensor,
+        referencePositions : Optional[torch.Tensor],
+        support : Union[float, torch.Tensor,Tuple[torch.Tensor, torch.Tensor]],
+        mode : str = 'gather',
+        domainMin : Optional[torch.Tensor] = None,
+        domainMax : Optional[torch.Tensor] = None,
+        periodicity : Optional[Union[bool, List[bool]]] = None,
+        hashMapLength : int = 4096,
+        algorithm: str = 'naive',
+        verbose: bool = False,
+        returnStructure : bool = False
+        ):
+    assert algorithm in ['naive', 'small', 'compact'], f'algorithm = {algorithm} not supported'
+    assert mode in ['symmetric', 'scatter', 'gather'], f'mode = {mode} not supported'
+    assert queryPositions.shape[1] == referencePositions.shape[1] if referencePositions is not None else True, f'queryPositions.shape[1] = {queryPositions.shape[1]} != referencePositions.shape[1] = {referencePositions.shape[1]}'
+    assert hashMapLength > 0, f'hashMapLength = {hashMapLength} <= 0'
+    assert len(periodicity) == queryPositions.shape[1] if isinstance(periodicity, list) else True, f'len(periodicity) = {len(periodicity)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+    assert domainMin.shape[0] == queryPositions.shape[1] if domainMin is not None else True, f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+    assert domainMax.shape[0] == queryPositions.shape[1] if domainMax is not None else True, f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+    assert isinstance(support, float) or support.shape[0] == queryPositions.shape[0] if isinstance(support, torch.Tensor) else True, f'support.shape[0] = {support.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+    assert support[0].shape[0] == queryPositions.shape[0] if isinstance(support, tuple) else True, f'support[0].shape[0] = {support[0].shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+    assert support[1].shape[0] == referencePositions.shape[0] if isinstance(support, tuple) else True, f'support[1].shape[0] = {support[1].shape[0]} != referencePositions.shape[0] = {referencePositions.shape[0]}'
+
+
+
+    if referencePositions is None:
+        referencePositions = queryPositions
+
+    if isinstance(support, float):
+        supportRadius = support
+        querySupport = None
+        referenceSupport = None
+    elif isinstance(support, torch.Tensor):
+        supportRadius = None
+        querySupport = support
+        if mode == 'gather':
+            referenceSupport = torch.zeros(referencePositions.shape[0], device = referencePositions.device)
+        assert mode == 'gather', f'mode = {mode} != gather'
+        assert querySupport.shape[0] == queryPositions.shape[0], f'querySupport.shape[0] = {querySupport.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+    elif isinstance(support, tuple):
+        supportRadius = None
+        querySupport = support[0]
+        referenceSupport = support[1]
+        assert querySupport.shape[0] == queryPositions.shape[0], f'querySupport.shape[0] = {querySupport.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+        assert referenceSupport.shape[0] == referencePositions.shape[0], f'referenceSupport.shape[0] = {referenceSupport.shape[0]} != referencePositions.shape[0] = {referencePositions.shape[0]}'
+    if periodicity is not None:
+        if isinstance(periodicity, bool):
+            periodicTensor = [periodicity] * queryPositions.shape[1]
+            if periodicity:
+                assert domainMin is not None, f'domainMin = {domainMin} is None'
+                assert domainMax is not None, f'domainMax = {domainMax} is None'
+                assert domainMin.shape[0] == queryPositions.shape[1], f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+                assert domainMax.shape[0] == queryPositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+        else:
+            periodicTensor = periodicity
+            assert len(periodicTensor) == queryPositions.shape[1], f'len(periodicTensor) = {len(periodicTensor)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+            if np.any(periodicTensor):
+                assert domainMin is not None, f'domainMin = {domainMin} is None'
+                assert domainMax is not None, f'domainMax = {domainMax} is None'
+                assert domainMin.shape[0] == queryPositions.shape[1], f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+                assert domainMax.shape[0] == queryPositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'    
+    else:
+        periodicTensor = [False] * queryPositions.shape[1]
+    if supportRadius is not None:
+        if algorithm == 'naive':
+            if verbose:
+                print('Calling radiusNaiveFixed, arguments:')
+                print(f'queryPositions = {queryPositions.shape} on {queryPositions.device}')
+                print(f'referencePositions = {referencePositions.shape} on {referencePositions.device}')
+                print(f'supportRadius = {supportRadius}')
+                print(f'periodicTensor = {periodicTensor}')
+                print(f'domainMin = {domainMin.shape} on {domainMin.device}')
+                print(f'domainMax = {domainMax.shape} on {domainMax.device}')
+            return radiusNaiveFixed(queryPositions, referencePositions, supportRadius, periodicTensor, domainMin, domainMax)
+        elif algorithm == 'small':
+            if verbose:
+                print('Calling neighborSearchSmallFixed, arguments:')
+                print(f'queryPositions = {queryPositions.shape} on {queryPositions.device}')
+                print(f'referencePositions = {referencePositions.shape} on {referencePositions.device}')
+                print(f'supportRadius = {supportRadius}')
+                print(f'domainMin = {domainMin.shape} on {domainMin.device}')
+                print(f'domainMax = {domainMax.shape} on {domainMax.device}')
+                print(f'periodicTensor = {periodicTensor}')
+            return neighborSearchSmallFixed(queryPositions, referencePositions, supportRadius, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device))
+        elif algorithm == 'compact':
+            if verbose:
+                print('Calling neighborSearch, arguments:')
+                print(f'queryPositions = {queryPositions.shape} on {queryPositions.device}')
+                print(f'referencePositions = {referencePositions.shape} on {referencePositions.device}')
+                print(f'support = {support}')
+                print(f'domainMin = {domainMin.shape} on {domainMin.device}')
+                print(f'domainMax = {domainMax.shape} on {domainMax.device}')
+                print(f'periodicity = {periodicity}')
+                print(f'hashMapLength = {hashMapLength}')
+                print(f'mode = {mode}')
+            (i, j), ds = neighborSearch((queryPositions, referencePositions), support, (domainMin, domainMax), periodicTensor, hashMapLength, mode, 'cpp')
+            if returnStructure:
+                return i, j, ds
+            else:
+                return i, j
+        else:
+            raise ValueError(f'algorithm = {algorithm} not supported')
+    else:
+        if algorithm == 'naive':
+            if verbose:
+                print('Calling radiusNaive, arguments:')
+                print(f'queryPositions = {queryPositions.shape} on {queryPositions.device}')
+                print(f'querySupport = {querySupport.shape} on {querySupport.device}')
+                print(f'referencePositions = {referencePositions.shape} on {referencePositions.device}')
+                print(f'referenceSupport = {referenceSupport.shape} on {referenceSupport.device}')
+                print(f'periodicTensor = {periodicTensor}')
+                print(f'domainMin = {domainMin.shape} on {domainMin.device}')
+                print(f'domainMax = {domainMax.shape} on {domainMax.device}')
+            return radiusNaive(queryPositions, referencePositions, querySupport, referenceSupport, periodicTensor, domainMin, domainMax, mode)
+        elif algorithm == 'small':
+            if verbose:
+                print('Calling neighborSearchSmall, arguments:')
+                print(f'queryPositions = {queryPositions.shape} on {queryPositions.device}')
+                print(f'querySupport = {querySupport.shape} on {querySupport.device}')
+                print(f'referencePositions = {referencePositions.shape} on {referencePositions.device}')
+                print(f'referenceSupport = {referenceSupport.shape} on {referenceSupport.device}' if referenceSupport is not None else None)
+                print(f'domainMin = {domainMin.shape} on {domainMin.device}')
+                print(f'domainMax = {domainMax.shape} on {domainMax.device}')
+                print(f'periodicTensor = {periodicTensor}')
+                print(f'mode = {mode}')
+            return neighborSearchSmall(queryPositions, querySupport, referencePositions, querySupport if referenceSupport is None else referenceSupport, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device), mode)
+        elif algorithm == 'compact':
+            if verbose:
+                print('Calling neighborSearch, arguments:')
+                print(f'queryPositions = {queryPositions.shape} on {queryPositions.device}')
+                print(f'querySupport = {querySupport.shape} on {querySupport.device}')
+                print(f'referencePositions = {referencePositions.shape} on {referencePositions.device}')
+                print(f'referenceSupport = {referenceSupport.shape} on {referenceSupport.device}')
+                print(f'periodicity = {periodicTensor}')
+                print(f'hashMapLength = {hashMapLength}')
+                print(f'mode = {mode}')
+            (i,j), ds = neighborSearch((queryPositions, referencePositions), (querySupport, referenceSupport), (domainMin, domainMax), periodicTensor, hashMapLength, mode, 'cpp')
+            if returnStructure:
+                return i, j, ds
+            else:
+                return i, j
+        else:
+            raise ValueError(f'algorithm = {algorithm} not supported')
+    pass
