@@ -418,3 +418,69 @@ def radiusSearch(
         else:
             raise ValueError(f'algorithm = {algorithm} not supported')
     pass
+
+
+def radius(queryPositions : torch.Tensor,
+        referencePositions : Optional[torch.Tensor],
+        support : Union[float, torch.Tensor,Tuple[torch.Tensor, torch.Tensor]],
+        batch_x : Optional[torch.Tensor] = None, batch_y : Optional[torch.Tensor] = None,
+        mode : str = 'gather',
+        domainMin : Optional[torch.Tensor] = None,
+        domainMax : Optional[torch.Tensor] = None,
+        periodicity : Optional[Union[bool, List[bool]]] = None,
+        hashMapLength : int = 4096,
+        algorithm: str = 'naive',
+        verbose: bool = False,
+        returnStructure : bool = False):
+    if batch_x is None and batch_y is None:
+        return radiusSearch(queryPositions, referencePositions, support, mode, domainMin, domainMax, periodicity, hashMapLength, algorithm, verbose, returnStructure)
+    else:
+        batchIDs = torch.unique(batch_x) if batch_x is not None else torch.unique(batch_y)
+        if returnStructure:
+            i = torch.empty(0, dtype = torch.long, device = queryPositions.device)
+            j = torch.empty(0, dtype = torch.long, device = queryPositions.device)
+            ds = {}
+            offsets = []
+            for batchID in batchIDs:
+                if batch_x is not None:
+                    mask_x = batch_x == batchID
+                else:
+                    mask_x = torch.ones_like(queryPositions, dtype = torch.bool)
+                if batch_y is not None:
+                    mask_y = batch_y == batchID
+                else:
+                    mask_y = torch.ones_like(referencePositions if referencePositions is not None else queryPositions, dtype = torch.bool)
+                x = queryPositions[mask_x]
+                y = referencePositions[mask_y] if referencePositions is not None else queryPositions[mask_y]
+                i_batch, j_batch, ds_batch = radiusSearch(x, y, support, mode, domainMin, domainMax, periodicity, hashMapLength, algorithm, verbose, returnStructure)
+                i = torch.cat([i, i_batch + offsets[0]])
+                j = torch.cat([j, j_batch + offsets[1]])
+                ds[batchID] = ds_batch
+                if batch_x is not None:
+                    offsets[0] += x.shape[0]
+                if batch_y is not None:
+                    offsets[1] += y.shape[0]
+            return i, j, ds
+        else:
+            i = torch.empty(0, dtype = torch.long, device = queryPositions.device)
+            j = torch.empty(0, dtype = torch.long, device = queryPositions.device)
+            offsets = []
+            for batchID in batchIDs:
+                if batch_x is not None:
+                    mask_x = batch_x == batchID
+                else:
+                    mask_x = torch.ones_like(queryPositions, dtype = torch.bool)
+                if batch_y is not None:
+                    mask_y = batch_y == batchID
+                else:
+                    mask_y = torch.ones_like(referencePositions, dtype = torch.bool)
+                x = queryPositions[mask_x]
+                y = referencePositions[mask_y] if referencePositions is not None else queryPositions[mask_y]
+                i_batch, j_batch = radiusSearch(x, y, support, mode, domainMin, domainMax, periodicity, hashMapLength, algorithm, verbose, returnStructure)
+                i = torch.cat([i, i_batch + offsets[0]])
+                j = torch.cat([j, j_batch + offsets[1]])
+                if batch_x is not None:
+                    offsets[0] += x.shape[0]
+                if batch_y is not None:
+                    offsets[1] += y.shape[0]
+            return i, j
