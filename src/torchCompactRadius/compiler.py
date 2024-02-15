@@ -8,6 +8,7 @@ from typing import Optional
 import platform
 import torch
 from torch.utils.cpp_extension import load
+import warnings
 
 directory = Path(__file__).resolve().parent
 
@@ -140,18 +141,21 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
         # clang under macos does not support fopenmp so check for existence of clang via homebrew
         # will fail if no clang is found
         if platform.system() == "Darwin":
-
-            os.environ['LDFLAGS'] = '%s %s' % (os.environ['LDFLAGS'] if 'LDFLAGS' in os.environ else '', '-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++')
-            os.environ['PATH'] = '%s %s' % ('/opt/homebrew/opt/llvm/bin:$PATH"', os.environ['PATH'])
-            os.environ['LDFLAGS'] = '%s %s' % (os.environ['LDFLAGS'] if 'LDFLAGS' in os.environ else '', "-L/opt/homebrew/opt/libomp/lib")
-            os.environ['CPPFLAGS'] = '%s %s' % (os.environ['CPPFLAGS'] if 'CPPFLAGS' in os.environ else '', "-I/opt/homebrew/opt/llvm/include")
-            os.environ['LDFLAGS'] = '%s %s' % (os.environ['LDFLAGS'], "-L/opt/homebrew/opt/libomp/lib")
-            os.environ['CPPFLAGS'] = '%s %s' % (os.environ['CPPFLAGS'], "-I/opt/homebrew/opt/llvm/include:-I/opt/homebrew/opt/libomp/include")
-            os.environ['CC'] = '/opt/homebrew/opt/llvm/bin/clang'
-            os.environ['CXX'] = '/opt/homebrew/opt/llvm/bin/clang'
-            nvcc = subprocess.check_output(
-                ['which', 'clang'], env = dict(PATH='%s:%s/bin' % (os.environ['PATH'], sys.exec_prefix))).decode().rstrip('\r\n')
-        
+            if not os.path.exists('/opt/homebrew/opt/llvm/bin/clang'):
+                warnings.warn('No clang compiler found in homebrew installation. OpenMP support will not be available.')
+                openMP = False
+            else:
+                os.environ['LDFLAGS'] = '%s %s' % (os.environ['LDFLAGS'] if 'LDFLAGS' in os.environ else '', '-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++')
+                os.environ['PATH'] = '%s %s' % ('/opt/homebrew/opt/llvm/bin:$PATH"', os.environ['PATH'])
+                os.environ['LDFLAGS'] = '%s %s' % (os.environ['LDFLAGS'] if 'LDFLAGS' in os.environ else '', "-L/opt/homebrew/opt/libomp/lib")
+                os.environ['CPPFLAGS'] = '%s %s' % (os.environ['CPPFLAGS'] if 'CPPFLAGS' in os.environ else '', "-I/opt/homebrew/opt/llvm/include")
+                os.environ['LDFLAGS'] = '%s %s' % (os.environ['LDFLAGS'], "-L/opt/homebrew/opt/libomp/lib")
+                os.environ['CPPFLAGS'] = '%s %s' % (os.environ['CPPFLAGS'], "-I/opt/homebrew/opt/llvm/include:-I/opt/homebrew/opt/libomp/include")
+                os.environ['CC'] = '/opt/homebrew/opt/llvm/bin/clang'
+                os.environ['CXX'] = '/opt/homebrew/opt/llvm/bin/clang'
+                nvcc = subprocess.check_output(
+                    ['which', 'clang'], env = dict(PATH='%s:%s/bin' % (os.environ['PATH'], sys.exec_prefix))).decode().rstrip('\r\n')
+    if openMP:    
         cudaFlags.append('-DOMP_VERSION')
         hostFlags.append('-DOMP_VERSION')
     if directory is None:
