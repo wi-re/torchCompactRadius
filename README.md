@@ -4,8 +4,8 @@ This repository contains an implementation of a compact hashing based neighborho
 
 Requirements:
 > pyTorch >= 2.0
-> numpy (not used in the computations)
-> subprocess (for compilation)
+numpy (not used in the computations)
+subprocess (for compilation)
 
 The module is built just-in-time on first import in a given python environment and this build process may take a few (<5) minutes. Note that for MacOS based systems an external clang compiler installed via homebrew is required for openMP support.
 
@@ -48,7 +48,7 @@ For the algorithm the following 4 options exist:
 - `compact`: The primary algorithm of this library. This approach uses compact hashing and a cell-based datastructure to compute neighborhoods in $\mathcal{O}\left(n\log n\right)$. The idea is based on [A parallel sph implementation on multi-core cpus](https://cg.informatik.uni-freiburg.de/publications/2011_CGF_dataStructuresSPH.pdf) and the GPU approach is based on [Multi-Level Memory Structures for Simulating and Rendering SPH](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14090). Note that this implementation is not optimized for adaptive simulations.
 
 
-## Example:
+## Example: [Open in Google Colab](https://colab.research.google.com/drive/1vKJV_8iPoMRXNRymCX0h1E72M_wRAwWU?usp=sharing)
 
 For this example we generate two separate point clouds $X\in[-1,1]^3$ and $y\in[-0.5,0.5]^3$ with a point spacing of $\Delta x = \frac{2}{32}$. This results in $32^3 = 32768$ points for set $X$ and $16^3 = 4096$ points for set $Y$. We then perform a neighbor search with a cutoff radius of $h_x$ such that points in $x$ would have $50$ neighbors on average (computed using `volumeToSupport`) and $h_y$ with twice the search radius. For the neighbor computation we then utilize the mean point spacing $h_{ij} = \frac{h_i + h_j}{2}$, resulting in $171$ neighbors per particle in $Y$:
 
@@ -96,9 +96,9 @@ print('nj:', nj.shape, nj.device, nj.dtype, nj)
 
 This should output:
 > i: torch.Size([700416]) cuda:0 torch.int64
-> ni: torch.Size([32768]) cuda:0 torch.int64 tensor([0, 0, 0,  ..., 0, 0, 0], device='cuda:0')
-> j: torch.Size([700416]) cuda:0 torch.int64
-> nj: torch.Size([4096]) cuda:0 torch.int64 tensor([171, 171, 171,  ..., 171, 171, 171], device='cuda:0')
+ni: torch.Size([32768]) cuda:0 torch.int64 tensor([0, 0, 0,  ..., 0, 0, 0], device='cuda:0')
+j: torch.Size([700416]) cuda:0 torch.int64
+nj: torch.Size([4096]) cuda:0 torch.int64 tensor([171, 171, 171,  ..., 171, 171, 171], device='cuda:0')
 
 
 
@@ -147,5 +147,6 @@ The `cluster` algorithm failing is due to a lack of support of torch_cluster`s i
 ## TODO:
 
 > Add AMD Support
-> Wrap periodic neighborhood search and non symmetric neighborhoods around torch cluster
-> Add automatic choice of algorithm based on performance
+Wrap periodic neighborhood search and non symmetric neighborhoods around torch cluster
+Add automatic choice of algorithm based on performance
+Add binary distributions
