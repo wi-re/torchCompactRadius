@@ -103,18 +103,26 @@ def searchNeighborsFixed_cpp(
     # If the target device is MPS we need to transfer all data to the cpu and the results back as there is no implementation
     # of the neighbor search for this accelerator type. The better solution would be to handcraft MPS code but alas.
     with record_function("neighborSearch - searchNeighborsFixed_cpp"):
-        if queryPositions.device == torch.device('mps'):
+        if queryPositions.device.type == 'mps':
             with record_function("neighborSearch - searchNeighborsFixed_cpp[transfer from MPS]"):
                 queryPositions_cpu = queryPositions.detach().cpu()
+                # print('queryPositions_cpu', queryPositions_cpu.device, queryPositions_cpu.dtype, queryPositions_cpu.shape)
                 sortedPositions_cpu = sortedPositions.detach().cpu()
+                # print('sortedPositions_cpu', sortedPositions_cpu.device, sortedPositions_cpu.dtype, sortedPositions_cpu.shape)
                 hashTable_cpu = hashTable.detach().cpu()
+                # print('hashTable_cpu', hashTable_cpu.device, hashTable_cpu.dtype, hashTable_cpu.shape)
                 sortedCellTable_cpu = sortedCellTable.detach().cpu()
+                # print('sortedCellTable_cpu', sortedCellTable_cpu.device, sortedCellTable_cpu.dtype, sortedCellTable_cpu.shape)
                 qMin_cpu = qMin.detach().cpu()
+                # print('qMin_cpu', qMin_cpu.device, qMin_cpu.dtype, qMin_cpu.shape)
                 minD_cpu = minD.detach().cpu()
+                # print('minD_cpu', minD_cpu.device, minD_cpu.dtype, minD_cpu.shape)
                 maxD_cpu = maxD.detach().cpu()
+                # print('maxD_cpu', maxD_cpu.device, maxD_cpu.dtype, maxD_cpu.shape)
                 numCells_cpu = numCells.detach().cpu()
-            with record_function("neighborSearch - searchNeighborsFixed_cpp[build NeighborOffsetList]"):
-                neighborCounter_cpp = countNeighbors_cpp(
+                # print('numCells_cpu', numCells_cpu.device, numCells_cpu.dtype, numCells_cpu.shape)
+            with record_function("neighborSearch - searchNeighbors_cpp[build NeighborOffsetList]"):
+                neighborCounter_cpp = countNeighborsFixed_cpp(
                     queryPositions_cpu, searchRadius, 
                     sortedPositions_cpu, support, 
                     hashTable_cpu, hashMapLength, 
@@ -123,8 +131,11 @@ def searchNeighborsFixed_cpp(
                     torch.tensor(periodicity).to('cpu'), mode, False)
                 neighborOffsets = torch.hstack((torch.tensor([0], dtype = torch.int32, device = 'cpu'), torch.cumsum(neighborCounter_cpp, dim = 0).to(torch.int32)))[:-1]
                 neighborListLength = neighborOffsets[-1] + neighborCounter_cpp[-1]
+                # print('neighborCounter_cpp', neighborCounter_cpp.device, neighborCounter_cpp.dtype, neighborCounter_cpp.shape)
+                # print('neighborOffsets', neighborOffsets.device, neighborOffsets.dtype, neighborOffsets.shape)
+                # print('neighborListLength', neighborListLength.device, neighborListLength.dtype, neighborListLength.shape)
             with record_function("neighborSearch - searchNeighborsFixed_cpp[build NeighborList]"):
-                neighbors_cpp = buildNeighborList_cpp(
+                neighbors_cpp = buildNeighborListFixed_cpp(
                     neighborCounter_cpp, neighborOffsets, int(neighborListLength.item()),
                     queryPositions_cpu, searchRadius, 
                     sortedPositions_cpu, support, 
@@ -266,6 +277,9 @@ def neighborSearchFixed_cpp(
             - numCells (torch.Tensor): Number of cells in the domain.
             - sortIndex (torch.Tensor): Sorted indices of reference particles.
     """
+
+      
+
     with record_function("neighborSearch"):
         with record_function("neighborSearch - computeGridSupport"):
             # Compute grid support
@@ -279,5 +293,8 @@ def neighborSearchFixed_cpp(
             # Build hash table and cell table
             sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap_compat(x, minD, maxD, periodicity, hMax, hashMapLength)
             sortedSupports = None 
+
+        # print('...')
+
         (i,j) = searchNeighborsFixed_cpp(queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
         return (i,j), sortedPositions, sortedSupports, hashTable, sortedCellTable, hCell, qMin, qMax, minD, maxD, numCells, sortIndex

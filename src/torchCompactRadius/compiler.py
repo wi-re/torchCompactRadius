@@ -122,9 +122,10 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
 
         cudaFlags.append('-DCUDA_VERSION')
         hostFlags.append('-DCUDA_VERSION')
-    
-    # ldFlags = ['openmp'] if openMP else []
-    ldFlags = []
+    if platform.system() == "Darwin":
+        ldFlags = ['-fopenmp'] if openMP else []
+    else:
+        ldFlags = []
     if verboseCuda:
         cudaFlags.append('--ptxas-options="-v "')
 

@@ -342,7 +342,11 @@ def radiusSearch(
                 print(f'domainMin = {domainMin.shape} on {domainMin.device}')
                 print(f'domainMax = {domainMax.shape} on {domainMax.device}')
                 print(f'periodicTensor = {periodicTensor}')
-            return neighborSearchSmallFixed(x, y, supportRadius, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device))
+            if queryPositions.device.type == 'mps':
+                i, j =  neighborSearchSmallFixed(x.cpu(), y.cpu(), supportRadius, domainMin.cpu(), domainMax.cpu(), torch.tensor(periodicTensor).cpu())
+                return i.to(queryPositions.device), j.to(queryPositions.device)
+            else:
+                return neighborSearchSmallFixed(x, y, supportRadius, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device))
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch, arguments:')
@@ -368,7 +372,11 @@ def radiusSearch(
                 print(f'batch = None')
                 print(f'periodic = {periodicTensor}')
             if hasClusterRadius:
-                i, j = radius_cluster(queryPositions, referencePositions, supportRadius, max_num_neighbors=256)
+                if queryPositions.device.type == 'mps':
+                    i, j = radius_cluster(queryPositions.cpu(), referencePositions.cpu(), supportRadius, max_num_neighbors=256)
+                    return j.to(queryPositions.device), i.to(queryPositions.device)
+                else:
+                    i, j = radius_cluster(queryPositions, referencePositions, supportRadius, max_num_neighbors=256)
                 return j, i
             else:
                 raise ModuleNotFoundError('torch_cluster is not installed')
@@ -397,7 +405,11 @@ def radiusSearch(
                 print(f'domainMax = {domainMax.shape} on {domainMax.device}')
                 print(f'periodicTensor = {periodicTensor}')
                 print(f'mode = {mode}')
-            return neighborSearchSmall(x, querySupport, y, querySupport if referenceSupport is None else referenceSupport, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device), mode)
+            if queryPositions.device.type == 'mps':
+                i, j =  neighborSearchSmall(x.cpu(), querySupport.cpu(), y.cpu(), querySupport.cpu() if referenceSupport is None else referenceSupport.cpu(), domainMin.cpu(), domainMax.cpu(), torch.tensor(periodicTensor).cpu(), mode)
+                return i.to(queryPositions.device), j.to(queryPositions.device)
+            else:
+                return neighborSearchSmall(x, querySupport, y, querySupport if referenceSupport is None else referenceSupport, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device), mode)
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch, arguments:')

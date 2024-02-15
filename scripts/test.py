@@ -120,14 +120,14 @@ def test_ij(i, j, y, positions, periodic):
 
 accelerator = 'cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else None)
 devices = ['cpu'] if accelerator is None else ['cpu', accelerator]
-
+# devices = ['mps']
 periodic = True
 reducedSet = True
 algorithm = 'naive'
 
 for periodic in [True, False]:
     for reducedSet in [True, False]:
-        for algorithm in ['naive', 'small', 'compact', 'cluster']:
+        for algorithm in ['naive', 'small', 'cluster', 'compact']:
             # if (periodic and algorithm == 'cluster') or (not hasCluster and algorithm == 'cluster'):
                 # continue
             print(f'periodic = {periodic}, \treducedSet = {reducedSet}, \talgorithm = {algorithm}\t', end = '')
