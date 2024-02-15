@@ -110,15 +110,15 @@ Compute Performance on GPUs for small scale problems:
 
 3090 | A5000
 ---|---
-![](figures/Benchmark_3090.png) | ![](figures/Benchmark_A5000.png)
+<img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Benchmark_3090.png?raw=true">| <img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Benchmark_A5000.png?raw=true">
 
 CPU perforamnce:
 
-![](figures/Benchmark_CPU.png)
+<img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Benchmark_CPU.png?raw=true">
 
 Overall GPU based performance for larger scale problems:
 
-![](figures/Overall.png)
+<img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Overall.png?raw=true">
 
 ## Testing
 
