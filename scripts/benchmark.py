@@ -98,20 +98,34 @@ from torch._dynamo.utils import CompileProfiler
 prof = CompileProfiler()
 
 profiler_model = torch.compile(compiledSearch, backend=prof, fullgraph = True)
+import os
+os.environ['DYNAMO_CACHE_SIZE_LIMIT'] = '1'
+os.environ['DYNAMO_VERBOSE'] = '1'
+os.environ['TORCH_LOGS']= 'recompiles'
 
+
+print('Algorithm: small A')
+nx = int((2**12) ** (1 / 2))
+(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
+h = ySupport[0].cpu().item()
+
+compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
+print(prof.report())
+
+
+print('Algorithm: small B')
+nx = int((2**14) ** (1 / 2))
+(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
+h = ySupport[0].cpu().item()
+
+compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
+
+print('Algorithm: small C')
 nx = int((2**16) ** (1 / 2))
 (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
 h = ySupport[0].cpu().item()
 
-compiledSearch(y, positions, h, mode =  'gather', periodicity = False, algorithm = 'compact')
-print(prof.report())
-
-
-nx = int((2**18) ** (1 / 2))
-(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
-h = ySupport[0].cpu().item()
-
-compiledSearch(y, positions, h, mode =  'gather', periodicity = False, algorithm = 'compact')
+compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
 
 exit()
 
