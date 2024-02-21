@@ -6,8 +6,8 @@ def mod(x, min : float, max : float):
     return torch.where(torch.abs(x) > (max - min) / 2, torch.sgn(x) * ((torch.abs(x) + min) % (max - min) + min), x)
     
 @torch.jit.script
-def radiusNaive(x, y, hx, hy, periodic : Optional[List[bool]] = None, minDomain = None, maxDomain = None, mode : str = 'gather'):
-    periodicity = [False] * x.shape[1] if periodic is None else periodic
+def radiusNaive(x, y, hx, hy, periodic : Optional[torch.Tensor] = None, minDomain = None, maxDomain = None, mode : str = 'gather'):
+    periodicity = torch.tensor([False] * x.shape[1], dtype = torch.bool, device = x.device) if periodic is None else periodic
     
     pos_x = torch.stack([x[:,i] if not periodic_i else torch.remainder(x[:,i] - minDomain[i], maxDomain[i] - minDomain[i]) + minDomain[i] for i, periodic_i in enumerate(periodicity)], dim = 1)
     pos_y = torch.stack([y[:,i] if not periodic_i else torch.remainder(y[:,i] - minDomain[i], maxDomain[i] - minDomain[i]) + minDomain[i] for i, periodic_i in enumerate(periodicity)], dim = 1)
@@ -35,8 +35,8 @@ def radiusNaive(x, y, hx, hy, periodic : Optional[List[bool]] = None, minDomain 
     return ii, jj#, distanceMatrix[adjacencyDense], distanceMatrices[adjacencyDense], supports
 
 @torch.jit.script
-def radiusNaiveFixed(x, y, h : float, periodic : Optional[List[bool]] = None, minDomain = None, maxDomain = None):
-    periodicity = [False] * x.shape[1] if periodic is None else periodic
+def radiusNaiveFixed(x, y, h : torch.Tensor, periodic : Optional[torch.Tensor] = None, minDomain = None, maxDomain = None):
+    periodicity = torch.tensor([False] * x.shape[1], dtype = torch.bool, device = x.device) if periodic is None else periodic
     
     pos_x = torch.stack([x[:,i] if not periodic_i else torch.remainder(x[:,i] - minDomain[i], maxDomain[i] - minDomain[i]) + minDomain[i] for i, periodic_i in enumerate(periodicity)], dim = 1)
     pos_y = torch.stack([y[:,i] if not periodic_i else torch.remainder(y[:,i] - minDomain[i], maxDomain[i] - minDomain[i]) + minDomain[i] for i, periodic_i in enumerate(periodicity)], dim = 1)

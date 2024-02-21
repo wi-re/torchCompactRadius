@@ -10,7 +10,7 @@ def neighborSearch(
         positions : Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
         supports : Union[float, torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
         domain : Optional[Tuple[torch.Tensor, torch.Tensor]] = None, 
-        periodicity : Optional[List[bool]] = None, 
+        periodicity : Optional[torch.Tensor] = None, 
         hashMapLength : int = -1, mode : str = 'symmetric', variant: str = 'cpp', verbose: bool = False, searchRadius : int = 1) -> Tuple[Tuple[torch.Tensor, torch.Tensor], dict]:
     """
     Performs neighbor search based on the given parameters.
@@ -22,7 +22,7 @@ def neighborSearch(
             It can be a single float, a single tensor, or a tuple of tensors representing query supports and reference supports.
         domain (Optional[Tuple[torch.Tensor, torch.Tensor]]): The domain of the points. 
             It is a tuple of tensors representing the minimum and maximum values of the domain. Default is None.
-        periodicity (Optional[List[bool]]): The periodicity of the points in each dimension. 
+        periodicity (Optional[torch.Tensor]): The periodicity of the points in each dimension. 
             It is a list of booleans indicating whether each dimension is periodic or not. Default is None.
         hashMapLength (int): The length of the hash map. Default is -1.
         mode (str): The mode of the neighbor search. Default is 'symmetric'.
@@ -238,7 +238,7 @@ try:
     hasClusterRadius = True
 except ModuleNotFoundError:
     hasClusterRadius = False
-    pass
+    # pass
 
 
 def radiusSearch( 
@@ -248,7 +248,7 @@ def radiusSearch(
         mode : str = 'gather',
         domainMin : Optional[torch.Tensor] = None,
         domainMax : Optional[torch.Tensor] = None,
-        periodicity : Optional[Union[bool, List[bool]]] = None,
+        periodicity : Optional[Union[bool, torch.Tensor]] = None,
         hashMapLength : int = 4096,
         algorithm: str = 'naive',
         verbose: bool = False,
@@ -261,7 +261,7 @@ def radiusSearch(
     assert mode in ['symmetric', 'scatter', 'gather'], f'mode = {mode} not supported'
     assert queryPositions.shape[1] == referencePositions.shape[1] if referencePositions is not None else True, f'queryPositions.shape[1] = {queryPositions.shape[1]} != referencePositions.shape[1] = {referencePositions.shape[1]}'
     assert hashMapLength > 0, f'hashMapLength = {hashMapLength} <= 0'
-    assert len(periodicity) == queryPositions.shape[1] if isinstance(periodicity, list) else True, f'len(periodicity) = {len(periodicity)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+    assert periodicity.shape[0] == queryPositions.shape[1] if isinstance(periodicity, torch.Tensor) else True, f'len(periodicity) = {len(periodicity)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
     assert domainMin.shape[0] == queryPositions.shape[1] if domainMin is not None else True, f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
     assert domainMax.shape[0] == queryPositions.shape[1] if domainMax is not None else True, f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
     assert isinstance(support, float) or support.shape[0] == queryPositions.shape[0] if isinstance(support, torch.Tensor) else True, f'support.shape[0] = {support.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
@@ -292,7 +292,7 @@ def radiusSearch(
         assert referenceSupport.shape[0] == referencePositions.shape[0], f'referenceSupport.shape[0] = {referenceSupport.shape[0]} != referencePositions.shape[0] = {referencePositions.shape[0]}'
     if periodicity is not None:
         if isinstance(periodicity, bool):
-            periodicTensor = [periodicity] * queryPositions.shape[1]
+            periodicTensor = torch.tensor([periodicity] * queryPositions.shape[1], device = queryPositions.device, dtype = torch.bool)
             if periodicity:
                 assert domainMin is not None, f'domainMin = {domainMin} is None'
                 assert domainMax is not None, f'domainMax = {domainMax} is None'
@@ -307,9 +307,9 @@ def radiusSearch(
                 assert domainMin.shape[0] == queryPositions.shape[1], f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
                 assert domainMax.shape[0] == queryPositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'    
     else:
-        periodicTensor = [False] * queryPositions.shape[1]
+        periodicTensor = torch.tensor([False] * queryPositions.shape[1], dtype = torch.bool, device = queryPositions.device)
 
-    if np.any(periodicTensor):
+    if torch.any(periodicTensor):
         if algorithm == 'cluster':
             raise ValueError(f'algorithm = {algorithm} not supported for periodic search')
         x = torch.stack([queryPositions[:,i] if not periodic_i else torch.remainder(queryPositions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
@@ -343,10 +343,10 @@ def radiusSearch(
                 print(f'domainMax = {domainMax.shape} on {domainMax.device}')
                 print(f'periodicTensor = {periodicTensor}')
             if queryPositions.device.type == 'mps':
-                i, j =  neighborSearchSmallFixed(x.cpu(), y.cpu(), supportRadius, domainMin.cpu(), domainMax.cpu(), torch.tensor(periodicTensor).cpu())
+                i, j =  neighborSearchSmallFixed(x.cpu(), y.cpu(), supportRadius, domainMin.cpu(), domainMax.cpu(), periodicTensor.cpu())
                 return i.to(queryPositions.device), j.to(queryPositions.device)
             else:
-                return neighborSearchSmallFixed(x, y, supportRadius, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device))
+                return neighborSearchSmallFixed(x, y, supportRadius, domainMin, domainMax, periodicTensor)
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch, arguments:')
@@ -409,7 +409,7 @@ def radiusSearch(
                 i, j =  neighborSearchSmall(x.cpu(), querySupport.cpu(), y.cpu(), querySupport.cpu() if referenceSupport is None else referenceSupport.cpu(), domainMin.cpu(), domainMax.cpu(), torch.tensor(periodicTensor).cpu(), mode)
                 return i.to(queryPositions.device), j.to(queryPositions.device)
             else:
-                return neighborSearchSmall(x, querySupport, y, querySupport if referenceSupport is None else referenceSupport, domainMin, domainMax, torch.tensor(periodicTensor).to(queryPositions.device), mode)
+                return neighborSearchSmall(x, querySupport, y, querySupport if referenceSupport is None else referenceSupport, domainMin, domainMax, periodicTensor, mode)
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch, arguments:')
@@ -439,7 +439,7 @@ def radius(queryPositions : torch.Tensor,
         mode : str = 'gather',
         domainMin : Optional[torch.Tensor] = None,
         domainMax : Optional[torch.Tensor] = None,
-        periodicity : Optional[Union[bool, List[bool]]] = None,
+        periodicity : Optional[Union[bool, torch.Tensor]] = None,
         hashMapLength : int = 4096,
         algorithm: str = 'naive',
         verbose: bool = False,

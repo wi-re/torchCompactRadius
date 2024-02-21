@@ -1,7 +1,7 @@
 import torch
 from torchCompactRadius.util import compute_h, linearIndexing
 from typing import Optional
-from torch.profiler import record_function
+# from torch.profiler import record_function
 
 @torch.jit.script
 def sortReferenceParticles(referenceParticles, referenceSupport : float, domainMin, domainMax):
@@ -22,21 +22,21 @@ def sortReferenceParticles(referenceParticles, referenceSupport : float, domainM
         domainMax: The maximum value of the domain.
         hCell (float): The computed h value for the cells.
     """
-    with record_function("neighborSearch - sortReferenceParticles"): 
-        with record_function("neighborSearch - sortReferenceParticles[index Calculation]"): 
-            hCell = compute_h(domainMin, domainMax, referenceSupport)
-            qExtent = domainMax - domainMin
-            cellCount = torch.ceil(qExtent / (hCell)).to(torch.int32)
-            indices = torch.floor((referenceParticles - domainMin) / hCell).to(torch.int32).view(-1, referenceParticles.shape[1])
-            linearIndices = linearIndexing(indices, cellCount)
-        with record_function("neighborSearch - sortReferenceParticles[argsort]"): 
-            sortingIndices = torch.argsort(linearIndices)
-        with record_function("neighborSearch - sortReferenceParticles[resort]"): 
-            sortedLinearIndices = linearIndices[sortingIndices]
+    # with record_function("neighborSearch - sortReferenceParticles"): 
+    # with record_function("neighborSearch - sortReferenceParticles[index Calculation]"): 
+    hCell = compute_h(domainMin, domainMax, referenceSupport)
+    qExtent = domainMax - domainMin
+    cellCount = torch.ceil(qExtent / (hCell)).to(torch.int32)
+    indices = torch.floor((referenceParticles - domainMin) / hCell).to(torch.int32).view(-1, referenceParticles.shape[1])
+    linearIndices = linearIndexing(indices, cellCount)
+    # with record_function("neighborSearch - sortReferenceParticles[argsort]"): 
+    sortingIndices = torch.argsort(linearIndices)
+    # with record_function("neighborSearch - sortReferenceParticles[resort]"): 
+    sortedLinearIndices = linearIndices[sortingIndices]
     return sortedLinearIndices, sortingIndices, \
             cellCount, domainMin, domainMax, float(hCell)
 
-@torch.jit.script
+# @torch.jit.script
 def computeGridSupport(queryParticleSupports : Optional[torch.Tensor], referenceSupports : Optional[torch.Tensor], mode : str = 'symmetric'):  
     """
     Computes the maximum support value for a grid based on the given query particle supports and reference supports.

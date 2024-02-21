@@ -34,7 +34,7 @@ def generateNeighborTestData(nx, targetNumNeighbors, dim, maxDomain_0, periodic,
     minDomain = torch.tensor([-1] * dim, dtype = torch.float32, device = device)
     maxDomain = torch.tensor([ 1] * dim, dtype = torch.float32, device = device)
     maxDomain[0] = maxDomain_0
-    periodicity = [periodic] * dim
+    periodicity = torch.tensor([periodic] * dim, device = device, dtype = torch.bool)
 
     extent = maxDomain - minDomain
     shortExtent = torch.min(extent, dim = 0)[0].item()
@@ -125,6 +125,71 @@ periodic = True
 reducedSet = True
 algorithm = 'naive'
 
+# for periodic in [True, False]:
+#     for reducedSet in [True, False]:
+#         for algorithm in ['naive', 'small', 'cluster', 'compact']:
+#             # if (periodic and algorithm == 'cluster') or (not hasCluster and algorithm == 'cluster'):
+#                 # continue
+#             print(f'periodic = {periodic}, \treducedSet = {reducedSet}, \talgorithm = {algorithm}\t', end = '')
+#             for device in devices:
+#                 print(f'device = {device}\t', end = '')
+#                 (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, dim, 1.0, False, device)
+#                 h = ySupport[0].cpu().item()
+#                 try:
+#                     i, j = radiusSearch(y if reducedSet else positions, positions, h, algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+#                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
+#                 except:
+#                     print('❌', end = '')
+#                 try:
+#                     i, j = radiusSearch(y if reducedSet else positions, positions, ySupport if reducedSet else supports, algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+#                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
+#                 except:
+#                     print('❌', end = '')
+#                 try:
+#                     i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+#                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
+#                 except:
+#                     print('❌', end = '')
+#                 try:
+#                     i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'scatter')
+#                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
+#                 except:
+#                     print('❌', end = '')
+#                 try:
+#                     i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'gather')
+#                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
+#                 except:
+#                     print('❌', end = '')
+#                 try:
+#                     i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'symmetric')
+#                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
+#                 except:
+#                     print('❌', end = '')
+#                 print('\t', end = '')
+#             print('')
+
+print('Testin compiled version')
+compiledSearch = torch.compile(radiusSearch, dynamic=True)
+print('Compiled')
+
+algorithm = 'compact'
+reducedSet = True
+periodic = True
+
+(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, dim, 1.0, False, device)
+h = ySupport[0].cpu().item()
+import torch.autograd.profiler as profiler
+
+with profiler.profile(record_shapes=False, use_cuda=torch.cuda.is_available()) as prof:
+    i, j = compiledSearch(y, positions, h, algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+    test_ij(i, j, y if reducedSet else positions, positions, periodic)
+
+
+prof.export_chrome_trace("trace.json")
+
+i, j = compiledSearch(y, positions, (ySupport, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+test_ij(i, j, y if reducedSet else positions, positions, periodic)
+
 for periodic in [True, False]:
     for reducedSet in [True, False]:
         for algorithm in ['naive', 'small', 'cluster', 'compact']:
@@ -136,32 +201,32 @@ for periodic in [True, False]:
                 (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, dim, 1.0, False, device)
                 h = ySupport[0].cpu().item()
                 try:
-                    i, j = radiusSearch(y if reducedSet else positions, positions, h, algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+                    i, j = compiledSearch(y if reducedSet else positions, positions, h, algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
                 except:
                     print('❌', end = '')
                 try:
-                    i, j = radiusSearch(y if reducedSet else positions, positions, ySupport if reducedSet else supports, algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+                    i, j = compiledSearch(y if reducedSet else positions, positions, ySupport if reducedSet else supports, algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
                 except:
                     print('❌', end = '')
                 try:
-                    i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
+                    i, j = compiledSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain)
                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
                 except:
                     print('❌', end = '')
                 try:
-                    i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'scatter')
+                    i, j = compiledSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'scatter')
                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
                 except:
                     print('❌', end = '')
                 try:
-                    i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'gather')
+                    i, j = compiledSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'gather')
                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
                 except:
                     print('❌', end = '')
                 try:
-                    i, j = radiusSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'symmetric')
+                    i, j = compiledSearch(y if reducedSet else positions, positions, (ySupport, supports) if reducedSet else (supports, supports), algorithm = algorithm, periodicity = periodic, domainMin = minDomain, domainMax = maxDomain, mode = 'symmetric')
                     test_ij(i, j, y if reducedSet else positions, positions, periodic)
                 except:
                     print('❌', end = '')

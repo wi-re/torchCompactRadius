@@ -30,9 +30,9 @@ parser.add_argument('-i','--iters', type=int, default=8)
 parser.add_argument('-w','--warmStartIters', type=int, default=2)
 parser.add_argument('-d','--device', type=str, default='cuda')
 parser.add_argument('-f','--filename', type=str, default='')
-parser.add_argument('-m','--methods', type=str, default='naive,small,compact,cluster')
+parser.add_argument('-m','--methods', type=str, default='naive')
 parser.add_argument('-t','--targetNumNeighbors', type=int, default=50)
-parser.add_argument('--dims', type=str, default='1,2,3')
+parser.add_argument('--dims', type=str, default='3')
 args = parser.parse_args()
 
 def generateNeighborTestData(nx, targetNumNeighbors, dim, maxDomain_0, periodic, device):
@@ -84,17 +84,45 @@ t_nx = tqdm(ptcls)
 t_dim = tqdm(dims)
 t_iter = tqdm(range(iters))
 
-
+# torch._dynamic.config.log_level = torch._dynamo.config.log_level.INFO
 from torchCompactRadius import radiusSearch
+torch._dynamo.config.verbose=True
+torch._dynamo.config.cache_size_limit = 1
+
+# with open('dynamo.log', 'w') as f:
+# torch._dynamo.config.log_file = f
+
+compiledSearch = torch.compile(radiusSearch, dynamic=True)
+from torch._dynamo.utils import CompileProfiler
+
+prof = CompileProfiler()
+
+profiler_model = torch.compile(compiledSearch, backend=prof, fullgraph = True)
+
+nx = int((2**16) ** (1 / 2))
+(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
+h = ySupport[0].cpu().item()
+
+compiledSearch(y, positions, h, mode =  'gather', periodicity = False, algorithm = 'compact')
+print(prof.report())
+
+
+nx = int((2**18) ** (1 / 2))
+(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
+h = ySupport[0].cpu().item()
+
+compiledSearch(y, positions, h, mode =  'gather', periodicity = False, algorithm = 'compact')
+
+exit()
 
 t_periodic.reset()
 for periodic in periodics:
     t_periodic.set_description("periodic = %s" % periodic)
-    t_nx.reset()
-    for ptcl in ptcls:
-        t_nx.set_description("ptcls = %d" % ptcl)
-        t_dim.reset()
-        for dim in dims:
+    t_dim.reset()
+    for dim in dims:
+        t_nx.reset()
+        for ptcl in ptcls:
+            t_nx.set_description("ptcls = %d" % ptcl)
             if ptcl > 2**19 and periodic == 'cluster':
                 break
             if ptcl > 2**15 and periodic == 'naive':
@@ -108,7 +136,7 @@ for periodic in periodics:
             # print(y.shape, positions.shape, ySupport.shape, supports.shape, minDomain, maxDomain, periodicity, hashMapLength)
             h = ySupport[0].cpu().item()
             for i in range(warmStartIters):
-                radiusSearch(y, positions, h, mode = 'gather', periodicity = False, algorithm = periodic)
+                compiledSearch(y, positions, h, mode = 'gather', periodicity = False, algorithm = periodic)
 
             # (i_cpu, j_cpu), neighborDict = neighborSearch((y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength, 'scatter', 'cpp')
             # del i_cpu, j_cpu, neighborDict
@@ -117,7 +145,7 @@ for periodic in periodics:
                 t_iter.set_description("i = %d" % i)
                 start_time = time.time()
                 # for i in range(8):
-                radiusSearch(y, positions, h, mode =  'gather', periodicity = False, algorithm = periodic)
+                compiledSearch(y, positions, h, mode =  'gather', periodicity = False, algorithm = periodic)
                 # (i_cpu, j_cpu), neighborDict = neighborSearch((y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength, 'scatter', 'cpp')
                 end_time = time.time()
                 torch.cuda.empty_cache()        
@@ -130,8 +158,8 @@ for periodic in periodics:
                 if i > 0:
                     dataset = pd.concat([dataset, df], ignore_index = True)
                 t_iter.update()
-            t_dim.update()
-        t_nx.update()
+            t_nx.update()
+        t_dim.update()
     t_periodic.update()
 
 # display(dataset)

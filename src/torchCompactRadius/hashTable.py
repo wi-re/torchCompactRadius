@@ -6,14 +6,14 @@ import torch
 from torchCompactRadius.cppWrapper import hashCells_cpp
 
 @torch.jit.script
-def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax : float, hashMapLength : int):
+def buildCompactHashMap(x, minDomain, maxDomain, periodicity : torch.Tensor, hMax : float, hashMapLength : int):
     """Builds a compact hash map for efficient neighborhood search.
 
     Args:
         x (torch.Tensor): The positions of the particles.
         minDomain (float): The minimum domain extent.
         maxDomain (float): The maximum domain extent.
-        periodicity (List[bool]): A list indicating whether each dimension is periodic or not.
+        periodicity (torch.Tensor): A list indicating whether each dimension is periodic or not.
         hMax (float): The maximum support radius.
         hashMapLength (int): The length of the hash map.
 
@@ -76,7 +76,7 @@ def buildCompactHashMap(x, minDomain, maxDomain, periodicity : List[bool], hMax 
 
 
 # @torch.jit.script
-def buildCompactHashMap_compat(x, minDomain, maxDomain, periodicity : List[bool], hMax : float, hashMapLength : int):
+def buildCompactHashMap_compat(x, minDomain, maxDomain, periodicity : torch.Tensor, hMax : float, hashMapLength : int):
     """Builds a compact hash map for efficient neighborhood search.
     This version uses a C++ implementation of the hash function for compatibility.
     This is needed primarily for the C++/MPS version as integer overflow behavior differes on these devices
@@ -85,7 +85,7 @@ def buildCompactHashMap_compat(x, minDomain, maxDomain, periodicity : List[bool]
         x (torch.Tensor): The positions of the particles.
         minDomain (float): The minimum domain extent.
         maxDomain (float): The maximum domain extent.
-        periodicity (List[bool]): A list indicating whether each dimension is periodic or not.
+        periodicity (torch.Tensor): A list indicating whether each dimension is periodic or not.
         hMax (float): The maximum support radius.
         hashMapLength (int): The length of the hash map.
 

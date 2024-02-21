@@ -1,7 +1,7 @@
 from torchCompactRadius.compiler import compileSourceFiles
 from typing import Optional, List
 import torch
-from torch.profiler import record_function
+# from torch.profiler import record_function
 
 neighborSearch_cpp = compileSourceFiles(
     ['cppSrc/neighborhoodDynamic.cpp', 'cppSrc/neighborhoodDynamic.cu', 
