@@ -1,5 +1,6 @@
 #pragma once
-
+// #define __USE_ISOC11 1
+// #include <time.h>
 #ifdef __INTELLISENSE__
 #define OMP_VERSION
 #endif

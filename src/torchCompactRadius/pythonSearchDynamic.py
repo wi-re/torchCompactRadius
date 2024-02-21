@@ -9,7 +9,7 @@ import torch
 
 
 @torch.jit.script
-def buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength:int, numCells, sortedCellTable, qMin, hCell : float, maxD, minD, periodicity: torch.Tensor,mode : str, searchRadius : int = 1):
+def buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity: torch.Tensor,mode : str, searchRadius : int = 1):
     """
     Builds a dynamic neighbor list for each query particle based on its position and support radius.
 
@@ -55,8 +55,8 @@ def buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports : 
 
 @torch.jit.script
 def searchNeighborsDynamicPython(
-    queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength: int, sortedCellTable, numCells,
-    qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
+    queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength, sortedCellTable, numCells,
+    qMin, qMax, minD, maxD, sortIndex, hCell, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
     # with record_function("neighborSearch - buildNeighborListFixed"):
     i,j = buildNeighborListDynamic(sortIndex, queryPositions, queryParticleSupports, sortedPositions, sortedSupports, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
     return (i,j)
@@ -66,7 +66,7 @@ def searchNeighborsDynamicPython(
 def neighborSearchDynamic(
     queryPositions, queryParticleSupports : Optional[torch.Tensor], 
     referencePositions, referenceSupports : Optional[torch.Tensor], 
-    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength : int, mode : str = 'symmetric', searchRadius : int = 1):
+    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength, mode : str = 'symmetric', searchRadius : int = 1):
     """
     Perform neighbor search for particles in a given domain.
 

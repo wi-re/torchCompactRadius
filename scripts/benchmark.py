@@ -25,14 +25,15 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-l','--lowerPower', type=int, default=8)
 parser.add_argument('-u','--upperPower', type=int, default=22)
-parser.add_argument('-s','--steps', type=int, default=64)
-parser.add_argument('-i','--iters', type=int, default=8)
-parser.add_argument('-w','--warmStartIters', type=int, default=2)
+parser.add_argument('-s','--steps', type=int, default=16)
+parser.add_argument('-i','--iters', type=int, default=32)
+parser.add_argument('-w','--warmStartIters', type=int, default=4)
 parser.add_argument('-d','--device', type=str, default='cuda')
 parser.add_argument('-f','--filename', type=str, default='')
+# parser.add_argument('-m','--methods', type=str, default='small,compact,cluster,naive')
 parser.add_argument('-m','--methods', type=str, default='naive')
 parser.add_argument('-t','--targetNumNeighbors', type=int, default=50)
-parser.add_argument('--dims', type=str, default='3')
+parser.add_argument('--dims', type=str, default='2')
 args = parser.parse_args()
 
 def generateNeighborTestData(nx, targetNumNeighbors, dim, maxDomain_0, periodic, device):
@@ -86,95 +87,116 @@ t_iter = tqdm(range(iters))
 
 # torch._dynamic.config.log_level = torch._dynamo.config.log_level.INFO
 from torchCompactRadius import radiusSearch
-torch._dynamo.config.verbose=True
-torch._dynamo.config.cache_size_limit = 1
+# torch._dynamo.config.verbose=True
+torch._dynamo.config.cache_size_limit = 1024
 
 # with open('dynamo.log', 'w') as f:
 # torch._dynamo.config.log_file = f
 
-compiledSearch = torch.compile(radiusSearch, dynamic=True)
-from torch._dynamo.utils import CompileProfiler
+# from torch._dynamo.utils import CompileProfiler
 
-prof = CompileProfiler()
+# prof = CompileProfiler()
 
-profiler_model = torch.compile(compiledSearch, backend=prof, fullgraph = True)
-import os
-os.environ['DYNAMO_CACHE_SIZE_LIMIT'] = '1'
-os.environ['DYNAMO_VERBOSE'] = '1'
-os.environ['TORCH_LOGS']= 'recompiles'
+# profiler_model = torch.compile(compiledSearch, backend=prof, fullgraph = True)
+# import os
+# os.environ['DYNAMO_CACHE_SIZE_LIMIT'] = '1'
+# os.environ['DYNAMO_VERBOSE'] = '1'
+# os.environ['TORCH_LOGS']= 'recompiles'
 
 
-print('Algorithm: small A')
+# print('Algorithm: small A')
 nx = int((2**12) ** (1 / 2))
+
 (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
-h = ySupport[0].cpu().item()
+periodicTensor = torch.tensor([True] * 2, dtype = torch.bool, device = y.device)
 
-compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
-print(prof.report())
+y = positions
+
+xA = torch.stack([y[:,i] if not periodic_i else torch.remainder(y[:,i] - minDomain[i], maxDomain[i] - minDomain[i]) + minDomain[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
+
+xB = torch.where(periodicTensor, (torch.remainder(y.mT -minDomain.view(2,-1), maxDomain.view(2,-1) - minDomain.view(2,-1)) + minDomain.view(2,-1)).mT, y)
+print(y.min(axis = 0), y.max(axis = 0))
+print(torch.sum(xA - xB))
+# print(xB)
+
+# h = ySupport[0].cpu().item()
+
+# compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
+# print(prof.report())
 
 
-print('Algorithm: small B')
-nx = int((2**14) ** (1 / 2))
-(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
-h = ySupport[0].cpu().item()
+# print('Algorithm: small B')
+# nx = int((2**14) ** (1 / 2))
+# (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
+# h = ySupport[0].cpu().item()
 
-compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
+# compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
 
-print('Algorithm: small C')
-nx = int((2**16) ** (1 / 2))
-(y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
-h = ySupport[0].cpu().item()
+# print('Algorithm: small C')
+# nx = int((2**16) ** (1 / 2))
+# (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, 2, 1.0, False, device)
+# h = ySupport[0].cpu().item()
 
-compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
+# compiledSearch(y, positions, (ySupport, supports), mode =  'gather', periodicity = False, algorithm = 'compact')
 
-exit()
+# exit()
+backends = ['native', 'cudagraphs', 'inductor', 'onnxrt', 'openxla', 'openxla_eval', 'tvm']
+backends = ['inductor', 'native']
 
-t_periodic.reset()
-for periodic in periodics:
-    t_periodic.set_description("periodic = %s" % periodic)
-    t_dim.reset()
-    for dim in dims:
-        t_nx.reset()
-        for ptcl in ptcls:
-            t_nx.set_description("ptcls = %d" % ptcl)
-            if ptcl > 2**19 and periodic == 'cluster':
-                break
-            if ptcl > 2**15 and periodic == 'naive':
-                break
-            if ptcl > 2**17 and periodic == 'small':
-                break
-            
-            nx = int(ptcl ** (1 / dim))
-            t_dim.set_description("dim = %d, nx = %d" % (dim, nx))
-            (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, dim, 1.0, False, device)
-            # print(y.shape, positions.shape, ySupport.shape, supports.shape, minDomain, maxDomain, periodicity, hashMapLength)
-            h = ySupport[0].cpu().item()
-            for i in range(warmStartIters):
-                compiledSearch(y, positions, h, mode = 'gather', periodicity = False, algorithm = periodic)
+for backend in (t:= tqdm(backends)):
+    t.set_description("backend = %s" % backend)
+    if backend == 'native':
+        compiledSearch = radiusSearch
+    else:
+        compiledSearch = torch.compile(radiusSearch, dynamic=True, backend = backend)
+    t_periodic.reset()
+    for periodic in ['naive', 'small', 'compact', 'cluster']:
+        if backend != 'native' and periodic == 'cluster':
+            continue
+        t_periodic.set_description("periodic = %s" % periodic)
+        t_dim.reset()
+        for dim in dims:
+            t_nx.reset()
+            for ptcl in ptcls:
+                t_nx.set_description("ptcls = %d" % ptcl)
+                if ptcl > 2**19 and periodic == 'cluster':
+                    break
+                if ptcl > 2**15 and periodic == 'naive':
+                    break
+                if ptcl > 2**17 and periodic == 'small':
+                    break
+                
+                nx = int(ptcl ** (1 / dim))
+                t_dim.set_description("dim = %d, nx = %d" % (dim, nx))
+                (y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength = generateNeighborTestData(nx, targetNumNeighbors, dim, 1.0, False, device)
+                # print(y.shape, positions.shape, ySupport.shape, supports.shape, minDomain, maxDomain, periodicity, hashMapLength)
+                h = ySupport[0].cpu().item()
+                for i in range(warmStartIters):
+                    compiledSearch(y, positions, fixedSupport = torch.tensor(h, device = y.device, dtype = y.dtype), mode = 'gather', periodicity = torch.tensor([False] * dim, dtype = torch.bool, device = y.device), algorithm = periodic)
 
-            # (i_cpu, j_cpu), neighborDict = neighborSearch((y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength, 'scatter', 'cpp')
-            # del i_cpu, j_cpu, neighborDict
-            t_iter.reset()
-            for i in range(iters):
-                t_iter.set_description("i = %d" % i)
-                start_time = time.time()
-                # for i in range(8):
-                compiledSearch(y, positions, h, mode =  'gather', periodicity = False, algorithm = periodic)
                 # (i_cpu, j_cpu), neighborDict = neighborSearch((y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength, 'scatter', 'cpp')
-                end_time = time.time()
-                torch.cuda.empty_cache()        
+                # del i_cpu, j_cpu, neighborDict
+                t_iter.reset()
+                for i in range(iters):
+                    t_iter.set_description("i = %d" % i)
+                    start_time = time.time()
+                    # for i in range(8):
+                    compiledSearch(y, positions, fixedSupport = torch.tensor(h, device = y.device, dtype = y.dtype), mode =  'gather', periodicity = torch.tensor([False] * dim, dtype = torch.bool, device = y.device), algorithm = periodic)
+                    # (i_cpu, j_cpu), neighborDict = neighborSearch((y, positions), (ySupport, supports), (minDomain, maxDomain), periodicity, hashMapLength, 'scatter', 'cpp')
+                    end_time = time.time()
+                    torch.cuda.empty_cache()        
 
-                df = pd.DataFrame({
-                    'ptcls': nx**dim, 'nx': nx, 'dim': dim, 'targetNumNeighbors': periodic, 
-                    'time': end_time - start_time, 'device': device.type, 'algorithm': periodic
-                    # 'ni_cpu.min()': ni_cpu.min().item(), 'ni_cpu.max()': ni_cpu.max().item(), 'nj_cpu.min()': nj_cpu.min().item(), 'nj_cpu.max()': nj_cpu.max().item()
-                    }, index = [0])
-                if i > 0:
-                    dataset = pd.concat([dataset, df], ignore_index = True)
-                t_iter.update()
-            t_nx.update()
-        t_dim.update()
-    t_periodic.update()
+                    df = pd.DataFrame({
+                        'ptcls': nx**dim, 'nx': nx, 'dim': dim, 'targetNumNeighbors': periodic, 
+                        'time': end_time - start_time, 'device': device.type, 'algorithm': periodic, 'backend':backend
+                        # 'ni_cpu.min()': ni_cpu.min().item(), 'ni_cpu.max()': ni_cpu.max().item(), 'nj_cpu.min()': nj_cpu.min().item(), 'nj_cpu.max()': nj_cpu.max().item()
+                        }, index = [0])
+                    if i > 0:
+                        dataset = pd.concat([dataset, df], ignore_index = True)
+                    t_iter.update()
+                t_nx.update()
+            t_dim.update()
+        t_periodic.update()
 
 # display(dataset)
 
@@ -186,7 +208,7 @@ data = copy.deepcopy(dataset)
 data['dim'] = data['dim'].astype('category')
 data['targetNumNeighbors'] = data['targetNumNeighbors'].astype('category')
 
-g = sns.relplot(data = data, x = 'ptcls', y = 'time', hue = 'algorithm', kind = 'line', col = 'dim')
+g = sns.relplot(data = data, x = 'ptcls', y = 'time', hue = 'algorithm', kind = 'line', col = 'dim', style = 'backend')
 
 for ax in g.axes.flat:
     ax.set_xlabel('Number of particles')
@@ -195,10 +217,10 @@ for ax in g.axes.flat:
 
 g.figure.suptitle('Time to find neighbors')
 
-sns.move_legend(g, 'center left', bbox_to_anchor=[.5, 0.05], ncols=4, title='Number of neighbors')
+# sns.move_legend(g, 'center left', bbox_to_anchor=[.5, 0.05], ncols=4, title='Configuration')
 g.axes[0,0].set_xscale('log')
 g.axes[0,0].set_yscale('log')
+# plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.225)
 g.figure.tight_layout()
-plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.225)
 
 plt.savefig('output/benchmark.png')

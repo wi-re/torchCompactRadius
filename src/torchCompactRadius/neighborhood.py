@@ -8,10 +8,11 @@ from typing import Optional, Tuple, Union, List
 
 def neighborSearch(
         positions : Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
-        supports : Union[float, torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
+        supports : Optional[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]] = None,
+        fixSupport : Optional[torch.Tensor] = None,
         domain : Optional[Tuple[torch.Tensor, torch.Tensor]] = None, 
         periodicity : Optional[torch.Tensor] = None, 
-        hashMapLength : int = -1, mode : str = 'symmetric', variant: str = 'cpp', verbose: bool = False, searchRadius : int = 1) -> Tuple[Tuple[torch.Tensor, torch.Tensor], dict]:
+        hashMapLength = -1, mode : str = 'symmetric', variant: str = 'cpp', verbose: bool = False, searchRadius : int = 1) -> Tuple[Tuple[torch.Tensor, torch.Tensor], dict]:
     """
     Performs neighbor search based on the given parameters.
 
@@ -46,24 +47,24 @@ def neighborSearch(
         queryPositions = positions[0]
         referencePositions = positions[1]
 
-    if isinstance(supports, torch.Tensor):
+    if supports is not None and isinstance(supports, torch.Tensor):
         if verbose:
             print('supports is a single tensor')
         fixedSupport = None
         querySupport = supports
         referenceSupport = supports
-    elif isinstance(supports, float):
-        if verbose:
-            print('supports is a single float')
-        fixedSupport = supports
-        querySupport = None
-        referenceSupport = None
-    else:
+    elif supports is not None and isinstance(supports, Tuple):
         if verbose:
             print('supports is a tuple of tensors')
         fixedSupport = None
         querySupport = supports[0]
         referenceSupport = supports[1]
+    else:
+        if verbose:
+            print('supports is a single float')
+        fixedSupport = fixSupport
+        querySupport = None
+        referenceSupport = None
 
     if domain is None:
         if verbose:
@@ -95,24 +96,24 @@ def neighborSearch(
             if verbose:
                 print('Launching C++ neighbor search with fixed support')
             neighborList = neighborSearchFixed_cpp(queryPositions, referencePositions, fixedSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
-    elif variant == 'python':
-        if fixedSupport is None:
-            if verbose:
-                print('Launching Python neighbor search with dynamic support')
-            neighborList = neighborSearchPython(queryPositions, querySupport, referencePositions, referenceSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
-        else:
-            if verbose:
-                print('Launching Python neighbor search with fixed support')
-            neighborList = neighborSearchFixed(queryPositions, referencePositions, fixedSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
-    elif variant == 'pythonDynamic':
-        if fixedSupport is None:
-            if verbose:
-                print('Launching Python neighbor search with dynamic support')
-            neighborList = neighborSearchDynamic(queryPositions, querySupport, referencePositions, referenceSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
-        else:
-            if verbose:
-                print('Launching Python neighbor search with fixed support')
-            neighborList = neighborSearchDynamic(queryPositions,  queryPositions.new_ones(queryPositions.shape[0]) * fixedSupport, referencePositions,queryPositions.new_ones(referencePositions.shape[0]) * fixedSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
+    # elif variant == 'python':
+    #     if fixedSupport is None:
+    #         if verbose:
+    #             print('Launching Python neighbor search with dynamic support')
+    #         neighborList = neighborSearchPython(queryPositions, querySupport, referencePositions, referenceSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
+    #     else:
+    #         if verbose:
+    #             print('Launching Python neighbor search with fixed support')
+    #         neighborList = neighborSearchFixed(queryPositions, referencePositions, fixedSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
+    # elif variant == 'pythonDynamic':
+    #     if fixedSupport is None:
+    #         if verbose:
+    #             print('Launching Python neighbor search with dynamic support')
+    #         neighborList = neighborSearchDynamic(queryPositions, querySupport, referencePositions, referenceSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
+    #     else:
+    #         if verbose:
+    #             print('Launching Python neighbor search with fixed support')
+    #         neighborList = neighborSearchDynamic(queryPositions,  queryPositions.new_ones(queryPositions.shape[0]) * fixedSupport, referencePositions,queryPositions.new_ones(referencePositions.shape[0]) * fixedSupport, domainMin, domainMax, periodicity, hashMapLength, mode, searchRadius)
     else:
         raise ValueError('variant must be either cpp, python or pythonDynamic')
     
@@ -231,7 +232,7 @@ from torchCompactRadius.cppWrapper import neighborSearchSmallFixed, neighborSear
 from torchCompactRadius.radiusNaive import radiusNaive, radiusNaiveFixed
 import numpy as np
 
-
+# import functorch.experimental.control_flow.cond
 
 try:
     from torch_cluster import radius as radius_cluster
@@ -244,12 +245,13 @@ except ModuleNotFoundError:
 def radiusSearch( 
         queryPositions : torch.Tensor,
         referencePositions : Optional[torch.Tensor],
-        support : Union[float, torch.Tensor,Tuple[torch.Tensor, torch.Tensor]],
+        support : Optional[Union[torch.Tensor,Tuple[torch.Tensor, torch.Tensor]]] = None,
+        fixedSupport : Optional[torch.Tensor] = None,
         mode : str = 'gather',
         domainMin : Optional[torch.Tensor] = None,
         domainMax : Optional[torch.Tensor] = None,
         periodicity : Optional[Union[bool, torch.Tensor]] = None,
-        hashMapLength : int = 4096,
+        hashMapLength = 4096,
         algorithm: str = 'naive',
         verbose: bool = False,
         returnStructure : bool = False
@@ -264,27 +266,27 @@ def radiusSearch(
     assert periodicity.shape[0] == queryPositions.shape[1] if isinstance(periodicity, torch.Tensor) else True, f'len(periodicity) = {len(periodicity)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
     assert domainMin.shape[0] == queryPositions.shape[1] if domainMin is not None else True, f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
     assert domainMax.shape[0] == queryPositions.shape[1] if domainMax is not None else True, f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
-    assert isinstance(support, float) or support.shape[0] == queryPositions.shape[0] if isinstance(support, torch.Tensor) else True, f'support.shape[0] = {support.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
-    assert support[0].shape[0] == queryPositions.shape[0] if isinstance(support, tuple) else True, f'support[0].shape[0] = {support[0].shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
-    assert support[1].shape[0] == referencePositions.shape[0] if isinstance(support, tuple) else True, f'support[1].shape[0] = {support[1].shape[0]} != referencePositions.shape[0] = {referencePositions.shape[0]}'
+    # assert isinstance(support, float) or support.shape[0] == queryPositions.shape[0] if isinstance(support, torch.Tensor) else True, f'support.shape[0] = {support.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+    # assert support[0].shape[0] == queryPositions.shape[0] if isinstance(support, tuple) else True, f'support[0].shape[0] = {support[0].shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+    # assert support[1].shape[0] == referencePositions.shape[0] if isinstance(support, tuple) else True, f'support[1].shape[0] = {support[1].shape[0]} != referencePositions.shape[0] = {referencePositions.shape[0]}'
 
 
 
     if referencePositions is None:
         referencePositions = queryPositions
 
-    if isinstance(support, float):
-        supportRadius = support
+    if fixedSupport is not None:
+        supportRadius = fixedSupport
         querySupport = None
         referenceSupport = None
-    elif isinstance(support, torch.Tensor):
+    elif support is not None and isinstance(support, torch.Tensor):
         supportRadius = None
         querySupport = support
         if mode == 'gather':
             referenceSupport = torch.zeros(referencePositions.shape[0], device = referencePositions.device)
         assert mode == 'gather', f'mode = {mode} != gather'
         assert querySupport.shape[0] == queryPositions.shape[0], f'querySupport.shape[0] = {querySupport.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
-    elif isinstance(support, tuple):
+    elif support is not None and isinstance(support, tuple):
         supportRadius = None
         querySupport = support[0]
         referenceSupport = support[1]
@@ -300,23 +302,24 @@ def radiusSearch(
                 assert domainMax.shape[0] == queryPositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
         else:
             periodicTensor = periodicity
-            assert len(periodicTensor) == queryPositions.shape[1], f'len(periodicTensor) = {len(periodicTensor)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
-            if np.any(periodicTensor):
-                assert domainMin is not None, f'domainMin = {domainMin} is None'
-                assert domainMax is not None, f'domainMax = {domainMax} is None'
-                assert domainMin.shape[0] == queryPositions.shape[1], f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
-                assert domainMax.shape[0] == queryPositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'    
+            # assert len(periodicTensor) == queryPositions.shape[1], f'len(periodicTensor) = {len(periodicTensor)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+            # if np.any(periodicTensor):
+            #     assert domainMin is not None, f'domainMin = {domainMin} is None'
+            #     assert domainMax is not None, f'domainMax = {domainMax} is None'
+            #     assert domainMin.shape[0] == queryPositions.shape[1], f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+            #     assert domainMax.shape[0] == queryPositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'    
     else:
         periodicTensor = torch.tensor([False] * queryPositions.shape[1], dtype = torch.bool, device = queryPositions.device)
 
-    if torch.any(periodicTensor):
-        if algorithm == 'cluster':
-            raise ValueError(f'algorithm = {algorithm} not supported for periodic search')
-        x = torch.stack([queryPositions[:,i] if not periodic_i else torch.remainder(queryPositions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
-        y = torch.stack([referencePositions[:,i] if not periodic_i else torch.remainder(referencePositions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
-    else:
-        x = queryPositions
-        y = referencePositions
+    # if torch.any(periodicTensor):
+        # if algorithm == 'cluster':
+            # raise ValueError(f'algorithm = {algorithm} not supported for periodic search')
+            
+    x = torch.stack([queryPositions[:,i] if not periodic_i else torch.remainder(queryPositions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
+    y = torch.stack([referencePositions[:,i] if not periodic_i else torch.remainder(referencePositions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
+    # else:
+        # x = queryPositions
+        # y = referencePositions
 
     if domainMin is None:
         domainMin = torch.zeros(queryPositions.shape[1], device = queryPositions.device)
@@ -358,7 +361,7 @@ def radiusSearch(
                 print(f'periodicity = {periodicity}')
                 print(f'hashMapLength = {hashMapLength}')
                 print(f'mode = {mode}')
-            (i, j), ds = neighborSearch((x, y), support, (domainMin, domainMax), periodicTensor, hashMapLength, mode, 'cpp')
+            (i, j), ds = neighborSearch((x, y), None, supportRadius, (domainMin, domainMax), periodicTensor, hashMapLength, mode, 'cpp')
             if returnStructure:
                 return i, j, ds
             else:
@@ -420,7 +423,7 @@ def radiusSearch(
                 print(f'periodicity = {periodicTensor}')
                 print(f'hashMapLength = {hashMapLength}')
                 print(f'mode = {mode}')
-            (i,j), ds = neighborSearch((x, y), (querySupport, referenceSupport), (domainMin, domainMax), periodicTensor, hashMapLength, mode, 'cpp')
+            (i,j), ds = neighborSearch((x, y), (querySupport, referenceSupport), None, (domainMin, domainMax), periodicTensor, hashMapLength, mode, 'cpp')
             if returnStructure:
                 return i, j, ds
             else:
@@ -440,7 +443,7 @@ def radius(queryPositions : torch.Tensor,
         domainMin : Optional[torch.Tensor] = None,
         domainMax : Optional[torch.Tensor] = None,
         periodicity : Optional[Union[bool, torch.Tensor]] = None,
-        hashMapLength : int = 4096,
+        hashMapLength = 4096,
         algorithm: str = 'naive',
         verbose: bool = False,
         returnStructure : bool = False):

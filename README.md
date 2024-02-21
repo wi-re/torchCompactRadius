@@ -24,7 +24,7 @@ def radiusSearch(
         domainMin : Optional[torch.Tensor] = None,
         domainMax : Optional[torch.Tensor] = None,
         periodicity : Optional[Union[bool, List[bool]]] = None,
-        hashMapLength : int = 4096,
+        hashMapLength = 4096,
         algorithm: str = 'naive',
         verbose: bool = False,
         returnStructure : bool = False

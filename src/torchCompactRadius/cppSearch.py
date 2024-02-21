@@ -10,8 +10,8 @@ from torchCompactRadius.cppWrapper import countNeighbors_cpp, buildNeighborList_
 
 # @torch.jit.script # cant jit script with compiled c++ code (yet?)
 def searchNeighbors_cpp(
-    queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength: int, sortedCellTable, numCells,
-        qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
+    queryPositions, queryParticleSupports : Optional[torch.Tensor], sortedPositions, sortedSupports : Optional[torch.Tensor], hashTable, hashMapLength, sortedCellTable, numCells,
+        qMin, qMax, minD, maxD, sortIndex, hCell, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
     # with record_function("neighborSearch - searchNeighbors_cpp"):
     # If the target device is MPS we need to transfer all data to the cpu and the results back as there is no implementation
     # of the neighbor search for this accelerator type. The better solution would be to handcraft MPS code but alas.
@@ -98,8 +98,8 @@ def searchNeighbors_cpp(
     return (i,j)
 
 def searchNeighborsFixed_cpp(
-    queryPositions, support : float, sortedPositions, hashTable, hashMapLength: int, sortedCellTable, numCells,
-        qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
+    queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells,
+        qMin, qMax, minD, maxD, sortIndex, hCell, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
     # If the target device is MPS we need to transfer all data to the cpu and the results back as there is no implementation
     # of the neighbor search for this accelerator type. The better solution would be to handcraft MPS code but alas.
     # with record_function("neighborSearch - searchNeighborsFixed_cpp"):
@@ -179,7 +179,7 @@ def searchNeighborsFixed_cpp(
 def neighborSearch_cpp(
     queryPositions, queryParticleSupports : Optional[torch.Tensor], 
     referencePositions, referenceSupports : Optional[torch.Tensor], 
-    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength : int, mode : str = 'symmetric', searchRadius : int = 1):
+    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength, mode : str = 'symmetric', searchRadius : int = 1):
     """
     Perform neighbor search for particles in a given domain.
 
@@ -246,8 +246,8 @@ def neighborSearch_cpp(
 # @torch.jit.script
 def neighborSearchFixed_cpp(
     queryPositions, 
-    referencePositions, support : float,
-    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength : int, mode : str = 'symmetric', searchRadius : int = 1):
+    referencePositions, support,
+    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength, mode : str = 'symmetric', searchRadius : int = 1):
     """
     Perform neighbor search for particles in a given domain.
 

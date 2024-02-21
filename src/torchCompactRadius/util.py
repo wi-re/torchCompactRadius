@@ -25,7 +25,7 @@ def volumeToSupport(volume : float, targetNeighbors : int, dim : int):
         # N_h = 4/3 \pi h^3 / v -> h = \sqrt[3]{N_h * v / \pi * 3/4}
         return torch.pow(targetNeighbors * volume / np.pi * 3 /4, 1/3)
 @torch.jit.script
-def compute_h(qMin, qMax, referenceSupport : float): 
+def compute_h(qMin, qMax, referenceSupport): 
     """
     Compute the smoothing length (h) based on the given minimum and maximum coordinates (qMin and qMax)
     and the reference support value. The smoothing length is used for grid operations and is determined
@@ -91,7 +91,7 @@ def countUniqueEntries(indices, positions):
 
 from torchCompactRadius.cppWrapper import hashCells_cpp
 # @torch.jit.script
-def hashCellIndices_cpp(cellIndices, hashMapLength : int):
+def hashCellIndices_cpp(cellIndices, hashMapLength):
     """
     Hashes the cell indices using a hash function.
 
@@ -111,7 +111,7 @@ def hashCellIndices_cpp(cellIndices, hashMapLength : int):
     return hashCells_cpp(cellIndices, hashMapLength)
 
 @torch.jit.script
-def hashCellIndices(cellIndices, hashMapLength : int):
+def hashCellIndices(cellIndices, hashMapLength):
     """
     Hashes the cell indices using a hash function.
 
@@ -156,7 +156,7 @@ def linearIndexing(cellIndices, cellCounts):
     return linearIndex
 
 @torch.jit.script
-def queryCell(cellIndex, hashTable, hashMapLength : int, numCells, cellTable):
+def queryCell(cellIndex, hashTable, hashMapLength, numCells, cellTable):
     """
     Queries a cell in the hash table and returns the indices of particles in that cell.
 

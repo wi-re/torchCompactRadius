@@ -3,8 +3,8 @@ from torchCompactRadius.util import compute_h, linearIndexing
 from typing import Optional
 # from torch.profiler import record_function
 
-@torch.jit.script
-def sortReferenceParticles(referenceParticles, referenceSupport : float, domainMin, domainMax):
+# @torch.jit.script
+def sortReferenceParticles(referenceParticles, referenceSupport, domainMin, domainMax):
     """
     Sorts the reference particles based on their linear indices.
 
@@ -34,7 +34,7 @@ def sortReferenceParticles(referenceParticles, referenceSupport : float, domainM
     # with record_function("neighborSearch - sortReferenceParticles[resort]"): 
     sortedLinearIndices = linearIndices[sortingIndices]
     return sortedLinearIndices, sortingIndices, \
-            cellCount, domainMin, domainMax, float(hCell)
+            cellCount, domainMin, domainMax, hCell
 
 # @torch.jit.script
 def computeGridSupport(queryParticleSupports : Optional[torch.Tensor], referenceSupports : Optional[torch.Tensor], mode : str = 'symmetric'):  

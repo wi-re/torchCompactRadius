@@ -10,8 +10,8 @@ import torch
 
 @torch.jit.script
 def findNeighborsFixedFixed(queryPosition, 
-            searchRange : int, sortedPositions, support : float, hashTable, hashMapLength:int, numCells, 
-            cellTable, qMin, hCell : float, maxDomain, minDomain, periodicity, bufferSize: int, mode : str):
+            searchRange : int, sortedPositions, support, hashTable, hashMapLength, numCells, 
+            cellTable, qMin, hCell, maxDomain, minDomain, periodicity, bufferSize: int, mode : str):
     centerCell = torch.floor((queryPosition - qMin) / hCell).to(torch.int32)
     neighborhood = torch.zeros(bufferSize, dtype = centerCell.dtype, device = centerCell.device)
     counter = 0
@@ -48,8 +48,8 @@ def findNeighborsFixedFixed(queryPosition,
 
 @torch.jit.script
 def countNeighborsFixed(queryPosition, 
-            searchRange : int, sortedPositions, support : float, hashTable, hashMapLength:int, numCells, 
-            cellTable, qMin, hCell : float, maxDomain, minDomain, periodicity, mode : str):
+            searchRange : int, sortedPositions, support, hashTable, hashMapLength, numCells, 
+            cellTable, qMin, hCell, maxDomain, minDomain, periodicity, mode : str):
     centerCell = torch.floor((queryPosition - qMin) / hCell).to(torch.int32)
     counter = torch.tensor(0, dtype = centerCell.dtype, device = centerCell.device)
     prod = getOffsets(searchRange, queryPosition.shape[0]).to(queryPosition.device)
@@ -90,7 +90,7 @@ def countNeighborsFixed(queryPosition,
     return counter
 
 @torch.jit.script
-def buildNeighborOffsetListFixed(queryPositions, sortedPositions, support : float, hashTable, hashMapLength:int, numCells, sortedCellTable, qMin, hCell : float, maxD, minD, periodicity : torch.Tensor, mode : str, searchRadius : int = 1):
+def buildNeighborOffsetListFixed(queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity : torch.Tensor, mode : str, searchRadius : int = 1):
     """
     Builds the neighbor offset list for each query particle.
 
@@ -125,7 +125,7 @@ def buildNeighborOffsetListFixed(queryPositions, sortedPositions, support : floa
 
 
 @torch.jit.script
-def buildNeighborListFixedFixed(neighborListLength, sortIndex, queryPositions, sortedPositions, support : float, hashTable, hashMapLength:int, numCells, sortedCellTable, qMin, hCell : float, maxD, minD, periodicity: torch.Tensor, neighborCounter, neighborOffsets, mode : str, searchRadius : int = 1):
+def buildNeighborListFixedFixed(neighborListLength, sortIndex, queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity: torch.Tensor, neighborCounter, neighborOffsets, mode : str, searchRadius : int = 1):
     """
     Builds a fixed-size neighbor list for each query particle.
 
@@ -165,8 +165,8 @@ def buildNeighborListFixedFixed(neighborListLength, sortIndex, queryPositions, s
 
 @torch.jit.script
 def searchNeighborsFixedPython(
-    queryPositions, support :float, sortedPositions, hashTable, hashMapLength: int, sortedCellTable, numCells,
-        qMin, qMax, minD, maxD, sortIndex, hCell : float, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
+    queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells,
+        qMin, qMax, minD, maxD, sortIndex, hCell, periodicity : torch.Tensor, mode : str = 'symmetric', searchRadius : int = 1):
     # with record_function("neighborSearch - buildNeighborOffsetList"):
     # Build neighbor list by first building a list of offsets and then the actual neighbor list
     neighborCounter, neighborOffsets, neighborListLength = buildNeighborOffsetListFixed(queryPositions, sortedPositions, support, hashTable, hashMapLength, numCells, sortedCellTable, qMin, hCell, maxD, minD, periodicity, mode, searchRadius)
@@ -177,8 +177,8 @@ def searchNeighborsFixedPython(
 @torch.jit.script
 def neighborSearchFixed(
     queryPositions, 
-    referencePositions, support : float, 
-    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength : int, mode : str = 'symmetric', searchRadius : int = 1):
+    referencePositions, support, 
+    minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor], periodicity : torch.Tensor, hashMapLength, mode : str = 'symmetric', searchRadius : int = 1):
     """
     Perform neighbor search for particles in a given domain.
 
