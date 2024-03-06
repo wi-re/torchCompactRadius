@@ -47,8 +47,8 @@ def find_cuda_home():
                 cuda_home = '/usr/local/cuda'
             if not os.path.exists(cuda_home):
                 cuda_home = None
-    if cuda_home and not torch.cuda.is_available():
-        print("No CUDA runtime is found, using CUDA_HOME='{}'".format(cuda_home))
+    # if cuda_home and not torch.cuda.is_available():
+        # print("No CUDA runtime is found, using CUDA_HOME='{}'".format(cuda_home))
     if cuda_home is not None:
         os.environ['CUDA_HOME'] = cuda_home
     # print('Cuda compiler:', cuda_home)
