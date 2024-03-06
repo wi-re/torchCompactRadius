@@ -249,8 +249,9 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
         return load(name=module_name, 
             sources=sourceFiles, verbose=verbose, extra_cflags=hostFlags, extra_cuda_cflags=cudaFlags, extra_ldflags=ldFlags)
     else:
-        variant = 'py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cpu'
+        variant = platform.system() + '_py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cpu'
         filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
+        # print('Looking for prebuilt module:', filepath)
         if os.path.exists(filepath):
             # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
             spec = importlib.util.spec_from_file_location(module_name, filepath)
@@ -259,7 +260,8 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             assert isinstance(spec.loader, importlib.abc.Loader)
             spec.loader.exec_module(module)
             return module
-        warnings.warn('No prebuilt module found.')
+        # warnings.warn('No prebuilt module found.')
+        # verbose = True
         if not os.path.exists(_get_build_directory(module_name, verbose)):
             warnings.warn('No prior extension directory exists, fully recompiling code. (This may take a while.)')        
         return load(name=module_name, 
