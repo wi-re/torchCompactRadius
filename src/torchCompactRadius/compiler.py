@@ -9,6 +9,7 @@ import platform
 import torch
 from torch.utils.cpp_extension import load
 import warnings
+import importlib
 
 directory = Path(__file__).resolve().parent
 
@@ -69,6 +70,45 @@ def getComputeCapability(device):
     return int(''.join([str(s) for s in torch.cuda.get_device_capability(device)]))
 
 
+
+def get_default_build_root() -> str:
+    """
+    Return the path to the root folder under which extensions will built.
+
+    For each extension module built, there will be one folder underneath the
+    folder returned by this function. For example, if ``p`` is the path
+    returned by this function and ``ext`` the name of an extension, the build
+    folder for the extension will be ``p/ext``.
+
+    This directory is **user-specific** so that multiple users on the same
+    machine won't meet permission issues.
+    """
+    return os.path.realpath(torch._appdirs.user_cache_dir(appname='torch_extensions'))
+
+def _get_build_directory(name: str, verbose: bool) -> str:
+    root_extensions_directory = os.environ.get('TORCH_EXTENSIONS_DIR')
+    if root_extensions_directory is None:
+        root_extensions_directory = get_default_build_root()
+        cu_str = ('cpu' if torch.version.cuda is None else
+                  f'cu{torch.version.cuda.replace(".", "")}')  # type: ignore[attr-defined]
+        python_version = f'py{sys.version_info.major}{sys.version_info.minor}'
+        build_folder = f'{python_version}_{cu_str}'
+
+        root_extensions_directory = os.path.join(
+            root_extensions_directory, build_folder)
+
+    if verbose:
+        print(f'Using {root_extensions_directory} as PyTorch extensions root...', file=sys.stderr)
+
+    build_directory = os.path.join(root_extensions_directory, name)
+    # if not os.path.exists(build_directory):
+    #     if verbose:
+    #         print(f'Creating extension directory {build_directory}...', file=sys.stderr)
+    #     # This is like mkdir -p, i.e. will also create parent directories.
+    #     os.makedirs(build_directory, exist_ok=True)
+
+    return build_directory
+
 def build_cpp_standard_arg(cpp_standard):
     """
     Build the argument for the C++ standard based on the given cpp_standard.
@@ -106,17 +146,19 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
     Returns:
         torch.utils.cpp_extension.CppExtension: Compiled module.
     """
+    verbose = False
     cpp_standard_arg = build_cpp_standard_arg(cpp_standard)
 
     hostFlags = [cpp_standard_arg, "-fPIC", "-O3", "-fopenmp"] if openMP else [cpp_standard_arg, "-fPIC", "-O3"]
-    cudaFlags = [cpp_standard_arg,'-O3']
+    cudaFlags = [cpp_standard_arg,'-O3', '-t 2']
     
     if torch.cuda.is_available():
         computeCapability = getComputeCapability(torch.cuda.current_device()) if cuda_arch is None else cuda_arch
         if verbose:
             print('computeCapability:', computeCapability)
         smFlag = '-gencode=arch=compute_%d,code=sm_%d' % (computeCapability, computeCapability)
-        cudaFlags.append(smFlag)
+        # cudaFlags.append(smFlag)
+        cudaFlags.append('-arch=all -Wno-deprecated-gpu-targets -t 2')
         cudaFlags.append('-allow-unsupported-compiler')
         if verbose:
             print('smFlag:', smFlag)
@@ -182,9 +224,43 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
         print('cppFiles:', cppFiles)
         print('cuFiles:', cuFiles)
 
+    if 'MAX_JOBS' not in os.environ:
+        os.environ['MAX_JOBS'] = '16'
+
+    version = platform.python_version()
+
+    
+
     if torch.cuda.is_available():
+        variant = platform.system() + '_py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cu' + torch.version.cuda.replace(".", "")
+        filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
+        print('Looking for prebuilt module:', filepath)
+        if os.path.exists(filepath):
+            # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+            spec = importlib.util.spec_from_file_location(module_name, filepath)
+            assert spec is not None
+            module = importlib.util.module_from_spec(spec)
+            assert isinstance(spec.loader, importlib.abc.Loader)
+            spec.loader.exec_module(module)
+            return module
+        warnings.warn('No prebuilt module found.')
+        if not os.path.exists(_get_build_directory(module_name, verbose)):
+            warnings.warn('No prior extension directory exists, fully recompiling code. (This may take a while.)')
         return load(name=module_name, 
             sources=sourceFiles, verbose=verbose, extra_cflags=hostFlags, extra_cuda_cflags=cudaFlags, extra_ldflags=ldFlags)
     else:
+        variant = 'py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cpu'
+        filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
+        if os.path.exists(filepath):
+            # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+            spec = importlib.util.spec_from_file_location(module_name, filepath)
+            assert spec is not None
+            module = importlib.util.module_from_spec(spec)
+            assert isinstance(spec.loader, importlib.abc.Loader)
+            spec.loader.exec_module(module)
+            return module
+        warnings.warn('No prebuilt module found.')
+        if not os.path.exists(_get_build_directory(module_name, verbose)):
+            warnings.warn('No prior extension directory exists, fully recompiling code. (This may take a while.)')        
         return load(name=module_name, 
             sources=cppFiles, verbose=verbose, extra_cflags=hostFlags, extra_ldflags=ldFlags)
