@@ -150,7 +150,7 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
     cpp_standard_arg = build_cpp_standard_arg(cpp_standard)
 
     hostFlags = [cpp_standard_arg, "-fPIC", "-O3", "-fopenmp"] if openMP else [cpp_standard_arg, "-fPIC", "-O3"]
-    cudaFlags = [cpp_standard_arg,'-O3', '-t 2']
+    cudaFlags = [cpp_standard_arg,'-O3']
     
     if torch.cuda.is_available():
         computeCapability = getComputeCapability(torch.cuda.current_device()) if cuda_arch is None else cuda_arch
@@ -158,7 +158,8 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             print('computeCapability:', computeCapability)
         smFlag = '-gencode=arch=compute_%d,code=sm_%d' % (computeCapability, computeCapability)
         # cudaFlags.append(smFlag)
-        cudaFlags.append('-arch=all -Wno-deprecated-gpu-targets -t 2')
+        # cudaFlags.append('-arch=all -Wno-deprecated-gpu-targets -t 2')
+        cudaFlags.append('-arch=native -Wno-deprecated-gpu-targets -t 1')
         cudaFlags.append('-allow-unsupported-compiler')
         if verbose:
             print('smFlag:', smFlag)
