@@ -158,8 +158,8 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             print('computeCapability:', computeCapability)
         smFlag = '-gencode=arch=compute_%d,code=sm_%d' % (computeCapability, computeCapability)
         # cudaFlags.append(smFlag)
-        # cudaFlags.append('-arch=all -Wno-deprecated-gpu-targets -t 2')
-        cudaFlags.append('-arch=native -Wno-deprecated-gpu-targets -t 1')
+        cudaFlags.append('-arch=all -Wno-deprecated-gpu-targets -t 2')
+        # cudaFlags.append('-arch=native -Wno-deprecated-gpu-targets -t 1')
         cudaFlags.append('-allow-unsupported-compiler')
         if verbose:
             print('smFlag:', smFlag)
@@ -237,6 +237,7 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
         filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
         # print('Looking for prebuilt module:', filepath)
         if os.path.exists(filepath):
+            # warnings.warn(f'Loading {variant}.')
             # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
             spec = importlib.util.spec_from_file_location(module_name, filepath)
             assert spec is not None
@@ -244,9 +245,10 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             assert isinstance(spec.loader, importlib.abc.Loader)
             spec.loader.exec_module(module)
             return module
+        # warnings.warn(f'No prebuilt binary exists for the current configuration {variant}.')
         # warnings.warn('No prebuilt module found.')
         if not os.path.exists(_get_build_directory(module_name, verbose)):
-            warnings.warn('No prior extension directory exists, fully recompiling code. (This may take a while.)')
+            warnings.warn(f'No prior extension directory exists, fully recompiling code. (This may take a while.) Building for {variant}')
         return load(name=module_name, 
             sources=sourceFiles, verbose=verbose, extra_cflags=hostFlags, extra_cuda_cflags=cudaFlags, extra_ldflags=ldFlags)
     else:
@@ -254,6 +256,7 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
         filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
         # print('Looking for prebuilt module:', filepath)
         if os.path.exists(filepath):
+            # warnings.warn(f'Loading {variant}.')
             # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
             spec = importlib.util.spec_from_file_location(module_name, filepath)
             assert spec is not None
@@ -261,9 +264,10 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             assert isinstance(spec.loader, importlib.abc.Loader)
             spec.loader.exec_module(module)
             return module
+        # warnings.warn(f'No prebuilt binary exists for the current configuration {variant}.')
         # warnings.warn('No prebuilt module found.')
         # verbose = True
         if not os.path.exists(_get_build_directory(module_name, verbose)):
-            warnings.warn('No prior extension directory exists, fully recompiling code. (This may take a while.)')        
+            warnings.warn(f'No prior extension directory exists, fully recompiling code. (This may take a while.) Building for {variant}')        
         return load(name=module_name, 
             sources=cppFiles, verbose=verbose, extra_cflags=hostFlags, extra_ldflags=ldFlags)
