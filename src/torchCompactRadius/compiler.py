@@ -146,7 +146,7 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
     Returns:
         torch.utils.cpp_extension.CppExtension: Compiled module.
     """
-    verbose = False
+    # verbose = False
     cpp_standard_arg = build_cpp_standard_arg(cpp_standard)
 
     hostFlags = [cpp_standard_arg, "-fPIC", "-O3", "-fopenmp"] if openMP else [cpp_standard_arg, "-fPIC", "-O3"]
@@ -158,8 +158,8 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             print('computeCapability:', computeCapability)
         smFlag = '-gencode=arch=compute_%d,code=sm_%d' % (computeCapability, computeCapability)
         # cudaFlags.append(smFlag)
-        cudaFlags.append('-arch=all -Wno-deprecated-gpu-targets -t 2')
-        # cudaFlags.append('-arch=native -Wno-deprecated-gpu-targets -t 1')
+        # cudaFlags.append('-arch=all -Wno-deprecated-gpu-targets -t 2')
+        cudaFlags.append('-arch=native -Wno-deprecated-gpu-targets -t 1')
         cudaFlags.append('-allow-unsupported-compiler')
         if verbose:
             print('smFlag:', smFlag)
@@ -235,8 +235,11 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
     if torch.cuda.is_available():
         variant = platform.system() + '_py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cu' + torch.version.cuda.replace(".", "")
         filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
-        # print('Looking for prebuilt module:', filepath)
+        if verbose:
+            print('Looking for prebuilt module:', filepath)
         if os.path.exists(filepath):
+            if verbose:
+                print('Loading:', variant)
             # warnings.warn(f'Loading {variant}.')
             # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
             spec = importlib.util.spec_from_file_location(module_name, filepath)
@@ -254,8 +257,11 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
     else:
         variant = platform.system() + '_py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cpu'
         filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
-        # print('Looking for prebuilt module:', filepath)
+        if verbose:
+            print('Looking for prebuilt module:', filepath)
         if os.path.exists(filepath):
+            if verbose:
+                print('Loading:', variant)
             # warnings.warn(f'Loading {variant}.')
             # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
             spec = importlib.util.spec_from_file_location(module_name, filepath)

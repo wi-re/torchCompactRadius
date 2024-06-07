@@ -1,6 +1,6 @@
 [project]
 name = "torchCompactRadius"
-version = "0.1.7"
+version = "0.1.8"
 authors = [
   { name="Rene Winchenbach", email="contact@fluids.dev" },
 ]

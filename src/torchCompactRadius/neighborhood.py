@@ -4,7 +4,69 @@ from torchCompactRadius.pythonSearchDynamic import neighborSearchDynamic, search
 from torchCompactRadius.pythonSearchFixed import neighborSearchFixed, searchNeighborsFixedPython
 import torch
 from typing import Optional, Tuple, Union, List
+from torchCompactRadius.util import getDomainExtents
+from torchCompactRadius.hashTable import buildCompactHashMap_compat
 
+def neighborSearchDataStructure(
+        referencePositions : torch.Tensor,
+        referenceSupports : Optional[torch.Tensor],
+        support : torch.Tensor ,
+        domain : Optional[Tuple[torch.Tensor, torch.Tensor]] = None, 
+        periodicity : Optional[torch.Tensor] = None, 
+        hashMapLength = -1, verbose: bool = False, searchRadius : int = 1) -> dict:
+    if domain is None:
+        if verbose:
+            print('domain is None')
+        domainMin = None
+        domainMax = None
+    else:
+        if verbose:
+            print('domain is a tuple of tensors')
+        domainMin = domain[0]
+        domainMax = domain[1]
+
+    if periodicity is None:
+        if verbose:
+            print('periodicity is None')
+        periodicity = [False] * referencePositions.shape[1]
+
+    # with record_function("neighborSearch"):
+    # with record_function("neighborSearch - computeGridSupport"):
+    # Compute grid support
+    hMax = support
+    # with record_function("neighborSearch - getDomainExtents"):
+    # Compute domain extents
+    minD, maxD = getDomainExtents(referencePositions, domainMin, domainMax)
+    # with record_function("neighborSearch - sortReferenceParticles"): 
+    # Wrap x positions around periodic boundaries
+    x = torch.vstack([component if not periodic else torch.remainder(component - minD[i], maxD[i] - minD[i]) + minD[i] for i, (component, periodic) in enumerate(zip(referencePositions.mT, periodicity))]).mT
+    # Build hash table and cell table
+    sortedPositions, hashTable, sortedCellTable, hCell, qMin, qMax, numCells, sortIndex = buildCompactHashMap_compat(x, minD, maxD, periodicity, hMax, hashMapLength)
+    # sortedSupports = None 
+    sortedSupports = referenceSupports[sortIndex] if referenceSupports is not None else None
+    # sortedSupports = xSupport[sortIndex]
+
+    # print('...')
+    return {
+        'sortedPositions' : sortedPositions,
+        'sortedSupports' : sortedSupports,
+        'referencePositions': referencePositions,
+        'referenceSupports': referenceSupports,
+        'hashTable' : hashTable,
+        'hashMapLength' : hashMapLength,
+        'sortedCellTable' : sortedCellTable,
+        'numCells' : numCells,
+        'qMin' : qMin,
+        'qMax' : qMax,
+        'minD' : minD,
+        'maxD' : maxD,
+        'sortIndex' : sortIndex,
+        'hCell' : hCell,
+        'periodicity' : periodicity,
+        'searchRadius' : searchRadius,
+    }
+    # (i,j) = searchNeighborsFixed_cpp(queryPositions, support, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+    
 
 def neighborSearch(
         positions : Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
@@ -125,6 +187,9 @@ def neighborSearch(
     neighborDict['searchRadius'] = searchRadius
     neighborDict['fixedSupport'] = fixedSupport
 
+    neighborDict['referencePositions'] = referencePositions
+    neighborDict['referenceSupports'] = referenceSupport
+
     neighborDict['sortedPositions'] = sortedPositions
     neighborDict['sortedSupports'] = sortedSupports
     neighborDict['sortIndex'] = sortIndex
@@ -139,8 +204,8 @@ def neighborSearch(
 
     neighborDict['qMin'] = qMin
     neighborDict['qMax'] = qMax
-    neighborDict['minDomain'] = minD
-    neighborDict['maxDomain'] = maxD
+    neighborDict['minD'] = minD
+    neighborDict['maxD'] = maxD
     
     return (i, j), neighborDict
 
@@ -191,8 +256,8 @@ def neighborSearchExisting(
     hCell = neighborDict['hCell']
     qMin = neighborDict['qMin']
     qMax = neighborDict['qMax']
-    minD = neighborDict['minDomain']
-    maxD = neighborDict['maxDomain']
+    minD = neighborDict['minD']
+    maxD = neighborDict['maxD']
 
     if variant == 'cpp':
         if fixedSupport is None:
@@ -499,3 +564,61 @@ def radius(queryPositions : torch.Tensor,
                 if batch_y is not None:
                     offsets[1] += y.shape[0]
             return i, j
+        
+
+
+def buildDataStructure( 
+        referencePositions : torch.Tensor,
+        referenceSupports : Optional[torch.Tensor],
+        fixedSupport : torch.Tensor,
+        domainMin : Optional[torch.Tensor] = None,
+        domainMax : Optional[torch.Tensor] = None,
+        periodicity : Optional[Union[bool, torch.Tensor]] = None,
+        hashMapLength = 4096,
+        verbose: bool = False
+        ):
+    
+    assert hashMapLength > 0, f'hashMapLength = {hashMapLength} <= 0'
+    assert periodicity.shape[0] == referencePositions.shape[1] if isinstance(periodicity, torch.Tensor) else True, f'len(periodicity) = {len(periodicity)} != referencePositions.shape[1] = {referencePositions.shape[1]}'
+    assert domainMin.shape[0] == referencePositions.shape[1] if domainMin is not None else True, f'domainMin.shape[0] = {domainMin.shape[0]} != referencePositions.shape[1] = {referencePositions.shape[1]}'
+    assert domainMax.shape[0] == referencePositions.shape[1] if domainMax is not None else True, f'domainMax.shape[0] = {domainMax.shape[0]} != referencePositions.shape[1] = {referencePositions.shape[1]}'
+    # assert isinstance(support, float) or support.shape[0] == queryPositions.shape[0] if isinstance(support, torch.Tensor) else True, f'support.shape[0] = {support.shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+    # assert support[0].shape[0] == queryPositions.shape[0] if isinstance(support, tuple) else True, f'support[0].shape[0] = {support[0].shape[0]} != queryPositions.shape[0] = {queryPositions.shape[0]}'
+    # assert support[1].shape[0] == referencePositions.shape[0] if isinstance(support, tuple) else True, f'support[1].shape[0] = {support[1].shape[0]} != referencePositions.shape[0] = {referencePositions.shape[0]}'
+
+
+    if periodicity is not None:
+        if isinstance(periodicity, bool):
+            periodicTensor = torch.tensor([periodicity] * referencePositions.shape[1], device = referencePositions.device, dtype = torch.bool)
+            if periodicity:
+                assert domainMin is not None, f'domainMin = {domainMin} is None'
+                assert domainMax is not None, f'domainMax = {domainMax} is None'
+                assert domainMin.shape[0] == referencePositions.shape[1], f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {referencePositions.shape[1]}'
+                assert domainMax.shape[0] == referencePositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {referencePositions.shape[1]}'
+        else:
+            periodicTensor = periodicity
+            # assert len(periodicTensor) == queryPositions.shape[1], f'len(periodicTensor) = {len(periodicTensor)} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+            # if np.any(periodicTensor):
+            #     assert domainMin is not None, f'domainMin = {domainMin} is None'
+            #     assert domainMax is not None, f'domainMax = {domainMax} is None'
+            #     assert domainMin.shape[0] == queryPositions.shape[1], f'domainMin.shape[0] = {domainMin.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'
+            #     assert domainMax.shape[0] == queryPositions.shape[1], f'domainMax.shape[0] = {domainMax.shape[0]} != queryPositions.shape[1] = {queryPositions.shape[1]}'    
+    else:
+        periodicTensor = torch.tensor([False] * referencePositions.shape[1], dtype = torch.bool, device = referencePositions.device)
+
+    # if torch.any(periodicTensor):
+        # if algorithm == 'cluster':
+            # raise ValueError(f'algorithm = {algorithm} not supported for periodic search')
+            
+    # x = torch.stack([queryPositions[:,i] if not periodic_i else torch.remainder(queryPositions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
+    y = torch.stack([referencePositions[:,i] if not periodic_i else torch.remainder(referencePositions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodicTensor)], dim = 1)
+    # else:
+        # x = queryPositions
+        # y = referencePositions
+
+    if domainMin is None:
+        domainMin = torch.zeros(referencePositions.shape[1], device = referencePositions.device)
+    if domainMax is None:
+        domainMax = torch.ones(referencePositions.shape[1], device = referencePositions.device)
+
+    return neighborSearchDataStructure(y, referenceSupports, fixedSupport, (domainMin, domainMax), periodicTensor, hashMapLength, verbose = verbose)
