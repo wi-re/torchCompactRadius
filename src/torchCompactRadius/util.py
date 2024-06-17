@@ -43,7 +43,10 @@ def compute_h(qMin, qMax, referenceSupport):
     numCells = torch.floor(qExtent / referenceSupport)
     h = qExtent / numCells
     return torch.max(h)
-@torch.jit.script
+
+
+
+# @torch.jit.script
 def getDomainExtents(positions, minDomain : Optional[torch.Tensor], maxDomain : Optional[torch.Tensor]):
     """
     Calculates the domain extents based on the given positions and optional minimum and maximum domain values.
@@ -58,7 +61,7 @@ def getDomainExtents(positions, minDomain : Optional[torch.Tensor], maxDomain : 
     """
     if minDomain is not None and isinstance(minDomain, list):
         minD = torch.tensor(minDomain).to(positions.device).type(positions.dtype)
-    elif minDomain is not None:
+    elif minDomain is not None: 
         minD = minDomain
     else:
         minD = torch.min(positions, dim = 0)[0]
