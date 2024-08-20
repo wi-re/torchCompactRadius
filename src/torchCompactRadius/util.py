@@ -40,8 +40,36 @@ def compute_h(qMin, qMax, referenceSupport):
         torch.Tensor: The computed smoothing length (h).
     """
     qExtent = qMax - qMin
-    numCells = torch.floor(qExtent / referenceSupport)
-    h = qExtent / numCells
+    qCells = qExtent / referenceSupport
+    qfCells = torch.floor(qCells)
+    # numCells = torch.where( qCells - qfCells < 1e-4, qfCells, qfCells+1)
+    numCells = qfCells
+    h = qExtent / (numCells)
+    if torch.any(qExtent / h - numCells > 0):
+        # print('Warning: Reference support is not a multiple of the domain extent. Consider changing the reference support value.')
+        numCells -= 1
+        h = qExtent / (numCells)
+
+    # print('Reference support:', referenceSupport)
+    # print('Domain extent:', qExtent)
+
+    # print('Reference Num Cells: ', qCells)
+    # print('Computed Num Cells: ', numCells)
+
+    # print('Reverse Count: ', qExtent / h - numCells)
+
+    # print('Number of cells:', numCells)
+    # print('Smoothing length:', h)
+    # print('Resulting Cells: ', torch.floor(qExtent / h))
+
+    # print(qfCells, qCells - qfCells)
+
+    # print('Difference of support: ', torch.abs(h - referenceSupport))
+
+    # if torch.any(torch.floor(qExtent / h) != torch.ceil(qExtent / h)):
+    #     print(torch.floor(qExtent / h), torch.ceil(qExtent / h))
+    #     print('Warning: Reference support is not a multiple of the domain extent. Consider changing the reference support value.')
+
     return torch.max(h)
 
 
