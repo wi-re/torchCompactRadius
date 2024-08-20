@@ -24,7 +24,7 @@ def volumeToSupport(volume : float, targetNeighbors : int, dim : int):
     else:
         # N_h = 4/3 \pi h^3 / v -> h = \sqrt[3]{N_h * v / \pi * 3/4}
         return torch.pow(targetNeighbors * volume / np.pi * 3 /4, 1/3)
-@torch.jit.script
+# @torch.jit.script
 def compute_h(qMin, qMax, referenceSupport): 
     """
     Compute the smoothing length (h) based on the given minimum and maximum coordinates (qMin and qMax)
@@ -45,11 +45,6 @@ def compute_h(qMin, qMax, referenceSupport):
     # numCells = torch.where( qCells - qfCells < 1e-4, qfCells, qfCells+1)
     numCells = qfCells
     h = qExtent / (numCells)
-    if torch.any(qExtent / h - numCells > 0):
-        # print('Warning: Reference support is not a multiple of the domain extent. Consider changing the reference support value.')
-        numCells -= 1
-        h = qExtent / (numCells)
-
     # print('Reference support:', referenceSupport)
     # print('Domain extent:', qExtent)
 
@@ -61,6 +56,17 @@ def compute_h(qMin, qMax, referenceSupport):
     # print('Number of cells:', numCells)
     # print('Smoothing length:', h)
     # print('Resulting Cells: ', torch.floor(qExtent / h))
+
+    if torch.any(qExtent / h - numCells > 0):
+        # print('Warning: Reference support is not a multiple of the domain extent. Consider changing the reference support value.')
+        numCells -= 1
+        h = qExtent / numCells
+        # print('New Num Cells: ', numCells)
+        # print('New Smoothing length: ', h)
+
+
+    if torch.any(torch.ceil(qExtent / h) > qExtent / h):
+        h = h * (1e-4 + 1)
 
     # print(qfCells, qCells - qfCells)
 
