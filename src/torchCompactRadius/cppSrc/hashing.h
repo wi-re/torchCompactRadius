@@ -21,12 +21,12 @@ template<std::size_t dim = 2>
 hostDeviceInline constexpr auto hashIndexing(std::array<int32_t, dim> cellIndices, uint32_t hashMapLength) {
     // auto dim = cellIndices.size(0);
     using unsignedType = uint32_t;
-    constexpr auto primes = std::array<unsignedType, 3>{73856093u, 19349663u, 83492791u};
     if constexpr (dim == 1) {
         return ((unsignedType) cellIndices[0]) % (unsignedType) hashMapLength;
     }else{
+        constexpr auto primes = std::array<unsignedType, 3>{73856093u, 19349663u, 83492791u};
         unsignedType hash = 0;
-        for(int32_t i = 0; i < dim; i++){
+        for(int32_t i = 0; i < (int32_t) dim; i++){
             hash += ((unsignedType) cellIndices[i]) * primes[i];
         }
         return (int32_t) (hash % (unsignedType) hashMapLength);

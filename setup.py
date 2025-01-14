@@ -56,7 +56,7 @@ def get_extensions():
     if sys.platform == 'win32':
         extra_compile_args['cxx'] += ['/openmp']
     else:
-        extra_compile_args['cxx'] += ['-fopenmp']
+        extra_compile_args['cxx'] += ['-fopenmp', '-Wno-sign-compare', '-Wno-unused-variable']
 
     if sys.platform == 'darwin':
         extra_compile_args['cxx'] += ['-D_LIBCPP_DISABLE_AVAILABILITY']

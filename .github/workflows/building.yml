@@ -12,7 +12,7 @@ jobs:
       matrix:
         os: [ubuntu-20.04] #, macos-14, windows-2019]
         python-version: ['3.11'] #, '3.8', '3.9', '3.10', '3.12']
-        torch-version: [2.5.0]  # [2.3.0, 2.4.0, 2.5.0]
+        torch-version: [2.5.0, 2.4.0]  # [2.3.0, 2.4.0, 2.5.0]
         cuda-version: ['cpu'] #, 'cu124'] #, 'cu121', 'cu118']
         exclude:
           - torch-version: 2.5.0
@@ -90,20 +90,35 @@ jobs:
 
       - name: Test installation
         run: |
-          python -c "import torchCompactRadius; print('torch-cluster:', torchCompactRadius.__version__)"
+          python -c "import torchCompactRadius; print('torch-compact-radius:', torchCompactRadius.__version__)"
 
       - name: Build wheel
         run: |
           pip install wheel
           python setup.py bdist_wheel --dist-dir=dist
 
-      - name: Rename dist folder
+      - name create archive folder
         run: |
-          mv dist torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+          mkdir whl
+          mkdir whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+          mv dist/*.whl whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}+${{ runner.os }}
+          name: artifact-${{ matrix.torch-version }}+${{ matrix.cuda-version }}+${{ runner.os }}+${{ matrix.python-version }}
           path:
-            torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}/
+            whl/
+  collect:
+    runs-on: ubuntu-20.04
+    needs: wheel
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: downloaded_artifacts
+      - name: List downloaded files
+        run: |
+          ls -l downloaded_artifacts
+          ls -l downloaded_artifacts/whl
+          ls -l downloaded_artifacts/whl/torch-*
