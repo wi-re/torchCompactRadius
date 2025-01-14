@@ -99,5 +99,7 @@ jobs:
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
-        path:
-          torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}/
+        with:
+          name: torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}+${{ runner.os }}
+          path:
+            torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}/
