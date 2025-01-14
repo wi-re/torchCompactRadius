@@ -113,12 +113,24 @@ jobs:
     runs-on: ubuntu-20.04
     needs: wheel
     steps:
+      - uses: actions/checkout@v2
+      - name: Get Version Number
+        run: |
+          VERSION=`sed -n "s/^__version__ = '\(.*\)'/\1/p" src/torchCompactRadius/__init__.py`
+          echo "Version: $VERSION"
       - name: Download Artifact
         uses: actions/download-artifact@v3
         with:
-          name: downloaded_artifacts
+          path: downloaded_artifacts
+          pattern: artifact-*
+          merge-multiple: true
       - name: List downloaded files
         run: |
           ls -l downloaded_artifacts
-          ls -l downloaded_artifacts/whl
-          ls -l downloaded_artifacts/whl/torch-*
+          ls -R downloaded_artifacts
+      - name: Upload Combined Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: 
+            downloaded_artifacts/
