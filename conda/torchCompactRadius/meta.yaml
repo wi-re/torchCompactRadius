@@ -1,0 +1,40 @@
+package:
+  name: torch-compact-radius
+  version: 0.2.3
+
+source:
+  path: ../..
+
+requirements:
+  build:
+    - {{ compiler('c') }}  # [win]
+
+  host:
+    - pip
+    - python {{ environ.get('PYTHON_VERSION') }}
+    - {{ environ.get('CONDA_PYTORCH_CONSTRAINT') }}
+    - {{ environ.get('CONDA_CUDATOOLKIT_CONSTRAINT') }}
+
+  run:
+    - python {{ environ.get('PYTHON_VERSION') }}
+    - {{ environ.get('CONDA_PYTORCH_CONSTRAINT') }}
+    - {{ environ.get('CONDA_CUDATOOLKIT_CONSTRAINT') }}
+    - numpy>=1.20.0
+
+build:
+  string: py{{ environ.get('PYTHON_VERSION').replace('.', '') }}_torch_{{ environ['TORCH_VERSION'] }}_{{ environ['CUDA_VERSION'] }}
+  script: pip install .
+  script_env:
+    - FORCE_CUDA
+    - TORCH_CUDA_ARCH_LIST
+
+test:
+  imports:
+    - torchCompactRadius
+  requires:
+    - scipy
+
+about:
+  home: https://fluids.dev
+  license: MIT
+  summary: PyTorch Extension Library of Optimized Graph Cluster Algorithms

@@ -53,8 +53,8 @@ For the algorithm the following 4 options exist:
 For this example we generate two separate point clouds $X\in[-1,1]^3$ and $y\in[-0.5,0.5]^3$ with a point spacing of $\Delta x = \frac{2}{32}$. This results in $32^3 = 32768$ points for set $X$ and $16^3 = 4096$ points for set $Y$. We then perform a neighbor search with a cutoff radius of $h_x$ such that points in $x$ would have $50$ neighbors on average (computed using `volumeToSupport`) and $h_y$ with twice the search radius. For the neighbor computation we then utilize the mean point spacing $h_{ij} = \frac{h_i + h_j}{2}$, resulting in $171$ neighbors per particle in $Y$:
 
 ```py
-from torchCompactRadius import radiusSearch, volumeToSupport
-from torchCompactRadius.util import countUniqueEntries
+from torch-compact-radius import radiusSearch, volumeToSupport
+from torch-compact-radius.util import countUniqueEntries
 import torch
 import platform
 # Paramaters for data generation
@@ -110,15 +110,15 @@ Compute Performance on GPUs for small scale problems:
 
 3090 | A5000
 ---|---
-<img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Benchmark_3090.png?raw=true">| <img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Benchmark_A5000.png?raw=true">
+<img src="https://github.com/wi-re/torch-compact-radius/blob/main/figures/Benchmark_3090.png?raw=true">| <img src="https://github.com/wi-re/torch-compact-radius/blob/main/figures/Benchmark_A5000.png?raw=true">
 
 CPU perforamnce:
 
-<img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Benchmark_CPU.png?raw=true">
+<img src="https://github.com/wi-re/torch-compact-radius/blob/main/figures/Benchmark_CPU.png?raw=true">
 
 Overall GPU based performance for larger scale problems:
 
-<img src="https://github.com/wi-re/torchCompactRadius/blob/main/figures/Overall.png?raw=true">
+<img src="https://github.com/wi-re/torch-compact-radius/blob/main/figures/Overall.png?raw=true">
 
 ## Testing
 
