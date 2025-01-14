@@ -130,13 +130,12 @@ jobs:
         run: |
           mkdir -p wheels
       - name: Flatten Directory Structure
-          - name: Flatten directory structure
-            run: |
-              for dir in downloaded_artifacts/*; do
-                if [ -d "$dir" ]; then
-                  cp -r "$dir" wheels
-                fi
-              done
+        run: |
+          for dir in downloaded_artifacts/*; do
+            if [ -d "$dir" ]; then
+              cp -r "$dir" wheels
+            fi
+          done
       - name: Upload Combined Artifact
         uses: actions/upload-artifact@v4
         with:
