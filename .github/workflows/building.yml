@@ -13,7 +13,7 @@ jobs:
         os: [ubuntu-20.04] #, macos-14, windows-2019]
         python-version: ['3.11'] #, '3.8', '3.9', '3.10', '3.12']
         torch-version: [2.5.0, 2.4.0]  # [2.3.0, 2.4.0, 2.5.0]
-        cuda-version: ['cpu'] #, 'cu124'] #, 'cu121', 'cu118']
+        cuda-version: ['cpu', 'cu124'] #, 'cu121', 'cu118']
         exclude:
           - torch-version: 2.5.0
             python-version: '3.8'
@@ -46,9 +46,9 @@ jobs:
         run: |
           pip install numpy==2.2.0
 
-      # - name: Free Disk Space (Ubuntu)
-      #   if: ${{ runner.os == 'Linux' }}
-      #   uses: jlumbroso/free-disk-space@main
+      - name: Free Disk Space (Ubuntu)
+        if: ${{ runner.os == 'Linux' }}
+        uses: jlumbroso/free-disk-space@main
 
       - name: Install CUDA ${{ matrix.cuda-version }}
         if: ${{ matrix.cuda-version != 'cpu' }}
@@ -104,7 +104,7 @@ jobs:
           mv dist/*.whl whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artifact-${{ matrix.torch-version }}+${{ matrix.cuda-version }}+${{ runner.os }}+${{ matrix.python-version }}
           path:
@@ -122,15 +122,24 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: downloaded_artifacts
-          pattern: artifact-*
-          merge-multiple: true
       - name: List downloaded files
         run: |
           ls -l downloaded_artifacts
           ls -R downloaded_artifacts
+      - name: Create Output Directory
+        run: |
+          mkdir -p wheels
+      - name: Flatten Directory Structure
+          - name: Flatten directory structure
+            run: |
+              for dir in downloaded_artifacts/*; do
+                if [ -d "$dir" ]; then
+                  cp -r "$dir" wheels
+                fi
+              done
       - name: Upload Combined Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: 
-            downloaded_artifacts/
+            wheels/
