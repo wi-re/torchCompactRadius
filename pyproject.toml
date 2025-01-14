@@ -26,7 +26,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-  "torch", "numpy", "ninja"
+  "torch", "numpy"
 ]
 license = {file = "LICENSE"}
 
