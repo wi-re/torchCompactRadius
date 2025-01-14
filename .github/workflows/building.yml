@@ -42,9 +42,9 @@ jobs:
         run: |
           pip install scipy==1.10.1
 
-      - name: Free Disk Space (Ubuntu)
-        if: ${{ runner.os == 'Linux' }}
-        uses: jlumbroso/free-disk-space@main
+      # - name: Free Disk Space (Ubuntu)
+      #   if: ${{ runner.os == 'Linux' }}
+      #   uses: jlumbroso/free-disk-space@main
 
       - name: Install CUDA ${{ matrix.cuda-version }}
         if: ${{ matrix.cuda-version != 'cpu' }}
@@ -60,7 +60,7 @@ jobs:
       - name: Set version
         if: ${{ runner.os != 'macOS' }}
         run: |
-          VERSION=`sed -n "s/^__version__ = '\(.*\)'/\1/p" torchCompactRadius/__init__.py`
+          VERSION=`sed -n "s/^__version__ = '\(.*\)'/\1/p" src/torchCompactRadius/__init__.py`
           TORCH_VERSION=`echo "pt${{ matrix.torch-version }}" | sed "s/..$//" | sed "s/\.//g"`
           CUDA_VERSION=`echo ${{ matrix.cuda-version }}`
           echo "New version name: $VERSION+$TORCH_VERSION$CUDA_VERSION"
