@@ -234,20 +234,20 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
 
     if torch.cuda.is_available():
         variant = platform.system() + '_py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cu' + torch.version.cuda.replace(".", "")
-        filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
-        if verbose:
-            print('Looking for prebuilt module:', filepath)
-        if os.path.exists(filepath):
-            if verbose:
-                print('Loading:', variant)
-            # warnings.warn(f'Loading {variant}.')
-            # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
-            spec = importlib.util.spec_from_file_location(module_name, filepath)
-            assert spec is not None
-            module = importlib.util.module_from_spec(spec)
-            assert isinstance(spec.loader, importlib.abc.Loader)
-            spec.loader.exec_module(module)
-            return module
+        # filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
+        # if verbose:
+        #     print('Looking for prebuilt module:', filepath)
+        # if os.path.exists(filepath):
+        #     if verbose:
+        #         print('Loading:', variant)
+        #     # warnings.warn(f'Loading {variant}.')
+        #     # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+        #     spec = importlib.util.spec_from_file_location(module_name, filepath)
+        #     assert spec is not None
+        #     module = importlib.util.module_from_spec(spec)
+        #     assert isinstance(spec.loader, importlib.abc.Loader)
+        #     spec.loader.exec_module(module)
+        #     return module
         # warnings.warn(f'No prebuilt binary exists for the current configuration {variant}.')
         # warnings.warn('No prebuilt module found.')
         if not os.path.exists(_get_build_directory(module_name, verbose)):
@@ -256,20 +256,20 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             sources=sourceFiles, verbose=verbose, extra_cflags=hostFlags, extra_cuda_cflags=cudaFlags, extra_ldflags=ldFlags)
     else:
         variant = platform.system() + '_py' + ''.join(version.split(".")[:-1]) + '_torch' + torch.__version__.split("+")[0].replace(".", "") + '_cpu'
-        filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
-        if verbose:
-            print('Looking for prebuilt module:', filepath)
-        if os.path.exists(filepath):
-            if verbose:
-                print('Loading:', variant)
-            # warnings.warn(f'Loading {variant}.')
-            # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
-            spec = importlib.util.spec_from_file_location(module_name, filepath)
-            assert spec is not None
-            module = importlib.util.module_from_spec(spec)
-            assert isinstance(spec.loader, importlib.abc.Loader)
-            spec.loader.exec_module(module)
-            return module
+        # filepath = os.path.join(directory, 'prebuilt/') + variant + '.so'
+        # if verbose:
+        #     print('Looking for prebuilt module:', filepath)
+        # if os.path.exists(filepath):
+        #     if verbose:
+        #         print('Loading:', variant)
+        #     # warnings.warn(f'Loading {variant}.')
+        #     # https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+        #     spec = importlib.util.spec_from_file_location(module_name, filepath)
+        #     assert spec is not None
+        #     module = importlib.util.module_from_spec(spec)
+        #     assert isinstance(spec.loader, importlib.abc.Loader)
+        #     spec.loader.exec_module(module)
+        #     return module
         # warnings.warn(f'No prebuilt binary exists for the current configuration {variant}.')
         # warnings.warn('No prebuilt module found.')
         # verbose = True

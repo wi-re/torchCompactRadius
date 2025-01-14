@@ -126,7 +126,7 @@ def countUniqueEntries(indices, positions):
 
 
 
-from torchCompactRadius.cppWrapper import hashCells_cpp
+from torchCompactRadius.compactHashing.cppWrapper import hashCells_cpp
 # @torch.jit.script
 def hashCellIndices_cpp(cellIndices, hashMapLength):
     """
@@ -270,3 +270,58 @@ def getOffsets(searchRange: int, dim: int):
             offsets[o][dim - d - 1] = itr
             ctr += 1
     return offsets
+
+
+
+from typing import NamedTuple, Union
+
+class DomainDescription(NamedTuple):
+    """
+    A named tuple containing the minimum and maximum domain values.
+    """
+    min: torch.Tensor
+    max: torch.Tensor
+    periodicity: Union[bool,torch.Tensor]
+    dim: int
+
+class PointCloud(NamedTuple):
+    """
+    A named tuple containing the positions of the particles and the number of particles.
+    """
+    positions: torch.Tensor
+    supports: Optional[torch.Tensor] = None
+
+class SparseCOO(NamedTuple):
+    """
+    A named tuple containing the neighbor list in coo format and the number of neighbors for each particle.
+    """
+    row: torch.Tensor
+    col: torch.Tensor
+
+    rowEntries: torch.Tensor
+
+class SparseCSR(NamedTuple):
+    """
+    A named tuple containing the neighbor list in csr format and the number of neighbors for each particle.
+    """
+    indices: torch.Tensor
+    indptr: torch.Tensor
+
+    rowEntries: torch.Tensor
+
+
+from torchCompactRadius.util import DomainDescription, PointCloud
+
+def getPeriodicPointCloud(
+        queryPointCloud: PointCloud,
+        domain: Optional[DomainDescription] = None,
+):
+    if domain is None:
+        return queryPointCloud
+    else:
+        domainMin = domain.min
+        domainMax = domain.max
+        periodic = domain.periodicity
+        if isinstance(periodic, bool):
+            periodic = [periodic] * queryPointCloud.positions.shape[1]
+        return PointCloud(torch.stack([queryPointCloud.positions[:,i] if not periodic_i else torch.remainder(queryPointCloud.positions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodic)], dim = 1), queryPointCloud.supports)
