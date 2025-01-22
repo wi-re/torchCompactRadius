@@ -274,6 +274,7 @@ def getOffsets(searchRange: int, dim: int):
 
 
 from typing import NamedTuple, Union
+from typing import NamedTuple
 
 class DomainDescription(NamedTuple):
     """
@@ -291,6 +292,7 @@ class PointCloud(NamedTuple):
     positions: torch.Tensor
     supports: Optional[torch.Tensor] = None
 
+
 class SparseCOO(NamedTuple):
     """
     A named tuple containing the neighbor list in coo format and the number of neighbors for each particle.
@@ -298,8 +300,8 @@ class SparseCOO(NamedTuple):
     row: torch.Tensor
     col: torch.Tensor
 
-    rowEntries: torch.Tensor
-
+    numRows: torch.Tensor
+    numCols: torch.Tensor
 class SparseCSR(NamedTuple):
     """
     A named tuple containing the neighbor list in csr format and the number of neighbors for each particle.
@@ -308,6 +310,46 @@ class SparseCSR(NamedTuple):
     indptr: torch.Tensor
 
     rowEntries: torch.Tensor
+
+    numRows: torch.Tensor
+    numCols: torch.Tensor
+
+def coo_to_csr(coo: SparseCOO, isSorted: bool = False) -> SparseCSR:
+    if not isSorted:
+        neigh_order = torch.argsort(coo.row)
+        row = coo.row[neigh_order]
+        col = coo.col[neigh_order]
+    else:
+        row = coo.row
+        col = coo.col
+
+    # print(f'Converting COO To CSR for matrix of shape {coo.numRows} x {coo.numCols}')
+    # print(f'Number of Entries: {row.shape[0]}/{col.shape[0]}')
+    jj, nit = torch.unique(row, return_counts=True)
+    nj = torch.zeros(coo.numRows, dtype=coo.row.dtype, device=coo.row.device)
+    nj[jj] = nit
+    # print(f'Number of neighbors: {nj} ({nj.sum()} total, shape {nj.shape})')
+
+    indptr = torch.zeros(coo.numRows + 1, dtype=torch.int64, device=coo.row.device)
+    indptr[1:] = torch.cumsum(nj, 0)
+    # print(f'Row pointers: {indptr} ({indptr.shape})')
+    indptr = indptr.int()
+    indices = col
+    rowEntries = nj
+
+    return SparseCSR(indices, indptr, rowEntries, coo.numRows, coo.numCols)
+
+def csr_to_coo(csr: SparseCSR) -> SparseCOO:
+    row = torch.zeros(csr.rowEntries.sum(), dtype=csr.indices.dtype, device=csr.indices.device)
+    col = torch.zeros_like(row)
+    rowStart = 0
+    for i in range(csr.numRows):
+        rowEnd = rowStart + csr.rowEntries[i]
+        row[rowStart:rowEnd] = i
+        col[rowStart:rowEnd] = csr.indices[csr.indptr[i]:csr.indptr[i+1]]
+        rowStart = rowEnd
+    return SparseCOO(row, col, csr.numRows, csr.numCols)
+
 
 
 from torchCompactRadius.util import DomainDescription, PointCloud

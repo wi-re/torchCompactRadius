@@ -1,6 +1,6 @@
 package:
   name: torch-compact-radius
-  version: 0.2.3
+  version: 0.2.4
 
 source:
   path: ../..
@@ -37,4 +37,4 @@ test:
 about:
   home: https://fluids.dev
   license: MIT
-  summary: PyTorch Extension Library of Optimized Graph Cluster Algorithms
+  summary: Compact Hashing based neighborhood search for 1, 2 and 3D using pytorch

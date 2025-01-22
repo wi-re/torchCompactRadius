@@ -121,6 +121,7 @@ def neighborSearchExisting(
     
 
 
+from .util import PointCloud, DomainDescription, SparseCOO, SparseCSR, coo_to_csr
 
 
 def radiusSearch( 
@@ -207,66 +208,72 @@ def radiusSearch(
         print(f'returnStructure = {returnStructure}')
 
 
-
+    ds = None
     if supportOverride is not None:
         if algorithm == 'naive':
             if verbose:
                 print('Calling radiusNaiveFixed:')
-            return radiusNaiveFixed(x, y, supportOverride, domainInformation.periodic, domainInformation.min, domainInformation.max)
+            i, j =  radiusNaiveFixed(x, y, supportOverride, domainInformation.periodic, domainInformation.min, domainInformation.max)
         elif algorithm == 'small':
             if verbose:
                 print('Calling neighborSearchSmallFixed')
             if queryPointCloud.positions.device.type == 'mps':
                 i, j =  neighborSearchSmallFixed(x.cpu(), y.cpu(), supportOverride, domainInformation.min.cpu(), domainInformation.max.cpu(), torch.tensor(domainInformation.periodic).cpu())
-                return i.to(queryPointCloud.positions.device), j.to(queryPointCloud.positions.device)
+                i, j =  i.to(queryPointCloud.positions.device), j.to(queryPointCloud.positions.device)
             else:
-                return neighborSearchSmallFixed(x, y, supportOverride, domainInformation.min, domainInformation.max, domainInformation.periodic)
+                i, j =  neighborSearchSmallFixed(x, y, supportOverride, domainInformation.min, domainInformation.max, domainInformation.periodic)
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch')
             (i, j), ds = neighborSearch((x.positions, y.positions), None, supportOverride, (domainInformation.min, domainInformation.max), domainInformation.periodicity, hashMapLength, mode, 'cpp')
-            if returnStructure:
-                return i, j, ds
-            else:
-                return i, j
+            # if returnStructure:
+            #     return i, j, ds
+            # else:
+            #     return i, j
         elif algorithm == 'cluster':
             if verbose:
                 print('Calling radius_cluster')
             if queryPointCloud.positions.device.type == 'mps':
                 i, j = radius_cluster(x.positions.cpu(), y.positions.cpu(), supportOverride, max_num_neighbors=256)
-                return j.to(queryPointCloud.positions.device), i.to(queryPointCloud.positions.device)
+                i, j = j.to(queryPointCloud.positions.device), i.to(queryPointCloud.positions.device)
             else:
-                i, j = radius_cluster(x.positions, y.positions, supportOverride, max_num_neighbors=256)
-            return j, i
+                j, i = radius_cluster(x.positions, y.positions, supportOverride, max_num_neighbors=256)
         else:
             raise ValueError(f'algorithm = {algorithm} not supported')
     else:
         if algorithm == 'naive':
             if verbose:
                 print('Calling radiusNaive')
-            return radiusNaive(x.positions, y.positions, x.supports, y.supports, domainInformation.periodicity, domainInformation.min, domainInformation.max, mode)
+            i, j =  radiusNaive(x.positions, y.positions, x.supports, y.supports, domainInformation.periodicity, domainInformation.min, domainInformation.max, mode)
         elif algorithm == 'small':
             if verbose:
                 print('Calling neighborSearchSmall')
             if x.positions.device.type == 'mps':
                 i, j =  neighborSearchSmall(x.cpu(), x.supports.cpu(), y.positions.cpu(), None if y.supports is None else y.supports.cpu(), domainInformation.min.cpu(), domainInformation.max.cpu(), domainInformation.periodicity.cpu(), mode)
-                return i.to(x.positions.device), j.to(x.positions.device)
+                i, j = i.to(x.positions.device), j.to(x.positions.device)
             else:
-                return neighborSearchSmall(x.positions, x.supports, y.positions, y.supports, domainInformation.min, domainInformation.max, domainInformation.periodicity, mode)
+                i, j = neighborSearchSmall(x.positions, x.supports, y.positions, y.supports, domainInformation.min, domainInformation.max, domainInformation.periodicity, mode)
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch, arguments:')
             (i,j), ds = neighborSearch((x.positions, y.positions), (x.supports, y.supports), None, (domainInformation.min, domainInformation.max), domainInformation.periodicity, hashMapLength, mode, 'cpp')
-            if returnStructure:
-                return i, j, ds
-            else:
-                return i, j
+            # if returnStructure:
+            #     return i, j, ds
+            # else:
+            #     return i, j
         elif algorithm == 'cluster':
             raise ValueError(f'algorithm = {algorithm} not supported for dynamic radius search')
         else:
             raise ValueError(f'algorithm = {algorithm} not supported')
-    pass
-
+        
+    sparse = SparseCOO(i, j, numQueryPoints, numReferencePoints)
+    if format == 'csr':
+        sparse = coo_to_csr(sparse, isSorted=True)
+    if returnStructure:
+        return sparse, ds
+    else:
+        return sparse
+    
 
 # Compatitility with torch.cluster.radius
 def radius(queryPositions : torch.Tensor,

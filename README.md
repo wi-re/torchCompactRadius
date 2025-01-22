@@ -7,10 +7,11 @@ Requirements:
 numpy (not used in the computations)
 subprocess (for compilation)
 
-The module is built just-in-time on first import in a given python environment and this build process may take a few (<5) minutes. Note that for MacOS based systems an external clang compiler installed via homebrew is required for openMP support.
-
+The module is built either just-in-time (this is what you get when you install it via pip directly) or pre-built for a variety of systems via conda or our website. Note that for MacOS based systems an external clang compiler installed via homebrew is required for openMP support.
 
 ## Usage
+
+__This has changed from previous versions__
 
 This package provices two primary functions `radius` and `radiusSearch`. `radius` is designed as a drop-in replacement of torch cluster's radius function, whereas radiusSearch is the preferred usage. __Important:__ `radius` and `radiusSearch` return index pairs in flipped order!
 
@@ -150,3 +151,30 @@ The `cluster` algorithm failing is due to a lack of support of torch_cluster`s i
 Wrap periodic neighborhood search and non symmetric neighborhoods around torch cluster
 Add automatic choice of algorithm based on performance
 Add binary distributions
+
+
+## Building and Installing
+
+To install simply run (adapt to your local system if necessary):
+```bash
+pytorch pyfluids::torch-compact-radius torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+```
+
+### Pip Version
+
+Simply run
+```bash
+pip install -e . --no-build-isolation
+```
+
+### Anaconda Version
+
+To build the conda version of the code simply run 
+```bash
+./conda/torchCompactRadius/build_conda.sh {pyVersion} {torchVersion} {cudaVersion}
+```
+
+e.g., to build the library for python 3.11, pytorch 2.5.0 and Cuda 12.1 run `build_conda.sh 3.11 2.5.0 cu121`. After building it like this, you can install the locally built version via
+```
+conda install -c ~/conda-bld/ torch-compact-radius -c pytorch
+```

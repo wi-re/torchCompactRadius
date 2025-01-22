@@ -36,17 +36,17 @@ if not hasPrecompiledCPU and not hasPrecompiledGPU:
         'cppSrc/neighborhoodSmall_cpu.cpp',     'cppSrc/neighborhoodSmall_cuda.cu',
         'cppSrc/cppWrapper.cpp'], module_name = 'torchCompactRadius_jit', verbose = False, openMP = True, verboseCuda = False, cuda_arch = None)
 
-# countNeighbors_cpp = neighborSearch_cpp.countNeighbors
-# buildNeighborList_cpp = neighborSearch_cpp.buildNeighborList
-# countNeighborsFixed_cpp = neighborSearch_cpp.countNeighborsFixed
-# buildNeighborListFixed_cpp = neighborSearch_cpp.buildNeighborListFixed
+countNeighbors_cpp = neighborSearch_cpp.countNeighbors
+buildNeighborList_cpp = neighborSearch_cpp.buildNeighborList
+countNeighborsFixed_cpp = neighborSearch_cpp.countNeighborsFixed
+buildNeighborListFixed_cpp = neighborSearch_cpp.buildNeighborListFixed
 hashCells_cpp = neighborSearch_cpp.computeHashIndices
-# neighborSearchSmall = neighborSearch_cpp.neighborSearchSmall
-# neighborSearchSmallFixed = neighborSearch_cpp.neighborSearchSmallFixed
+neighborSearchSmall = neighborSearch_cpp.neighborSearchSmall
+neighborSearchSmallFixed = neighborSearch_cpp.neighborSearchSmallFixed
 
-countNeighbors_cpp = None
-buildNeighborList_cpp = None
-countNeighborsFixed_cpp = None
-buildNeighborListFixed_cpp = None
-neighborSearchSmall = None
-neighborSearchSmallFixed = None
+# countNeighbors_cpp = None
+# buildNeighborList_cpp = None
+# countNeighborsFixed_cpp = None
+# buildNeighborListFixed_cpp = None
+# neighborSearchSmall = None
+# neighborSearchSmallFixed = None
