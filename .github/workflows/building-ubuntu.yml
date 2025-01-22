@@ -1,0 +1,146 @@
+name: Building Wheels
+
+on: [workflow_dispatch]
+
+jobs:
+
+  wheel:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04] #, windows-2019]
+        python-version: ['3.11', '3.9', '3.10', '3.12']
+        torch-version: [2.5.0]  # [2.3.0, 2.4.0, 2.5.0]
+        cuda-version: ['cpu', 'cu118', 'cu121', 'cu124']
+        exclude:
+          - torch-version: 2.5.0
+            python-version: '3.8'
+          - torch-version: 2.3.0
+            cuda-version: 'cu124'
+          - os: macos-14
+            cuda-version: 'cu118'
+          - os: macos-14
+            cuda-version: 'cu121'
+          - os: macos-14
+            cuda-version: 'cu124'
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip
+        run: |
+          pip install --upgrade setuptools
+
+      - name: Install scipy
+        if: ${{ (matrix.python-version == '3.8') || (matrix.python-version == '3.9') }}
+        run: |
+          pip install scipy==1.10.1
+
+      - name: Install numpy
+        run: |
+          pip install numpy==2.2.0
+
+      - name: Free Disk Space (Ubuntu)
+        if: ${{ runner.os == 'Linux' }}
+        uses: jlumbroso/free-disk-space@main
+
+      - name: Install CUDA ${{ matrix.cuda-version }}
+        if: ${{ matrix.cuda-version != 'cpu' }}
+        run: |
+          bash .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}.sh
+
+      - name: Install PyTorch ${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+        run: |
+          pip install torch==${{ matrix.torch-version }} --extra-index-url https://download.pytorch.org/whl/${{ matrix.cuda-version }}
+          python -c "import torch; print('PyTorch:', torch.__version__)"
+          python -c "import torch; print('CUDA:', torch.version.cuda)"
+
+      - name: Set version
+        if: ${{ runner.os != 'macOS' }}
+        run: |
+          VERSION=`sed -n "s/^__version__ = '\(.*\)'/\1/p" src/torchCompactRadius/__init__.py`
+          TORCH_VERSION=`echo "pt${{ matrix.torch-version }}" | sed "s/..$//" | sed "s/\.//g"`
+          CUDA_VERSION=`echo ${{ matrix.cuda-version }}`
+          echo "New version name: $VERSION+$TORCH_VERSION$CUDA_VERSION"
+          sed -i "s/$VERSION/$VERSION+$TORCH_VERSION$CUDA_VERSION/" setup.py
+          sed -i "s/$VERSION/$VERSION+$TORCH_VERSION$CUDA_VERSION/" src/torchCompactRadius/__init__.py
+        shell:
+          bash
+
+      - name: Install main package for CPU
+        if: ${{ matrix.cuda-version == 'cpu' }}
+        run: |
+          FORCE_ONLY_CPU=1 python setup.py develop
+        shell:
+          bash
+
+      - name: Install main package for GPU
+        if: ${{ matrix.cuda-version != 'cpu' }}
+        run: |
+          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
+          python setup.py develop
+        shell:
+          bash
+
+      - name: Test installation
+        run: |
+          python -c "import torchCompactRadius; print('torch-compact-radius:', torchCompactRadius.__version__)"
+
+      - name: Build wheel
+        run: |
+          pip install wheel
+          python setup.py bdist_wheel --dist-dir=dist
+
+      - name: create archive folder
+        run: |
+          mkdir whl
+          mkdir whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+          mv dist/*.whl whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.torch-version }}+${{ matrix.cuda-version }}+${{ runner.os }}+${{ matrix.python-version }}
+          path:
+            whl/
+  collect:
+    runs-on: ubuntu-20.04
+    needs: wheel
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Version Number
+        run: |
+          VERSION=`sed -n "s/^__version__ = '\(.*\)'/\1/p" src/torchCompactRadius/__init__.py`
+          echo "Version: $VERSION"
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded_artifacts
+          pattern: artifact-*
+          merge-multiple: true
+      - name: List downloaded files
+        run: |
+          ls -l downloaded_artifacts
+          ls -R downloaded_artifacts
+      - name: Create Output Directory
+        run: |
+          mkdir -p wheels
+      - name: Flatten Directory Structure
+        run: |
+          for dir in downloaded_artifacts/*; do
+            if [ -d "$dir" ]; then
+              cp -r "$dir" wheels
+            fi
+          done
+      - name: Upload Combined Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels
+          path: 
+            wheels/
