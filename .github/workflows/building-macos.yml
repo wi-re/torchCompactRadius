@@ -1,4 +1,4 @@
-name: Building Wheels
+name: Building Wheels [MacOS]
 
 on: [workflow_dispatch]
 

@@ -1,4 +1,4 @@
-name: Building Conda
+name: Building Conda [Ubuntu]
 
 on: [workflow_dispatch]
 

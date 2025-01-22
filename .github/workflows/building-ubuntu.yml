@@ -1,4 +1,4 @@
-name: Building Wheels
+name: Building Wheels [Ubuntu]
 
 on: [workflow_dispatch]
 
