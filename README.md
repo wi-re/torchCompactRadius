@@ -167,6 +167,11 @@ Simply run
 pip install -e . --no-build-isolation
 ```
 
+Or install it via
+```bash
+pip install torchCompactRadius -f https://fluids.dev/torchCompactRadius/wheels/torch-2.5.0+{cuTag}/
+```
+
 ### Anaconda Version
 
 To build the conda version of the code simply run 
