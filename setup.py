@@ -11,8 +11,8 @@ from torch.__config__ import parallel_info
 from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
                                        CUDAExtension)
 
-__version__ = '1.6.4'
-URL = 'https://github.com/rusty1s/pytorch_cluster'
+__version__ = '0.2.4'
+URL = 'https://github.com/wi-re/torchCompactRadius'
 
 WITH_CUDA = False
 if torch.cuda.is_available():
@@ -108,10 +108,10 @@ if torch.cuda.is_available() and torch.version.hip:
 setup(
     name='torchCompactRadius',
     version=__version__,
-    description=('PyTorch Extension Library of Optimized Graph Cluster '
+    description=('PyTorch Extension Library for compact hash map based neighbor searching '
                  'Algorithms'),
-    author='Matthias Fey',
-    author_email='matthias.fey@tu-dortmund.de',
+    author='Rene WInchenbach',
+    author_email='contact@fluids.dev',
     url=URL,
     download_url=f'{URL}/archive/{__version__}.tar.gz',
     keywords=[
