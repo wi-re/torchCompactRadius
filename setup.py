@@ -110,7 +110,7 @@ setup(
     version=__version__,
     description=('PyTorch Extension Library for compact hash map based neighbor searching '
                  'Algorithms'),
-    author='Rene WInchenbach',
+    author='Rene Winchenbach',
     author_email='contact@fluids.dev',
     url=URL,
     download_url=f'{URL}/archive/{__version__}.tar.gz',
