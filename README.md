@@ -7,6 +7,37 @@ Requirements:
 
 The module is built either just-in-time (this is what you get when you install it via pip directly) or pre-built for a variety of systems via conda or our website. Note that for MacOS based systems an external clang compiler installed via homebrew is required for openMP support.
 
+## Installation
+
+
+__Anaconda__:
+```bash
+pytorch pyfluids::torch-compact-radius torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+```
+
+__pip__:
+
+```bash
+pip install torchCompactRadius -f https://fluids.dev/torchCompactRadius/wheels/torch-2.5.0+{cuTag}/
+```
+
+Note, if you are using Google Colab (or similar) you can run
+```py
+import torch
+!pip install torchCompactRadius -f https://fluids.dev/torchCompactRadius/wheels/torch-{version}/
+```
+
+
+Or the JIT compiled version available on PyPi:
+
+Note that if you install the latter, it makes sense to limit which architectures the code is compiled for before import torchCompactRadius
+```py
+import torch
+os.environ['TORCH_CUDA_ARCH_LIST'] = f'{torch.cuda.get_device_properties(0).major}.{torch.cuda.get_device_properties(0).minor}'
+
+import torchCompactRadius
+```
+
 ## Usage and Example
 
 __This has changed from previous versions__
@@ -161,11 +192,6 @@ The `cluster` algorithm failing is due to a lack of support of torch_cluster`s i
 
 ## Building and Installing
 
-To install simply run (adapt to your local system if necessary):
-```bash
-pytorch pyfluids::torch-compact-radius torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
-```
-
 ### Pip Version
 
 Simply run
@@ -173,10 +199,6 @@ Simply run
 pip install -e . --no-build-isolation
 ```
 
-Or install it via
-```bash
-pip install torchCompactRadius -f https://fluids.dev/torchCompactRadius/wheels/torch-2.5.0+{cuTag}/
-```
 
 ### Anaconda Version
 
