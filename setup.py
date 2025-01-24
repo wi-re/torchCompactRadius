@@ -49,6 +49,9 @@ def get_extensions():
     print(f'Building suffices: {suffices}')
 
     suffix = 'cuda' if WITH_CUDA else 'cpu'
+    if 'cuda' in suffices and not WITH_CUDA:
+        raise ValueError('CUDA is not available. Please install CUDA.')
+    
     extra_compile_args = {'cxx': ['-O2']}
     extra_link_args = ['-s']
 
