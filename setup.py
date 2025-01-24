@@ -11,7 +11,7 @@ from torch.__config__ import parallel_info
 from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
                                        CUDAExtension)
 
-__version__ = '0.2.4'
+__version__ = '0.2.4+pt25cu124'
 URL = 'https://github.com/wi-re/torchCompactRadius'
 
 WITH_CUDA = False
@@ -23,7 +23,7 @@ if os.getenv('FORCE_CUDA', '0') == '1':
     suffices = ['cuda', 'cpu']
 if os.getenv('FORCE_ONLY_CUDA', '0') == '1':
     suffices = ['cuda']
-if os.getenv('FORCE_ONLY_CPU', '0') == '1':
+if os.getenv('FORCE_ONLY_CPU', '0') == '1' or os.getenv('FORCE_CUDA', '1') == '0':
     suffices = ['cpu']
 
 BUILD_DOCS = os.getenv('BUILD_DOCS', '0') == '1'
