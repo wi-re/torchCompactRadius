@@ -60,4 +60,4 @@ else
     mv dist/* wheels/torch-$PYTORCH_VERSION+cu$CUDA_VERSION
 fi
 
-conda/torchCompactRadius/build_conda.sh
+conda/torchCompactRadius/build_conda.sh 3.11 $1 $2
