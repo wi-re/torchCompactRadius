@@ -59,3 +59,5 @@ else
     mkdir -p wheels/torch-$PYTORCH_VERSION+cu$CUDA_VERSION
     mv dist/* wheels/torch-$PYTORCH_VERSION+cu$CUDA_VERSION
 fi
+
+conda/torchCompactRadius/build_conda.sh

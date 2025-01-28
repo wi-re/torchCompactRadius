@@ -300,8 +300,8 @@ class SparseCOO(NamedTuple):
     row: torch.Tensor
     col: torch.Tensor
 
-    numRows: torch.Tensor
-    numCols: torch.Tensor
+    numRows: int
+    numCols: int
 class SparseCSR(NamedTuple):
     """
     A named tuple containing the neighbor list in csr format and the number of neighbors for each particle.
@@ -311,8 +311,8 @@ class SparseCSR(NamedTuple):
 
     rowEntries: torch.Tensor
 
-    numRows: torch.Tensor
-    numCols: torch.Tensor
+    numRows: int
+    numCols: int
 
 def coo_to_csr(coo: SparseCOO, isSorted: bool = False) -> SparseCSR:
     if not isSorted:

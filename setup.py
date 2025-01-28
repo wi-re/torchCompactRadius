@@ -11,7 +11,7 @@ from torch.__config__ import parallel_info
 from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
                                        CUDAExtension)
 
-__version__ = '0.2.4+pt25cu124'
+__version__ = '0.2.5'
 URL = 'https://github.com/wi-re/torchCompactRadius'
 
 WITH_CUDA = False

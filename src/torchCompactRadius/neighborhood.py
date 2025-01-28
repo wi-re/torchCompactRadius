@@ -15,7 +15,9 @@ from torchCompactRadius.searchAlgorithms.radiusNaive import radiusNaive, radiusN
 from torchCompactRadius.util import getPeriodicPointCloud
 from torchCompactRadius.searchAlgorithms.compactSearch import neighborSearch
 from typing import Union, Tuple, Optional, List
+from .util import PointCloud, DomainDescription, SparseCOO, SparseCSR, coo_to_csr
 import numpy as np
+from typing import Union
 try:
     from torch_cluster import radius as radius_cluster
     hasClusterRadius = True
@@ -25,7 +27,7 @@ except ModuleNotFoundError:
     
 def neighborSearchExisting(
         queryPointCloud: PointCloud,
-        hashMap : CompactHashMap, mode : str = 'symmetric', searchRadius : int = 1, variant: str = 'cpp', verbose : bool = False) -> Tuple[Tuple[torch.Tensor, torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
+        hashMap : CompactHashMap, mode : str = 'symmetric', searchRadius : int = 1, variant: str = 'cpp', verbose : bool = False, format : str = 'coo') -> Union[SparseCOO, SparseCSR]:
     """
     Perform a neighbor search using existing data.
 
@@ -93,35 +95,42 @@ def neighborSearchExisting(
         if fixedSupport is None:
             if verbose:
                 print('Launching C++ neighbor search with dynamic support')
-            return searchNeighbors_cpp(queryPositions, querySupport, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+            i, j = searchNeighbors_cpp(queryPositions, querySupport, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
         else:
             if verbose:
                 print('Launching C++ neighbor search with fixed support')
-            return searchNeighborsFixed_cpp(queryPositions, fixedSupport, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+            i, j = searchNeighborsFixed_cpp(queryPositions, fixedSupport, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
     elif variant == 'python':
         if fixedSupport is None:
             if verbose:
                 print('Launching Python neighbor search with dynamic support')
-            return searchNeighborsPython(queryPositions, querySupport, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+            i, j = searchNeighborsPython(queryPositions, querySupport, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
         else:
             if verbose:
                 print('Launching Python neighbor search with fixed support')
-            return searchNeighborsFixedPython(queryPositions, fixedSupport, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+            i, j = searchNeighborsFixedPython(queryPositions, fixedSupport, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
     elif variant == 'pythonDynamic':
         if fixedSupport is None:
             if verbose:
                 print('Launching Python neighbor search with dynamic support')
-            return searchNeighborsDynamicPython(queryPositions, querySupport, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+            i, j = searchNeighborsDynamicPython(queryPositions, querySupport, sortedPositions, sortedSupports, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
         else:
             if verbose:
                 print('Launching Python neighbor search with fixed support')
-            return searchNeighborsDynamicPython(queryPositions,  queryPositions.new_ones(queryPositions.shape[0]) * fixedSupport, fixedSupport, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
+            i, j = searchNeighborsDynamicPython(queryPositions,  queryPositions.new_ones(queryPositions.shape[0]) * fixedSupport, fixedSupport, sortedPositions, hashTable, hashMapLength, sortedCellTable, numCells, qMin, qMax, minD, maxD, sortIndex, hCell, periodicity, mode, searchRadius)
     else:
-        raise ValueError('variant must be either cpp, python or pythonDynamic')
+        raise ValueError('variant must be either cpp, python or pythonDynamic')\
+            
+    numQueryPoints = queryPositions.shape[0]
+    numReferencePoints = sortedPositions.shape[0]
+    sparse = SparseCOO(i, j, numQueryPoints, numReferencePoints)
+    if format == 'csr':
+        return coo_to_csr(sparse, isSorted=True)
+    return sparse
+    
     
 
 
-from .util import PointCloud, DomainDescription, SparseCOO, SparseCSR, coo_to_csr
 
 
 def radiusSearch( 
