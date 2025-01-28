@@ -39,7 +39,7 @@ fi
 
 echo "Version tag: $VERSION_TAG"
 sed -i "s/$VERSION/$VERSION_TAG/" setup.py
-sed -i "s/$VERSION/$VERSION_TAGN/" src/torchCompactRadius/__init__.py
+sed -i "s/$VERSION/$VERSION_TAG/" src/torchCompactRadius/__init__.py
 if [ "${CUDA_VERSION}" = "cpu" ]; then
     export FORCE_CUDA=0
     export TORCH_CUDA_ARCH_LIST=""

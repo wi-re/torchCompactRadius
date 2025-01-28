@@ -75,6 +75,7 @@ def get_extensions():
         nvcc_flags = os.getenv('NVCC_FLAGS', '')
         nvcc_flags = [] if nvcc_flags == '' else nvcc_flags.split(' ')
         nvcc_flags += ['-O2']
+        nvcc_flags += [f'-DCUDA_VERSION=1']
         extra_compile_args['nvcc'] = nvcc_flags
 
     Extension = CppExtension if suffix == 'cpu' else CUDAExtension
