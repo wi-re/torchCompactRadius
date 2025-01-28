@@ -201,7 +201,7 @@ torch::Tensor countNeighbors_t(
 
     // Loop over all query particles and count the number of neighbors per particle
     if(queryPositions_.is_cuda()){
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             countNeighborsForParticleCuda(neighborCounters,
@@ -432,7 +432,7 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
     // int32_t dim = queryPositions.size(1);
 
     if(queryPositions_.is_cuda()){
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             buildNeighborhoodCuda(neighborOffsets_, neighborList_i, neighborList_j,

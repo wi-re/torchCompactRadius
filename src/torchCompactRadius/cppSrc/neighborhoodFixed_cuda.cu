@@ -29,7 +29,7 @@ __global__ void countNeighborsForParticleCudaFixedDispatcher(int32_t numParticle
     }
 }
 
-#ifdef CUDA_VERSION
+#ifdef COMPILE_WITH_CUDA
 #include <cuda_runtime.h>
 #endif
 template<typename Func, typename... Ts>

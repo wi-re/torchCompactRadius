@@ -1,5 +1,5 @@
 #include "neighborhoodSmall.h"
-#ifdef CUDA_VERSION
+#ifdef COMPILE_WITH_CUDA
 #include <cuda_runtime.h>
 #endif
 /**
@@ -110,7 +110,7 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
         );
     } else {
         
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             countNeighborsSmallCUDA(neighborCountersPtr, queryPositionsPtr, querySupportPtr, referencePositionsPtr, referenceSupportPtr, minDomainPtr, maxDomainPtr, periodicityPtr, nQuery, nReference, dim, searchMode);
@@ -125,7 +125,7 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
     if(!useCuda)
         	numNeighbors = neighborOffsetsPtr[nQuery - 1];
     else
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             cudaMemcpy(&numNeighbors, neighborOffsetsPtr + nQuery - 1, sizeof(int32_t), cudaMemcpyDeviceToHost);
@@ -166,7 +166,7 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
         });
 #endif  
     } else {
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             neighborSearchSmallCUDA(neighborOffsetsPtr, iPtr, jPtr, queryPositionsPtr, querySupportPtr, referencePositionsPtr, referenceSupportPtr, minDomainPtr, maxDomainPtr, periodicityPtr, nQuery, nReference, dim, searchMode);
@@ -234,7 +234,7 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmallFixed(torch::Tensor q
 #endif
     } else {
         
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             countNeighborsSmallFixedCUDA(neighborCountersPtr, queryPositionsPtr, referencePositionsPtr, support, minDomainPtr, maxDomainPtr, periodicityPtr, nQuery, nReference, dim);
@@ -249,7 +249,7 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmallFixed(torch::Tensor q
     if(!useCuda)
         	numNeighbors = neighborOffsetsPtr[nQuery - 1];
     else
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             cudaMemcpy(&numNeighbors, neighborOffsetsPtr + nQuery - 1, sizeof(int32_t), cudaMemcpyDeviceToHost);
@@ -288,7 +288,7 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmallFixed(torch::Tensor q
         });
 #endif
     } else {
-        #ifndef CUDA_VERSION
+        #ifndef COMPILE_WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
         #else
             neighborSearchSmallFixedCUDA(neighborOffsetsPtr, iPtr, jPtr, queryPositionsPtr, referencePositionsPtr, support, minDomainPtr, maxDomainPtr, periodicityPtr, nQuery, nReference, dim);
