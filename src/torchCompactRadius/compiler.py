@@ -165,8 +165,8 @@ def compileSourceFiles(sourceFiles, module_name, directory: Optional[str] = None
             print('smFlag:', smFlag)
         cudaFlags.append('--use_fast_math')
 
-        cudaFlags.append('-DCOMPILE_WITH_CUDA')
-        hostFlags.append('-DCOMPILE_WITH_CUDA')
+        cudaFlags.append('-DWITH_CUDA')
+        hostFlags.append('-DWITH_CUDA')
     if platform.system() == "Darwin":
         ldFlags = ['-fopenmp'] if openMP else []
     else:

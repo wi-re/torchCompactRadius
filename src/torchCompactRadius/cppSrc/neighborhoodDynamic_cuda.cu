@@ -32,7 +32,7 @@ __global__ void countNeighborsForParticleCudaDispatcher(int32_t numParticles,
 }
 
 // #ifdef CUUDA_VERSION
-#ifdef COMPILE_WITH_CUDA
+#ifdef WITH_CUDA
 #include <cuda_runtime.h>
 
 void cuda_error_check() {

@@ -10,7 +10,7 @@ torch::Tensor computeHashIndices_t(torch::Tensor cellIndices, uint32_t hashMapLe
     auto nQuery = cellIndices.size(0);
 
     if (cellIndices.is_cuda()) {
-    #ifndef COMPILE_WITH_CUDA
+    #ifndef WITH_CUDA
         throw std::runtime_error("CUDA support is not available in this build");
     #else
         hashCellsCuda(hashIndices, cellIndices, hashMapLength);
