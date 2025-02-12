@@ -276,7 +276,9 @@ def getOffsets(searchRange: int, dim: int):
 from typing import NamedTuple, Union
 from typing import NamedTuple
 
-class DomainDescription(NamedTuple):
+from dataclasses import dataclass
+@dataclass(slots=True)
+class DomainDescription:
     """
     A named tuple containing the minimum and maximum domain values.
     """
@@ -284,8 +286,9 @@ class DomainDescription(NamedTuple):
     max: torch.Tensor
     periodicity: Union[bool,torch.Tensor]
     dim: int
-
-class PointCloud(NamedTuple):
+    
+@dataclass(slots=True)
+class PointCloud:
     """
     A named tuple containing the positions of the particles and the number of particles.
     """
@@ -293,7 +296,9 @@ class PointCloud(NamedTuple):
     supports: Optional[torch.Tensor] = None
 
 
-class SparseCOO(NamedTuple):
+    
+@dataclass(slots=True)
+class SparseCOO:
     """
     A named tuple containing the neighbor list in coo format and the number of neighbors for each particle.
     """
@@ -302,7 +307,10 @@ class SparseCOO(NamedTuple):
 
     numRows: int
     numCols: int
-class SparseCSR(NamedTuple):
+
+    
+@dataclass(slots=True)
+class SparseCSR:
     """
     A named tuple containing the neighbor list in csr format and the number of neighbors for each particle.
     """
