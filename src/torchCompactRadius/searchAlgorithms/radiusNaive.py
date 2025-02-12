@@ -24,8 +24,11 @@ def radiusNaive(x, y, hx, hy, periodic : Optional[torch.Tensor] = None, minDomai
         scatterMatrix = hy.repeat(x.shape[0],1).mT
         adjacencyDense = distanceMatrix <= scatterMatrix
         # supports = scatterMatrix[adjacencyDense]
-    else:
+    elif mode == 'symmetric':
         symmetricMatrix = (hx + hy[:,None]) / 2
+        adjacencyDense = distanceMatrix <= symmetricMatrix
+    elif mode == 'superSymmetric':
+        symmetricMatrix = torch.max(hx, hy)
         adjacencyDense = distanceMatrix <= symmetricMatrix
         # supports = symmetricMatrix[adjacencyDense]
     

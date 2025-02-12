@@ -64,7 +64,7 @@ def computeGridSupport(queryParticleSupports : Optional[torch.Tensor], reference
     elif mode == 'gather':
         assert queryParticleSupports is not None, 'queryParticleSupports must be provided for gather mode'
         hMax = torch.max(queryParticleSupports) if queryParticleSupports is not None else 0.0
-    elif mode == 'symmetric':
+    elif mode == 'symmetric' or mode == 'superSymmetric':
         assert referenceSupports is not None, 'referenceSupports must be provided for symmetric mode'
         assert queryParticleSupports is not None, 'queryParticleSupports must be provided for symmetric mode'
         referenceHMax = torch.max(referenceSupports) if referenceSupports is not None else 0.0

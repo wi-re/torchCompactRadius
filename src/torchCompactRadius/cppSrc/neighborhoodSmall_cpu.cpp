@@ -53,7 +53,9 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
         searchMode = supportMode::gather;
     } else if(mode == "scatter"){
         searchMode = supportMode::scatter;
-    } else {
+    } else if(mode == "superSymmetric"){
+        searchMode = supportMode::superSymmetric;    
+    }else {
         throw std::runtime_error("Invalid support mode: " + mode);
     }
     bool useCuda = queryPositions_.is_cuda();
@@ -101,7 +103,8 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
                     scalar_t dist = modDistancePtr<scalar_t>(xi, xj, minDomainPtr, maxDomainPtr, periodicityPtr, dim);
                     if ((searchMode == supportMode::scatter && dist < referenceSupportPtr[j]) ||
                         (searchMode == supportMode::gather && dist < querySupportPtr[i]) ||
-                        (searchMode == supportMode::symmetric && dist < (querySupportPtr[i] + referenceSupport[j]) / 2.f)) {
+                        (searchMode == supportMode::symmetric && dist < (querySupportPtr[i] + referenceSupport[j]) / 2.f)||
+                        (searchMode == supportMode::superSymmetric && dist < std::max(querySupportPtr[i], referenceSupportPtr[j]))) {
                         counter++;
                 }
                 neighborCountersPtr[i] = counter;
@@ -155,7 +158,8 @@ std::pair<torch::Tensor, torch::Tensor> neighborSearchSmall(torch::Tensor queryP
                 scalar_t dist = modDistancePtr<scalar_t>(xi, xj, minDomainPtr, maxDomainPtr, periodicityPtr, dim);
                 if ((searchMode == supportMode::scatter && dist < referenceSupportPtr[j]) ||
                     (searchMode == supportMode::gather && dist < querySupportPtr[i]) ||
-                    (searchMode == supportMode::symmetric && dist < (querySupportPtr[i] + referenceSupport[j]) / 2.f)) {
+                    (searchMode == supportMode::symmetric && dist < (querySupportPtr[i] + referenceSupport[j]) / 2.f)||
+                    (searchMode == supportMode::superSymmetric && dist < std::max(querySupportPtr[i], referenceSupportPtr[j]))) {
                     iPtr[curOffset + counter] = i;
                     jPtr[curOffset + counter] = j;
                     counter++;

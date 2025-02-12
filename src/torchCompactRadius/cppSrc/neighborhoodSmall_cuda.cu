@@ -31,8 +31,8 @@ __global__ void countNeighborsSmallKernel( int32_t* __restrict__ neighborCounter
 
     const float* __restrict__ queryPosition = queryPositionsPtr + idx * dim;
     int32_t neighborCounter = 0;
-    auto requires_hj = searchMode == supportMode::scatter || searchMode == supportMode::symmetric;
-    auto requires_hi = searchMode == supportMode::gather || searchMode == supportMode::symmetric;
+    auto requires_hj = searchMode == supportMode::scatter || searchMode == supportMode::symmetric || searchMode == supportMode::superSymmetric;
+    auto requires_hi = searchMode == supportMode::gather || searchMode == supportMode::symmetric || searchMode == supportMode::superSymmetric;
     float querySupport = requires_hi ? querySupportPtr[idx] : 0.f;
 
     for (int32_t j = 0; j < nReference; j++){
@@ -44,7 +44,8 @@ __global__ void countNeighborsSmallKernel( int32_t* __restrict__ neighborCounter
         // }
         if ((searchMode == supportMode::scatter && dist < referenceSupport) ||
                 (searchMode == supportMode::gather && dist < querySupport) ||
-                (searchMode == supportMode::symmetric && dist < (querySupport + referenceSupport) / 2.f)) {
+                (searchMode == supportMode::symmetric && dist < (querySupport + referenceSupport) / 2.f)||
+                (searchMode == supportMode::superSymmetric && dist < std::max(querySupport, referenceSupport))) {
                 neighborCounter++;
                 }
     }
@@ -95,8 +96,8 @@ __global__ void neighborSearchSmallCUDAKernel( int32_t* __restrict__ neighborCou
     
     const float* __restrict__ queryPosition = queryPositionsPtr + idx * dim;
     int32_t neighborCounter = 0;
-    auto requires_hj = searchMode == supportMode::scatter || searchMode == supportMode::symmetric;
-    auto requires_hi = searchMode == supportMode::gather || searchMode == supportMode::symmetric;
+    auto requires_hj = searchMode == supportMode::scatter || searchMode == supportMode::symmetric || searchMode == supportMode::superSymmetric;
+    auto requires_hi = searchMode == supportMode::gather || searchMode == supportMode::symmetric || searchMode == supportMode::superSymmetric;
     float querySupport = requires_hi ? querySupportPtr[idx] : 0.f;
 
     int32_t neighborOffset = idx > 0 ? neighborCounterPtr[idx - 1] : 0;
@@ -106,7 +107,8 @@ __global__ void neighborSearchSmallCUDAKernel( int32_t* __restrict__ neighborCou
         scalar_t dist = modDistancePtrCUDA<scalar_t, dim>(queryPosition, referencePosition, minDomainPtr, maxDomainPtr, periodicityPtr);
         if ((searchMode == supportMode::scatter && dist < referenceSupport) ||
                 (searchMode == supportMode::gather && dist < querySupport) ||
-                (searchMode == supportMode::symmetric && dist < (querySupport + referenceSupport) / 2.f)) {
+                (searchMode == supportMode::symmetric && dist < (querySupport + referenceSupport) / 2.f)||
+                (searchMode == supportMode::superSymmetric && dist < std::max(querySupport, referenceSupport))) {
                     neighborList_jPtr[neighborOffset + neighborCounter] = j;
                     neighborList_iPtr[neighborOffset + neighborCounter] = idx;
                 neighborCounter++;

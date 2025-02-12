@@ -104,7 +104,7 @@ hostDeviceInline auto buildNeighborhood(int32_t i,
                 auto dist = modDistance<dim>(xi, xj, minDomain, maxDomain, periodicity);
                 if ((searchMode == supportMode::scatter && dist < sortedSupport[j]) ||
                     (searchMode == supportMode::gather && dist < querySupport[i]) ||
-                    (searchMode == supportMode::symmetric && dist < (querySupport[i] + sortedSupport[j]) / 2.f) ||
+                    (searchMode == supportMode::symmetric && dist < (querySupport[i] + sortedSupport[j]) / 2.f)||
                     (searchMode == supportMode::superSymmetric && dist < std::max(querySupport[i], sortedSupport[j]))) {
                     neighborList_i[currentOffset] = i;
                     neighborList_j[currentOffset] = j;

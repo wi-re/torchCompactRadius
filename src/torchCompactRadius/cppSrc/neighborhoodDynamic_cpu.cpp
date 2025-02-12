@@ -82,7 +82,7 @@ torch::Tensor countNeighbors_t(
     } else if(mode == "scatter"){
         searchMode = supportMode::scatter;
     } else if(mode == "superSymmetric"){
-        searchMode = supportMode::superSymmetric;   
+        searchMode = supportMode::superSymmetric;    
     }else {
         throw std::runtime_error("Invalid support mode: " + mode);
     }
@@ -294,8 +294,8 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
     } else if(mode == "scatter"){
         searchMode = supportMode::scatter;
     } else if(mode == "superSymmetric"){
-        searchMode = supportMode::superSymmetric;   
-    } else {
+        searchMode = supportMode::superSymmetric;    
+    }else {
         throw std::runtime_error("Invalid support mode: " + mode);
     }
     bool useCuda = queryPositions_.is_cuda();

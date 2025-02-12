@@ -166,7 +166,7 @@ def radiusSearch(
     else:
         assert algorithm in ['naive', 'small', 'compact'], f'algorithm = {algorithm} not supported'
     assert format in ['coo', 'csr'], f'format = {format} not supported'
-    assert mode in ['symmetric', 'scatter', 'gather'], f'mode = {mode} not supported'
+    assert mode in ['symmetric', 'scatter', 'gather', 'superSymmetric'], f'mode = {mode} not supported'
     assert queryPointCloud is not None, f'referencePointCloud = {queryPointCloud} is None'
     if supportOverride is not None and not isinstance(supportOverride, float):
         raise ValueError(f'supportOverride = {supportOverride} must be a float')
