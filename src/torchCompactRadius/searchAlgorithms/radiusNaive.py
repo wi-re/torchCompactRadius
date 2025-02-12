@@ -30,6 +30,8 @@ def radiusNaive(x, y, hx, hy, periodic : Optional[torch.Tensor] = None, minDomai
     elif mode == 'superSymmetric':
         symmetricMatrix = torch.max(hx, hy)
         adjacencyDense = distanceMatrix <= symmetricMatrix
+    else:
+        raise ValueError('mode must be one of gather, scatter, symmetric, or superSymmetric')
         # supports = symmetricMatrix[adjacencyDense]
     
     ii = indexI[adjacencyDense]

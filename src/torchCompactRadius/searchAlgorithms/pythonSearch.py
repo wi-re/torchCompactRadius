@@ -65,7 +65,8 @@ def findNeighbors(queryPosition, querySupport: Optional[torch.Tensor],
                 neighborhood.append(neighbors)
                 # neighborhood[counter:counter + neighbors.numel()] = neighbors
                 # counter += neighbors.numel()
-            elif mode == 'superSymmetric':
+            elif mode == 'superSymmetric' and sortedSupport is not None and querySupport is not None:
+                
                 hij = torch.max(sortedSupport[particlesInCell], querySupport)
                 neighbors = particlesInCell[distances < hij]
                 neighborhood.append(neighbors)
@@ -123,7 +124,7 @@ def findNeighborsFixed(queryPosition, querySupport : Optional[torch.Tensor],
                 neighbors = particlesInCell[distances < hij]
                 neighborhood[counter:counter + neighbors.numel()] = neighbors
                 counter += neighbors.numel()
-            elif mode == 'superSymmetric':
+            elif mode == 'superSymmetric' and sortedSupport is not None and querySupport is not None:
                 hij = torch.max(sortedSupport[particlesInCell], querySupport)
                 neighbors = particlesInCell[distances < hij]
                 neighborhood[counter:counter + neighbors.numel()] = neighbors
@@ -185,7 +186,7 @@ def countNeighbors(queryPosition, querySupport : Optional[torch.Tensor],
             elif mode == 'symmetric' and querySupport is not None and sortedSupport is not None:
                 hij = (sortedSupport[particlesInCell] + querySupport) / 2
                 counter += torch.sum(distances < hij)
-            elif mode == 'superSymmetric':
+            elif mode == 'superSymmetric' and sortedSupport is not None and querySupport is not None:
                 hij = torch.max(sortedSupport[particlesInCell], querySupport)
                 counter += torch.sum(distances < hij)
             # neighbors = particlesInCell[distances < querySupport]
