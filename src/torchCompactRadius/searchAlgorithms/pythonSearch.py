@@ -65,6 +65,10 @@ def findNeighbors(queryPosition, querySupport: Optional[torch.Tensor],
                 neighborhood.append(neighbors)
                 # neighborhood[counter:counter + neighbors.numel()] = neighbors
                 # counter += neighbors.numel()
+            elif mode == 'superSymmetric':
+                hij = torch.max(sortedSupport[particlesInCell], querySupport)
+                neighbors = particlesInCell[distances < hij]
+                neighborhood.append(neighbors)
             # print('offset:', xx, yy, distances)
             # neighbors = particlesInCell[distances < querySupport]
             # neighborhood.append(neighbors)
@@ -116,6 +120,11 @@ def findNeighborsFixed(queryPosition, querySupport : Optional[torch.Tensor],
                 counter += neighbors.numel()
             elif mode == 'symmetric' and querySupport is not None and sortedSupport is not None:
                 hij = (sortedSupport[particlesInCell] + querySupport) / 2
+                neighbors = particlesInCell[distances < hij]
+                neighborhood[counter:counter + neighbors.numel()] = neighbors
+                counter += neighbors.numel()
+            elif mode == 'superSymmetric':
+                hij = torch.max(sortedSupport[particlesInCell], querySupport)
                 neighbors = particlesInCell[distances < hij]
                 neighborhood[counter:counter + neighbors.numel()] = neighbors
                 counter += neighbors.numel()
@@ -175,6 +184,9 @@ def countNeighbors(queryPosition, querySupport : Optional[torch.Tensor],
                 counter += torch.sum(distances < hij)
             elif mode == 'symmetric' and querySupport is not None and sortedSupport is not None:
                 hij = (sortedSupport[particlesInCell] + querySupport) / 2
+                counter += torch.sum(distances < hij)
+            elif mode == 'superSymmetric':
+                hij = torch.max(sortedSupport[particlesInCell], querySupport)
                 counter += torch.sum(distances < hij)
             # neighbors = particlesInCell[distances < querySupport]
             # neighborhood.append(neighbors)

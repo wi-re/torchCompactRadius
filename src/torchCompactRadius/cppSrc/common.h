@@ -53,7 +53,7 @@ using general_t = torch::TensorAccessor<T, dim>;
 
 // Simple enum to specify the support mode
 enum struct supportMode{
-    symmetric, gather, scatter
+    symmetric, gather, scatter, superSymmetric
 };
 
 // Simple helper math functions
