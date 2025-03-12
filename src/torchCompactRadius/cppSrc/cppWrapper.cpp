@@ -17,4 +17,4 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   // m.def("neighborSearchSmall", &neighborSearchSmall, "Neighbor Search (C++)");
   // m.def("neighborSearchSmallFixed", &neighborSearchSmallFixed, "Neighbor Search (C++) (fixed support radius)");
   m.def("countNeighborsMLM", &countNeighborsMLM, "Count the Number of Neighbors (C++) using a precomputed hash table and cell map (MLM)");
-}
+} 
