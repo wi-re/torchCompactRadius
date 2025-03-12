@@ -24,11 +24,15 @@ def computeResolutionLevels(domain, hMin, hMax):
 
     hRatio = hMax / hCell
     # print(f'hMin = {hMin}, hMax = {hMax}, hRatio = {hRatio}')
-    levels = int(math.floor(math.log2(hRatio)))
+    levels = int(math.ceil(math.log2(hRatio)))
+    hCellMax = hCell * 2**levels
+    # if hCellMax < hMax:
+    #     levels += 1
+    #     hCellMax *= 2
     # print(f'levels = {levels}')
 
     levelResolutions = []
-    for i in range(levels):
+    for i in range(levels + 1):
         if (qCells / 2**i).min() <= 1:
             break
         # print(f'level = {i}, h = {hCell * 2**i}, qCells = {qCells / 2**i}')

@@ -30,7 +30,7 @@ def searchDataStructureDense(
     for i in tqdm(range(len(positions))):
         pos_i = positions[i]
         h_i = supports[i]
-        l_i = (h_i / mlmData.hCell).ceil().int().clamp(1, mlmData.levels)
+        l_i = ((torch.log2(h_i / mlmData.hCell)).ceil().int() + 1).clamp(1, mlmData.levels)
         # l_i = levels
 
         # print(f'pos = {pos_i}, h = {h_i}, l = {l_i}, hCell = {hCell}')
@@ -124,7 +124,7 @@ def searchDataStructureHashed(
     for i in tqdm(range(len(positions))):
         pos_i = positions[i]
         h_i = supports[i]
-        l_i = (h_i / hCell).ceil().int().clamp(1, levels)
+        l_i = ((torch.log2(h_i / mlmData.hCell)).ceil().int() + 1).clamp(1, mlmData.levels)
         # l_i = levels
 
         # print(f'pos = {pos_i}, h = {h_i}, l = {l_i}, hCell = {hCell}')

@@ -6,7 +6,7 @@
 // Define the python bindings for the C++ functions
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> countNeighborsMLM(
     torch::Tensor queryPositions_, torch::Tensor querySupport_, 
-    torch::Tensor sortedPositions_, 
+    torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
 
     torch::Tensor domainMin_, torch::Tensor domainMax_, torch::Tensor periodicity_,
 
