@@ -375,3 +375,13 @@ def getPeriodicPointCloud(
         if isinstance(periodic, bool):
             periodic = [periodic] * queryPointCloud.positions.shape[1]
         return PointCloud(torch.stack([queryPointCloud.positions[:,i] if not periodic_i else torch.remainder(queryPointCloud.positions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodic)], dim = 1), queryPointCloud.supports)
+
+
+@torch.jit.script
+def mod(x, min : float, max : float):
+    h = max - min
+    return ((x + h / 2.0) - torch.floor((x + h / 2.0) / h) * h) - h / 2.0
+def moduloDistance(xij, periodicity, min, max):
+    if isinstance(periodicity, bool):
+        periodicity = [periodicity] * xij.shape[-1]
+    return torch.stack([xij[:,i] if not periodic else mod(xij[:,i], min[i], max[i]) for i, periodic in enumerate(periodicity)], dim = -1)

@@ -419,13 +419,13 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
 
     // return std::make_pair(neighborList_i, neighborList_j);
     // Create the accessors for the input tensors as packed accessors
-    auto referencePositionAccessor = sortedPositions_.packed_accessor32<float_t, 2, traits>();
-    auto referenceSupportAccessor = sortedSupport_.packed_accessor32<float_t, 1, traits>();
+    // auto referencePositionAccessor = sortedPositions_.packed_accessor32<float_t, 2, traits>();
+    // auto referenceSupportAccessor = sortedSupport_.packed_accessor32<float_t, 1, traits>();
     auto hashTableAccessor = hashTable_.packed_accessor32<int32_t, 2, traits>();
     auto cellTableAccessor = cellTable_.packed_accessor32<int32_t, 2, traits>();
     auto offsetAccessor = offsets.packed_accessor32<int32_t, 2, traits>();
     auto numCellsAccessor = numCells_.packed_accessor32<int32_t, 1, traits>();
-    auto neighborCounterAccessor = neighborCounter_.packed_accessor32<int32_t, 1, traits>();
+    // auto neighborCounterAccessor = neighborCounter_.packed_accessor32<int32_t, 1, traits>();
     auto neighborOffsetsAccessor = neighborOffsets_.packed_accessor32<int32_t, 1, traits>();
 
     auto neighborList_iAccessor = neighborList_i.packed_accessor32<int64_t, 1, traits>();
