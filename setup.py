@@ -76,6 +76,7 @@ def get_extensions():
         nvcc_flags = [] if nvcc_flags == '' else nvcc_flags.split(' ')
         nvcc_flags += ['-O2']
         nvcc_flags += [f'-DCOMPILE_WITH_CUDA=1']
+        nvcc_flags += [f'-extended-lambda']
         extra_compile_args['nvcc'] = nvcc_flags
 
     Extension = CppExtension if suffix == 'cpu' else CUDAExtension

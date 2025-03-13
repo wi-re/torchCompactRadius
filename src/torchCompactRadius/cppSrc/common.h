@@ -25,8 +25,10 @@
 
 #if defined(__CUDACC__) || defined(__HIPCC__)
 #define hostDeviceInline __device__ __host__ inline
+#define deviceInline __device__ inline
 #else
 #define hostDeviceInline inline
+#define deviceInline inline
 #endif
 
 // Define the traits for the pointer types based on the CUDA availability
@@ -64,7 +66,7 @@ enum struct supportMode{
  * @param exponent The exponent.
  * @return The calculated power.
 */
-hostDeviceInline constexpr int32_t power(const int32_t base, const int32_t exponent) {
+deviceInline constexpr int32_t power(const int32_t base, const int32_t exponent) {
     int32_t result = 1;
     for (int32_t i = 0; i < exponent; i++) {
         result *= base;
@@ -79,7 +81,7 @@ hostDeviceInline constexpr int32_t power(const int32_t base, const int32_t expon
  * @param m The modulus.
  * @return The calculated modulo.
  */
-hostDeviceInline constexpr auto pymod(const int32_t n, const int32_t m) {
+deviceInline constexpr auto pymod(const int32_t n, const int32_t m) {
     return n >= 0 ? n % m : ((n % m) + m) % m;
 }
 /**
@@ -91,7 +93,7 @@ hostDeviceInline constexpr auto pymod(const int32_t n, const int32_t m) {
  * @return The calculated modulo.
  */
 template<typename scalar_t>
-hostDeviceInline auto moduloOp(const scalar_t p, const scalar_t q, const scalar_t h){
+deviceInline auto moduloOp(const scalar_t p, const scalar_t q, const scalar_t h){
     return ((p - q + h / 2.0) - std::floor((p - q + h / 2.0) / h) * h) - h / 2.0;
 }
 
@@ -106,7 +108,7 @@ hostDeviceInline auto moduloOp(const scalar_t p, const scalar_t q, const scalar_
  * @return The calculated distance.
  */
 template<std::size_t dim, typename scalar_t>
-hostDeviceInline auto modDistance(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<bool,1> periodicity){
+deviceInline auto modDistance(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<bool,1> periodicity){
     scalar_t sum(0.0);
     for(int32_t i = 0; i < dim; i++){
         auto diff = periodicity[i] ? moduloOp(x_i[i], x_j[i], maxDomain[i] - minDomain[i]) : x_i[i] - x_j[i];
@@ -115,7 +117,7 @@ hostDeviceInline auto modDistance(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,
     return std::sqrt(sum);
 }
 template<std::size_t dim, typename scalar_t>
-hostDeviceInline auto modDistance2(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<bool,1> periodicity){
+deviceInline auto modDistance2(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> x_j, cptr_t<scalar_t,1> minDomain, cptr_t<scalar_t,1> maxDomain, cptr_t<bool,1> periodicity){
     scalar_t sum(0.0);
     for(int32_t i = 0; i < dim; i++){
         auto diff = periodicity[i] ? moduloOp(x_i[i], x_j[i], maxDomain[i] - minDomain[i]) : x_i[i] - x_j[i];
