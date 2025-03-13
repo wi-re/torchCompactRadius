@@ -13,6 +13,7 @@ def searchDataStructureDense(
     dim = positions.shape[1]
 
     offsets = getOffsets(1, dim)
+    offsets = [o.to(positions.device) for o in offsets]
 
     neighborRows = []
     neighborCols = []
@@ -111,6 +112,7 @@ def searchDataStructureHashed(
 ):
     dim = positions.shape[1]
     offsets = getOffsets(1, dim)
+    offsets = [o.to(positions.device) for o in offsets]
 
     neighborRows = []
     neighborCols = []
