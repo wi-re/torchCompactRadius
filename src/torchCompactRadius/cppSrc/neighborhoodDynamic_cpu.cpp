@@ -229,6 +229,7 @@ torch::Tensor countNeighbors_t(
                     celTableAccessor, numCellsAccessor,\
                     offsetAccessor,\
                     hCell, minDomain, maxDomain, periodicity, searchMode
+                    #ifndef DEV_VERSION
                 if(dim == 1)
                     countNeighborsForParticle<1, float_t>(args);
                 else if(dim == 2)
@@ -237,6 +238,11 @@ torch::Tensor countNeighbors_t(
                     countNeighborsForParticle<3, float_t>(args);
                 else
                     throw std::runtime_error("Unsupported dimension: " + std::to_string(dim));
+                    #else
+                if(dim != 2)
+                    throw std::runtime_error("Unsupported dimension: " + std::to_string(dim));
+                countNeighborsForParticle<2, float_t>(args);
+                    #endif
                 #undef args
             }
 #ifndef OMP_VERSION
@@ -462,6 +468,7 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
                     cellTableAccessor, numCellsAccessor,\
                     offsetAccessor,\
                     hCell, minDomain, maxDomain, periodicity, searchMode
+#ifndef DEV_VERSION
                 if(dim == 1)
                     buildNeighborhood<1, float_t>(args);
                 else if(dim == 2)
@@ -470,7 +477,11 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList_t(
                     buildNeighborhood<3, float_t>(args);
                 else
                     throw std::runtime_error("Unsupported dimension: " + std::to_string(dim));
-
+#else
+                if (dim != 2)
+                    throw std::runtime_error("Unsupported dimension: " + std::to_string(dim));
+                buildNeighborhood<2, float_t>(args);
+#endif
                 #undef args
                 }
 #ifndef OMP_VERSION
@@ -489,7 +500,11 @@ torch::Tensor countNeighbors(
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose){
         torch::Tensor returnTensor;
+#ifndef DEV_VERSION
     AT_DISPATCH_FLOATING_TYPES(queryPositions_.scalar_type(), "countNeighbors", [&] {
+#else
+        using scalar_t = float;
+#endif
         returnTensor =  countNeighbors_t<scalar_t>(
             queryPositions_, querySupport_, searchRange, 
             sortedPositions_, sortedSupport_,
@@ -497,7 +512,9 @@ torch::Tensor countNeighbors(
             numCells_, cellTable_,
             qMin_, hCell, maxDomain_, minDomain_, periodicity_,
             mode, verbose);
+#ifndef DEV_VERSION
     });
+#endif
     return returnTensor;
     }
 
@@ -510,7 +527,11 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose){
     std::pair<torch::Tensor, torch::Tensor> returnPair;
+    #ifndef DEV_VERSION
     AT_DISPATCH_FLOATING_TYPES(queryPositions_.scalar_type(), "buildNeighborList", [&] {
+    #else
+        using scalar_t = float;
+    #endif
         returnPair = buildNeighborList_t<scalar_t>(
             neighborCounter_, neighborOffsets_, neighborListLength,
             queryPositions_, querySupport_, searchRange, 
@@ -519,6 +540,8 @@ std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
             numCells_, cellTable_,
             qMin_, hCell, maxDomain_, minDomain_, periodicity_,
             mode, verbose);
+    #ifndef DEV_VERSION
     });
+    #endif
     return returnPair;
     }

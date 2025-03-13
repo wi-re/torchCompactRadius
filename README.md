@@ -211,3 +211,15 @@ e.g., to build the library for python 3.11, pytorch 2.5.0 and Cuda 12.1 run `bui
 ```
 conda install -c ~/conda-bld/ torch-compact-radius -c pytorch
 ```
+
+## For development
+
+use ccache
+`conda install ccache -c conda-forge`
+
+and then
+```export CMAKE_C_COMPILER_LAUNCHER=ccache
+export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+export CMAKE_CUDA_COMPILER_LAUNCHER=ccache```
+
+before calling setup.py

@@ -85,6 +85,7 @@ offsets.packed_accessor32<int32_t,2, traits>(), \
 hCell, minDomain.packed_accessor32<scalar_t,1, traits>(), maxDomain.packed_accessor32<scalar_t,1, traits>(), periodicity.packed_accessor32<bool,1, traits>(), searchMode
 
     int32_t dim = queryPositions.size(1);
+    #ifndef DEV_VERSION
     if(dim == 1)
         AT_DISPATCH_FLOATING_TYPES(queryPositions.scalar_type(), "buildNeighborhoodCuda", [&] {
             launchKernel(buildNeighborhoodCudaDispatcher<1, scalar_t>, args);
@@ -101,6 +102,10 @@ hCell, minDomain.packed_accessor32<scalar_t,1, traits>(), maxDomain.packed_acces
         });
         // buildNeighborhoodCudaDispatcher<3><<<blocks, threads>>>(args);
     else throw std::runtime_error("Unsupported dimensionality");
+    #else
+    using scalar_t = float;
+        launchKernel(buildNeighborhoodCudaDispatcher<2, scalar_t>, args);
+    #endif
 
     // cuda_error_check();
 
@@ -130,6 +135,7 @@ void countNeighborsForParticleCuda(
 
     int32_t dim = queryPositions.size(1);
     // std::cout << "dim: " << dim << std::endl;
+    #ifndef DEV_VERSION
     if (dim == 1)
     AT_DISPATCH_FLOATING_TYPES(queryPositions.scalar_type(), "countNeighborsForParticleCuda", [&] {
         launchKernel(countNeighborsForParticleCudaDispatcher<1, scalar_t>, args);
@@ -146,6 +152,10 @@ void countNeighborsForParticleCuda(
     });
         // countNeighborsForParticleCudaDispatcher<3><<<blocks, threads>>>(args);
     else throw std::runtime_error("Unsupported dimensionality");
+    #else
+    using scalar_t = float;
+        launchKernel(countNeighborsForParticleCudaDispatcher<2, scalar_t>, args);
+    #endif
 
 #undef args
 }

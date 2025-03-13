@@ -123,3 +123,5 @@ hostDeviceInline auto modDistance2(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t
     }
     return sum;
 }
+
+#define DEV_VERSION

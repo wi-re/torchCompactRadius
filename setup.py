@@ -99,10 +99,10 @@ install_requires = [
     'torch',
 ]
 
-test_requires = [
-    'pytest',
-    'pytest-cov',
-]
+# test_requires = [
+#     'pytest',
+#     'pytest-cov',
+# ]
 
 # work-around hipify abs paths
 include_package_data = True
@@ -124,11 +124,11 @@ setup(
         'graph-neural-networks',
         'cluster-algorithms',
     ],
-    python_requires='>=3.8',
+    # python_requires='>=3.8',
     install_requires=install_requires,
-    extras_require={
-        'test': test_requires,
-    },
+    # extras_require={
+    #     'test': test_requires,
+    # },
     ext_modules=get_extensions() if not BUILD_DOCS else [],
     cmdclass={
         'build_ext':

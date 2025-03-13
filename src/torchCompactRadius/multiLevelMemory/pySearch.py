@@ -60,8 +60,8 @@ def searchDataStructureDense(
                 pos_j = referencePositions[j]
                 x_ij = moduloDistance(pos_i.view(1,-1) - pos_j.view(1,-1), domain.periodicity, domain.min, domain.max)
                 r_ij = torch.linalg.norm(x_ij, dim = -1)
-                cond = r_ij < h_i
-                # print(f'\t\tj = {j}, pos = {pos_j}, h = {h_i}, r = {r_ij}, neighbors = {cond.sum()}')
+                cond = r_ij[0] < h_i
+                # print(f'\t\tj = {j}, pos = {pos_j}, h = {h_i}, x = {x_ij}, r = {r_ij}, neighbors = {cond.sum()}')
                 if cond:
                     neighbors.append(j)
                     actual += 1
@@ -69,6 +69,13 @@ def searchDataStructureDense(
                 # if x_ij[:,0] > 2 * hCellCurr or x_ij[:,1] > 2 * hCellCurr:
                     # raise ValueError(f'r_ij = {r_ij}, hCellCurr = {hCellCurr}')
                 checked += 1
+        row = torch.tensor([i] * len(neighbors))
+        col = torch.tensor(neighbors)
+
+        x_ij = moduloDistance(positions[row] - referencePositions[col], domain.periodicity, domain.min, domain.max)
+        r_ij = torch.linalg.norm(x_ij, dim = -1)
+        if torch.any(r_ij > h_i):
+            raise ValueError(f'r_ij = {r_ij}, h_i = {h_i}')
 
         neighborRows.append(torch.tensor([i] * len(neighbors)))
         neighborCols.append(torch.tensor(neighbors))
@@ -89,7 +96,7 @@ def searchDataStructureDense(
 
     return SparseCOO(
         row = neighborRows,
-        col = neighborCols,
+        col = mlmData.sortingIndices[neighborCols],
 
         numRows=positions.shape[0],
         numCols=mlmData.sortedPositions.shape[0],
@@ -198,7 +205,7 @@ def searchDataStructureHashed(
 
     return SparseCOO(
         row = neighborRows,
-        col = neighborCols,
+        col = mlmData.sortingIndices[neighborCols],
 
         numRows=positions.shape[0],
         numCols=sortedPositions.shape[0],

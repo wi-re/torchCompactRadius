@@ -9,7 +9,6 @@ maintainers = [
 ]
 description = "Compact Hashing based radius search for pyTorch using C++/CUDA backends."
 readme = "README.md"
-requires-python = ">=3.10"
 keywords = ["sph","radius","pytorch"]
 classifiers = [
   # How mature is this project? Common values are

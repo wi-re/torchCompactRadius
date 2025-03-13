@@ -25,6 +25,7 @@ void hashCellsCuda(torch::Tensor hashIndices, torch::Tensor cellIndices, uint32_
 
     auto cellIndicesAccessor = cellIndices.packed_accessor32<int32_t, 2, traits>();
     auto hashIndicesAccessor = hashIndices.packed_accessor32<int32_t, 1, traits>();
+    #ifndef DEV_VERSION
     if(dim ==1){
         hashCellsCudaKernel<1><<<blocks, threads>>>(numCells, hashIndicesAccessor, cellIndicesAccessor, hashMapLength);
     }
@@ -34,6 +35,9 @@ void hashCellsCuda(torch::Tensor hashIndices, torch::Tensor cellIndices, uint32_
     else if(dim ==3){
         hashCellsCudaKernel<3><<<blocks, threads>>>(numCells, hashIndicesAccessor, cellIndicesAccessor, hashMapLength);
     }
+    #else
+    hashCellsCudaKernel<2><<<blocks, threads>>>(numCells, hashIndicesAccessor, cellIndicesAccessor, hashMapLength);
+    #endif
     // cudaDeviceSynchronize();
     return;
 }
