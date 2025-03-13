@@ -4,7 +4,7 @@
 #ifdef __CUDACC__
 #include <cuda_runtime.h>
 
-void cuda_error_check() {
+inline void cuda_error_check() {
     cudaError_t error = cudaGetLastError();
     if (error != cudaSuccess) {
         throw std::runtime_error(cudaGetErrorString(error));
@@ -346,6 +346,10 @@ auto parallelCall(
     int32_t from, int32_t to,
     Ts&&... args
 ){
+    for(int32_t i = from; i < to; ++i){
+        invoke(f, i, std::forward<Ts>(args)...);
+    }
+    return;
     #ifdef OMP_VERSION
     #pragma omp parallel for
     for(int32_t i = from; i < to; ++i){

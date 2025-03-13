@@ -15,8 +15,7 @@ auto countNeighborsMLMParticle_cpu(int32_t nQuery, int32_t dim, c10::ScalarType 
             parallelCall(countNeighborsMLMParticle<dim_v, scalar_t>, 0, nQuery, functionArguments);
     });
 }
-
-
+ 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> countNeighborsMLM(countNeighbors_pyArguments_t){
         if(verbose)
     std::cout << "C++: countNeighbors [MLM]" << std::endl;
@@ -40,28 +39,17 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
     auto offsets_ = getOffsets(queryPositions_, dim, verbose, hostOptions);
 
     auto wrappedArguments = std::make_tuple(countNeighbors_functionArguments);
-
-    if (hashMapOffset_.has_value() && hashMapOccupancy_.has_value() && sortedCells_.has_value()){
-        if(queryPositions_.is_cuda()){
-#ifndef WITH_CUDA
+    if(queryPositions_.is_cuda()){
+        #ifndef WITH_CUDA
             throw std::runtime_error("CUDA support is not available in this build");
-#else
+        #else
             std::apply(countNeighborsMLM_cuda, wrappedArguments);
-#endif
-        }else{
+        #endif
+    }else{
+        if (hashMapOffset_.has_value() && hashMapOccupancy_.has_value() && sortedCells_.has_value())
             countNeighborsMLMParticle_cpu<true>(nQuery, dim, queryPositions_.scalar_type(), wrappedArguments);
-        }
-    }
-    else{
-        if(queryPositions_.is_cuda()){
-            #ifndef WITH_CUDA
-                throw std::runtime_error("CUDA support is not available in this build");
-            #else
-                std::apply(countNeighborsMLM_cuda, wrappedArguments);
-            #endif
-            }else{
-                countNeighborsMLMParticle_cpu<false>(nQuery, dim, queryPositions_.scalar_type(), wrappedArguments);
-            }
+        else
+            countNeighborsMLMParticle_cpu<false>(nQuery, dim, queryPositions_.scalar_type(), wrappedArguments);
     }
     return std::make_tuple(neighborCounters_, neighborAccessCounters_, neighborHashCollisions_, neighborSynchronousCounters_, neighborSupports_);
 }

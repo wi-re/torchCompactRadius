@@ -93,7 +93,7 @@ hostDeviceInline auto iterateOffsetCells(
     }
 }
 
-void cuda_error_check();
+// void cuda_error_check();
 
 
 

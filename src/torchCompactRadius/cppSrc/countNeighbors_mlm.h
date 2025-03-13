@@ -5,7 +5,12 @@
 #include <algorithm>
 #include <optional>
 
-
+#define countNeighbors_pyArguments_t \
+torch::Tensor queryPositions_, torch::Tensor querySupport_, \
+torch::Tensor sortedPositions_, torch::Tensor sortedSupport_, \
+torch::Tensor domainMin_, torch::Tensor domainMax_, torch::Tensor periodicity_, \
+float_t hCell, torch::Tensor cellBegin_, torch::Tensor cellEnd_, torch::Tensor cellIndices_, torch::Tensor cellLevel_, torch::Tensor cellResolutions_, \
+std::optional<torch::Tensor> hashMapOffset_, std::optional<torch::Tensor> hashMapOccupancy_, std::optional<torch::Tensor> sortedCells_, int32_t hashMapLength, bool verbose
 
 #define countNeighbors_functionArguments_t \
 torch::Tensor queryPositions_, torch::Tensor querySupport_, \
@@ -13,9 +18,9 @@ torch::Tensor sortedPositions_, torch::Tensor sortedSupport_, \
 torch::Tensor domainMin_, torch::Tensor domainMax_, torch::Tensor periodicity_, \
 float_t hCell, torch::Tensor offsets_, \
 torch::Tensor cellBegin_, torch::Tensor cellEnd_, torch::Tensor cellIndices_, torch::Tensor cellLevel_, torch::Tensor cellResolutions_, \
-std::optional<torch::Tensor> hashMapOffset_, std::optional<torch::Tensor> hashMapOccupancy_, std::optional<torch::Tensor> sortedCells_, int32_t hashMapLength, \
-bool verbose, \
+std::optional<torch::Tensor> hashMapOffset_, std::optional<torch::Tensor> hashMapOccupancy_, std::optional<torch::Tensor> sortedCells_, int32_t hashMapLength, bool verbose, \
 torch::Tensor neighborCounters_, torch::Tensor neighborAccessCounters_, torch::Tensor neighborHashCollisions_, torch::Tensor neighborSynchronousCounters_, torch::Tensor neighborSupports_
+
 #define countNeighbors_functionArguments \
 queryPositions_, querySupport_, \
 sortedPositions_, sortedSupport_, \
@@ -26,19 +31,73 @@ hashMapOffset_, hashMapOccupancy_, sortedCells_, hashMapLength, \
 verbose, \
 neighborCounters_, neighborAccessCounters_, neighborHashCollisions_, neighborSynchronousCounters_, neighborSupports_
 
-#define countNeighbors_pyArguments_t \
-torch::Tensor queryPositions_, torch::Tensor querySupport_, \
-torch::Tensor sortedPositions_, torch::Tensor sortedSupport_, \
-torch::Tensor domainMin_, torch::Tensor domainMax_, torch::Tensor periodicity_, \
-float_t hCell, torch::Tensor cellBegin_, torch::Tensor cellEnd_, torch::Tensor cellIndices_, torch::Tensor cellLevel_, torch::Tensor cellResolutions_, \
-std::optional<torch::Tensor> hashMapOffset_, std::optional<torch::Tensor> hashMapOccupancy_, std::optional<torch::Tensor> sortedCells_, int32_t hashMapLength, bool verbose
+// function argument processor
+
+template<typename scalar_t = float, bool hash = false>
+auto getFunctionArguments(countNeighbors_functionArguments_t){
+        bool useCuda = queryPositions_.is_cuda();
+        // Check if the input tensors are defined and contiguous and have the correct dimensions
+        auto queryPositions = getAccessor<float_t, 2>(queryPositions_, "queryPositions", useCuda, verbose);
+        auto querySupport = getAccessor<float_t, 1>(querySupport_, "querySupport", useCuda, verbose);
+        auto sortedPositions = getAccessor<float_t, 2>(sortedPositions_, "sortedPositions", useCuda, verbose);
+        auto sortedSupport = getAccessor<float_t, 1>(sortedSupport_, "sortedSupport", useCuda, verbose);
+    
+        // Check if the datastructure tensors are defined and contiguous and have the correct dimensions
+        auto domainMin = getAccessor<float_t, 1>(domainMin_, "minDomain", useCuda, verbose);
+        auto domainMax = getAccessor<float_t, 1>(domainMax_, "maxDomain", useCuda, verbose);
+        auto periodicity = periodicity_.packed_accessor32<bool, 1, traits>();
+    
+        auto cellBegin = getAccessor<int32_t, 1>(cellBegin_, "cellBegin", useCuda, verbose);
+        auto cellEnd = getAccessor<int32_t, 1>(cellEnd_, "cellEnd", useCuda, verbose);
+        auto cellIndices = getAccessor<int32_t, 1>(cellIndices_, "cellIndices", useCuda, verbose);
+        auto cellLevel = getAccessor<int32_t, 1>(cellLevel_, "cellLevel", useCuda, verbose);
+        auto cellResolutions = getAccessor<int32_t, 2>(cellResolutions_, "cellResolutions", useCuda, verbose);
+
+        auto offsets = getAccessor<int32_t, 2>(offsets_, "offsets", useCuda, verbose);
+        auto neighborCounters = getAccessor<int32_t, 1>(neighborCounters_, "neighborCounters", useCuda, verbose);
+        auto neighborAccessCounters = getAccessor<int32_t, 1>(neighborAccessCounters_, "neighborAccessCounters", useCuda, verbose);
+        auto neighborHashCollisions = getAccessor<int32_t, 1>(neighborHashCollisions_, "neighborHashCollisions", useCuda, verbose);
+        auto neighborSynchronousCounters = getAccessor<int32_t, 1>(neighborSynchronousCounters_, "neighborSynchronousCounters", useCuda, verbose);
+        auto neighborSupports = getAccessor<float_t, 1>(neighborSupports_, "neighborSupports", useCuda, verbose);
+
+        if constexpr(hash){
+            if (hashMapOffset_.has_value() && hashMapOccupancy_.has_value() && sortedCells_.has_value()){
+                auto hashMapOffset = getAccessor<int32_t, 1>(hashMapOffset_.value(), "hashMapOffset", useCuda, verbose);
+                auto hashMapOccupancy = getAccessor<int32_t, 1>(hashMapOccupancy_.value(), "hashMapOccupancy", useCuda, verbose);
+                auto sortedCells = getAccessor<int32_t, 1>(sortedCells_.value(), "sortedCells", useCuda, verbose);
+
+                return std::make_tuple(
+                    queryPositions, querySupport, 
+                    sortedPositions, sortedSupport,
+                    domainMin, domainMax, periodicity,
+                    hCell, offsets,
+                    cellBegin, cellEnd, cellIndices, cellLevel, cellResolutions,
+                    hashMapOffset, hashMapOccupancy, sortedCells, hashMapLength,
+                    neighborCounters, neighborAccessCounters, neighborHashCollisions, neighborSynchronousCounters, neighborSupports, verbose
+                );
+            }
+            else{
+                throw std::runtime_error("Hashmap tensors are not defined");
+            }
+        }
+        else{
+            return std::make_tuple(
+                queryPositions, querySupport, 
+                sortedPositions, sortedSupport,
+                domainMin, domainMax, periodicity,
+                hCell, offsets,
+                cellBegin, cellEnd, cellIndices, cellLevel, cellResolutions,
+                neighborCounters, neighborAccessCounters, neighborHashCollisions, neighborSynchronousCounters, neighborSupports, verbose
+            );
+        }
+    }
 
 // Define the python bindings for the C++ functions
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> countNeighborsMLM(countNeighbors_pyArguments_t);
-
 void countNeighborsMLM_cuda(countNeighbors_functionArguments_t);
 
 
+// the actual implementations
 template<std::size_t dim = 2, typename scalar_t = float>
 deviceInline auto countNeighborsMLMParticle(int32_t i, 
     cptr_t<scalar_t, 2> queryPositions, cptr_t<scalar_t, 1> querySupport, 
@@ -165,62 +224,3 @@ deviceInline auto countNeighborsMLMParticleHashed(int32_t i,
 }
 
 
-
-template<typename scalar_t = float, bool hash = false>
-auto getFunctionArguments(countNeighbors_functionArguments_t){
-        bool useCuda = queryPositions_.is_cuda();
-        // Check if the input tensors are defined and contiguous and have the correct dimensions
-        auto queryPositions = getAccessor<float_t, 2>(queryPositions_, "queryPositions", useCuda, verbose);
-        auto querySupport = getAccessor<float_t, 1>(querySupport_, "querySupport", useCuda, verbose);
-        auto sortedPositions = getAccessor<float_t, 2>(sortedPositions_, "sortedPositions", useCuda, verbose);
-        auto sortedSupport = getAccessor<float_t, 1>(sortedSupport_, "sortedSupport", useCuda, verbose);
-    
-        // Check if the datastructure tensors are defined and contiguous and have the correct dimensions
-        auto domainMin = getAccessor<float_t, 1>(domainMin_, "minDomain", useCuda, verbose);
-        auto domainMax = getAccessor<float_t, 1>(domainMax_, "maxDomain", useCuda, verbose);
-        auto periodicity = periodicity_.packed_accessor32<bool, 1, traits>();
-    
-        auto cellBegin = getAccessor<int32_t, 1>(cellBegin_, "cellBegin", useCuda, verbose);
-        auto cellEnd = getAccessor<int32_t, 1>(cellEnd_, "cellEnd", useCuda, verbose);
-        auto cellIndices = getAccessor<int32_t, 1>(cellIndices_, "cellIndices", useCuda, verbose);
-        auto cellLevel = getAccessor<int32_t, 1>(cellLevel_, "cellLevel", useCuda, verbose);
-        auto cellResolutions = getAccessor<int32_t, 2>(cellResolutions_, "cellResolutions", useCuda, verbose);
-
-        auto offsets = getAccessor<int32_t, 2>(offsets_, "offsets", useCuda, verbose);
-        auto neighborCounters = getAccessor<int32_t, 1>(neighborCounters_, "neighborCounters", useCuda, verbose);
-        auto neighborAccessCounters = getAccessor<int32_t, 1>(neighborAccessCounters_, "neighborAccessCounters", useCuda, verbose);
-        auto neighborHashCollisions = getAccessor<int32_t, 1>(neighborHashCollisions_, "neighborHashCollisions", useCuda, verbose);
-        auto neighborSynchronousCounters = getAccessor<int32_t, 1>(neighborSynchronousCounters_, "neighborSynchronousCounters", useCuda, verbose);
-        auto neighborSupports = getAccessor<float_t, 1>(neighborSupports_, "neighborSupports", useCuda, verbose);
-
-        if constexpr(hash){
-            if (hashMapOffset_.has_value() && hashMapOccupancy_.has_value() && sortedCells_.has_value()){
-                auto hashMapOffset = getAccessor<int32_t, 1>(hashMapOffset_.value(), "hashMapOffset", useCuda, verbose);
-                auto hashMapOccupancy = getAccessor<int32_t, 1>(hashMapOccupancy_.value(), "hashMapOccupancy", useCuda, verbose);
-                auto sortedCells = getAccessor<int32_t, 1>(sortedCells_.value(), "sortedCells", useCuda, verbose);
-
-                return std::make_tuple(
-                    queryPositions, querySupport, 
-                    sortedPositions, sortedSupport,
-                    domainMin, domainMax, periodicity,
-                    hCell, offsets,
-                    cellBegin, cellEnd, cellIndices, cellLevel, cellResolutions,
-                    hashMapOffset, hashMapOccupancy, sortedCells, hashMapLength,
-                    neighborCounters, neighborAccessCounters, neighborHashCollisions, neighborSynchronousCounters, neighborSupports, verbose
-                );
-            }
-            else{
-                throw std::runtime_error("Hashmap tensors are not defined");
-            }
-        }
-        else{
-            return std::make_tuple(
-                queryPositions, querySupport, 
-                sortedPositions, sortedSupport,
-                domainMin, domainMax, periodicity,
-                hCell, offsets,
-                cellBegin, cellEnd, cellIndices, cellLevel, cellResolutions,
-                neighborCounters, neighborAccessCounters, neighborHashCollisions, neighborSynchronousCounters, neighborSupports, verbose
-            );
-        }
-    }

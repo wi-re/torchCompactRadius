@@ -31,21 +31,21 @@ __global__ void countNeighborsForParticleCudaDispatcher(int32_t numParticles,
     }
 }
 
-// #ifdef CUUDA_VERSION
-#ifdef WITH_CUDA
-#include <cuda_runtime.h>
+// // #ifdef CUUDA_VERSION
+// #ifdef WITH_CUDA
+// #include <cuda_runtime.h>
 
-void cuda_error_check() {
-    cudaError_t error = cudaGetLastError();
-    if (error != cudaSuccess) {
-        throw std::runtime_error(cudaGetErrorString(error));
-    }
-    error = cudaDeviceSynchronize();
-    if (error != cudaSuccess) {
-        throw std::runtime_error(cudaGetErrorString(error));
-    }
-}
-#endif
+// void cuda_error_check() {
+//     cudaError_t error = cudaGetLastError();
+//     if (error != cudaSuccess) {
+//         throw std::runtime_error(cudaGetErrorString(error));
+//     }
+//     error = cudaDeviceSynchronize();
+//     if (error != cudaSuccess) {
+//         throw std::runtime_error(cudaGetErrorString(error));
+//     }
+// }
+// #endif
 
 template<typename Func, typename... Ts>
 void launchKernel(Func kernel, int32_t numParticles, Ts&&... args) {
