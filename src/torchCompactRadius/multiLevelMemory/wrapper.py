@@ -40,6 +40,7 @@ class MultiLevelMemoryData:
     cellData : CellData
     hashMapData: Optional[HashMapData]    
 
+from torchCompactRadius.multiLevelMemory.indexing import mortonEncode
 
 def buildDataStructure(
         positions: torch.Tensor,
@@ -55,10 +56,13 @@ def buildDataStructure(
     hMin = supports.min().cpu().item()
     hMax = supports.max().cpu().item()
 
-    levels, levelResolutions, hCell, hVerlet = computeResolutionLevels(domain, hMin, hMax)
+    levels, levelResolutions, hCell, hVerlet, hFine = computeResolutionLevels(domain, hMin, hMax)
     codes = getMortonCodes(positions, hCell, domain, levels)
 
-    sortingIndices = torch.argsort(codes[0])
+    ci = ((positions - domain.min) / hFine).int()
+    morton = mortonEncode(ci)
+
+    sortingIndices = torch.argsort(morton)
 
     sortedPositions = positions[sortingIndices]
     sortedSupports = supports[sortingIndices]

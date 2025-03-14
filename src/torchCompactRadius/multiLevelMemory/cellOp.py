@@ -21,7 +21,8 @@ def computeCellResolution(domain, hMin):
 def computeResolutionLevels(domain, hMin, hMax):
     hCell, qCells = computeCellResolution(domain, hMin)
 
-
+    hFine = (domain.max - domain.min) / (2**16)
+    hFine = hFine.max()
     hRatio = hMax / hCell
     # print(f'hMin = {hMin}, hMax = {hMax}, hRatio = {hRatio}')
     levels = int(math.ceil(math.log2(hRatio)))
@@ -40,7 +41,7 @@ def computeResolutionLevels(domain, hMin, hMax):
 
     levels = len(levelResolutions)
 
-    return levels, levelResolutions, hCell, hCell / hMin
+    return levels, levelResolutions, hCell, hCell / hMin, hFine
 
 from torchCompactRadius.multiLevelMemory.cellData import CellData
 

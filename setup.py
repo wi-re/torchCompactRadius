@@ -11,6 +11,8 @@ from torch.__config__ import parallel_info
 from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
                                        CUDAExtension)
 
+import dsl
+
 __version__ = '0.3.0'
 URL = 'https://github.com/wi-re/torchCompactRadius'
 
@@ -36,10 +38,20 @@ def get_extensions():
     extensions = []
 
     extensions_dir = osp.join('src/torchCompactRadius/cppSrc')
-    main_files = glob.glob(osp.join(extensions_dir, '*.cpp'))
+    main_files = []
+
+    for subfolder in os.listdir(extensions_dir):
+        if os.path.isdir(os.path.join(extensions_dir, subfolder)):
+            main_files += glob.glob(osp.join(extensions_dir, subfolder, '*.cpp'))
+            if 'cuda' in suffices:
+                main_files += glob.glob(osp.join(extensions_dir, subfolder, '*.cu'))
+            # remove generated 'hip' files, in case of rebuilds
+
+    main_files += glob.glob(osp.join(extensions_dir, '*.cpp'))
     if 'cuda' in suffices:
         main_files += glob.glob(osp.join(extensions_dir, '*.cu'))
     # remove generated 'hip' files, in case of rebuilds
+    # main_files = [path for path in main_files if 'hip' not in path]
     main_files = [path for path in main_files if 'hip' not in path]
 
     print(f'Found {len(main_files)} extension main files.')
@@ -47,6 +59,14 @@ def get_extensions():
         print(f'Including {main}.')
     print(f'Building with CUDA: {WITH_CUDA}')
     print(f'Building suffices: {suffices}')
+
+    header_files = glob.glob(osp.join(extensions_dir, '*.h'))
+    for subfolder in os.listdir(extensions_dir):
+        if os.path.isdir(os.path.join(extensions_dir, subfolder)):
+            header_files += glob.glob(osp.join(extensions_dir, subfolder, '*.h'))
+    for header in header_files:
+        print(f'Processing {header}.')
+        dsl.process(header)
 
     suffix = 'cuda' if 'cuda' in suffices else 'cpu'
     # if 'cuda' in suffices and not WITH_CUDA:

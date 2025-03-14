@@ -1,8 +1,10 @@
 #include "neighborhood.h"
 #include "hashing.h"
 #include "neighborhoodSmall.h"
-#include "buildNeighborhood_mlm.h"
-#include "countNeighbors_mlm.h"
+#include <multiLevelMemory/countNeighborsDense.h>
+#include <multiLevelMemory/countNeighborsHashmap.h>
+#include <multiLevelMemory/buildNeighborhoodDense.h>
+#include <multiLevelMemory/buildNeighborhoodHashmap.h>
 
 
 // Create the python bindings for the C++ functions
@@ -17,6 +19,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   // m.def("neighborSearchSmall", &neighborSearchSmall, "Neighbor Search (C++)");
   // m.def("neighborSearchSmallFixed", &neighborSearchSmallFixed, "Neighbor Search (C++) (fixed support radius)");
-  m.def("countNeighborsMLM", &countNeighborsMLM, "Count the Number of Neighbors (C++) using a precomputed hash table and cell map (MLM)");
-  m.def("buildNeighborListMLM", &buildNeighborListMLM, "Build the Neighborlist (C++) using a precomputed hash table and cell map as well as neighbor counts (MLM)");
+  m.def("countNeighborsDense", &countNeighborsDense, "Count the Number of Neighbors (C++) using a cell map (MLM)");
+  m.def("buildNeighborhoodDense", &buildNeighborhoodDense, "Build the Neighborlist (C++) using a cell map as well as neighbor counts (MLM)");
+  m.def("countNeighborsHashmap", &countNeighborsHashmap, "Count the Number of Neighbors (C++) using a precomputed hash table and cell map (MLM)");
+  m.def("buildNeighborhoodHashmap", &buildNeighborhoodHashmap, "Build the Neighborlist (C++) using a precomputed hash table and cell map as well as neighbor counts (MLM)");
 } 
