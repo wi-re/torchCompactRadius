@@ -11,7 +11,7 @@
 /** BEGIN TOML
 neighborCounters.type = "tensor[int32_t]"
 neighborOffsets.type = "tensor[int32_t]"
-neighborListLength.type = "int32_t"
+neighborListLength.type = "int64_t"
 
 queryPositions ={type = "tensor[scalar_t]",dim = 2}
 querySupports.type = "tensor[scalar_t]"
@@ -25,7 +25,7 @@ domainMin.type = "tensor[scalar_t]"
 domainMax.type = "tensor[scalar_t]"
 periodicity.type = "tensor[bool]"
 
-hCell.type = "float"
+hCell.type = "double"
 
 offsets = {type = "tensor[int32_t]", dim = 2, pythonArg = false}
 
@@ -38,7 +38,7 @@ cellResolutions = {type = "tensor[int32_t]", dim = 2}
 hashMapOffset.type = "tensor[int32_t]"
 hashMapOccupancy.type = "tensor[int32_t]"
 sortedCells.type = "tensor[int32_t]"
-hashMapLength.type = "int32_t"
+hashMapLength.type = "int64_t"
 
 buildSymmetric.type = "bool"
 verbose.type = "bool"
@@ -49,11 +49,11 @@ neighborList_j = {type = "tensor[int64_t]", pythonArg = false, const = false}
 */ // END TOML
 
 // DEF PYTHON BINDINGS
-#define buildNeighborhoodHashmap_pyArguments_t torch::Tensor neighborCounters, torch::Tensor neighborOffsets, int32_t neighborListLength, torch::Tensor queryPositions, torch::Tensor querySupports, torch::Tensor synchronizedSupport, torch::Tensor sortedPositions, torch::Tensor sortedSupports, torch::Tensor domainMin, torch::Tensor domainMax, torch::Tensor periodicity, float hCell, torch::Tensor cellBegin, torch::Tensor cellEnd, torch::Tensor cellIndices, torch::Tensor cellLevel, torch::Tensor cellResolutions, torch::Tensor hashMapOffset, torch::Tensor hashMapOccupancy, torch::Tensor sortedCells, int32_t hashMapLength, bool buildSymmetric, bool verbose
+#define buildNeighborhoodHashmap_pyArguments_t torch::Tensor neighborCounters, torch::Tensor neighborOffsets, int64_t neighborListLength, torch::Tensor queryPositions, torch::Tensor querySupports, torch::Tensor synchronizedSupport, torch::Tensor sortedPositions, torch::Tensor sortedSupports, torch::Tensor domainMin, torch::Tensor domainMax, torch::Tensor periodicity, double hCell, torch::Tensor cellBegin, torch::Tensor cellEnd, torch::Tensor cellIndices, torch::Tensor cellLevel, torch::Tensor cellResolutions, torch::Tensor hashMapOffset, torch::Tensor hashMapOccupancy, torch::Tensor sortedCells, int64_t hashMapLength, bool buildSymmetric, bool verbose
 // DEF FUNCTION ARGUMENTS
-#define buildNeighborhoodHashmap_functionArguments_t torch::Tensor neighborCounters_, torch::Tensor neighborOffsets_, int32_t neighborListLength_, torch::Tensor queryPositions_, torch::Tensor querySupports_, torch::Tensor synchronizedSupport_, torch::Tensor sortedPositions_, torch::Tensor sortedSupports_, torch::Tensor domainMin_, torch::Tensor domainMax_, torch::Tensor periodicity_, float hCell_, torch::Tensor offsets_, torch::Tensor cellBegin_, torch::Tensor cellEnd_, torch::Tensor cellIndices_, torch::Tensor cellLevel_, torch::Tensor cellResolutions_, torch::Tensor hashMapOffset_, torch::Tensor hashMapOccupancy_, torch::Tensor sortedCells_, int32_t hashMapLength_, bool buildSymmetric_, bool verbose_, torch::Tensor neighborList_i_, torch::Tensor neighborList_j_
+#define buildNeighborhoodHashmap_functionArguments_t torch::Tensor neighborCounters_, torch::Tensor neighborOffsets_, int64_t neighborListLength_, torch::Tensor queryPositions_, torch::Tensor querySupports_, torch::Tensor synchronizedSupport_, torch::Tensor sortedPositions_, torch::Tensor sortedSupports_, torch::Tensor domainMin_, torch::Tensor domainMax_, torch::Tensor periodicity_, double hCell_, torch::Tensor offsets_, torch::Tensor cellBegin_, torch::Tensor cellEnd_, torch::Tensor cellIndices_, torch::Tensor cellLevel_, torch::Tensor cellResolutions_, torch::Tensor hashMapOffset_, torch::Tensor hashMapOccupancy_, torch::Tensor sortedCells_, int64_t hashMapLength_, bool buildSymmetric_, bool verbose_, torch::Tensor neighborList_i_, torch::Tensor neighborList_j_
 // DEF COMPUTE ARGUMENTS
-#define buildNeighborhoodHashmap_computeArguments_t cptr_t<int32_t, 1> neighborCounters, cptr_t<int32_t, 1> neighborOffsets, int32_t neighborListLength, cptr_t<scalar_t, 2> queryPositions, cptr_t<scalar_t, 1> querySupports, cptr_t<scalar_t, 1> synchronizedSupport, cptr_t<scalar_t, 2> sortedPositions, cptr_t<scalar_t, 1> sortedSupports, cptr_t<scalar_t, 1> domainMin, cptr_t<scalar_t, 1> domainMax, cptr_t<bool, 1> periodicity, float hCell, cptr_t<int32_t, 2> offsets, cptr_t<int32_t, 1> cellBegin, cptr_t<int32_t, 1> cellEnd, cptr_t<int32_t, 1> cellIndices, cptr_t<int32_t, 1> cellLevel, cptr_t<int32_t, 2> cellResolutions, cptr_t<int32_t, 1> hashMapOffset, cptr_t<int32_t, 1> hashMapOccupancy, cptr_t<int32_t, 1> sortedCells, int32_t hashMapLength, bool buildSymmetric, bool verbose, ptr_t<int64_t, 1> neighborList_i, ptr_t<int64_t, 1> neighborList_j
+#define buildNeighborhoodHashmap_computeArguments_t cptr_t<int32_t, 1> neighborCounters, cptr_t<int32_t, 1> neighborOffsets, int64_t neighborListLength, cptr_t<scalar_t, 2> queryPositions, cptr_t<scalar_t, 1> querySupports, cptr_t<scalar_t, 1> synchronizedSupport, cptr_t<scalar_t, 2> sortedPositions, cptr_t<scalar_t, 1> sortedSupports, cptr_t<scalar_t, 1> domainMin, cptr_t<scalar_t, 1> domainMax, cptr_t<bool, 1> periodicity, scalar_t hCell, cptr_t<int32_t, 2> offsets, cptr_t<int32_t, 1> cellBegin, cptr_t<int32_t, 1> cellEnd, cptr_t<int32_t, 1> cellIndices, cptr_t<int32_t, 1> cellLevel, cptr_t<int32_t, 2> cellResolutions, cptr_t<int32_t, 1> hashMapOffset, cptr_t<int32_t, 1> hashMapOccupancy, cptr_t<int32_t, 1> sortedCells, int64_t hashMapLength, bool buildSymmetric, bool verbose, ptr_t<int64_t, 1> neighborList_i, ptr_t<int64_t, 1> neighborList_j
 // DEF ARGUMENTS
 #define buildNeighborhoodHashmap_arguments_t  neighborCounters,  neighborOffsets,  neighborListLength,  queryPositions,  querySupports,  synchronizedSupport,  sortedPositions,  sortedSupports,  domainMin,  domainMax,  periodicity,  hCell,  offsets,  cellBegin,  cellEnd,  cellIndices,  cellLevel,  cellResolutions,  hashMapOffset,  hashMapOccupancy,  sortedCells,  hashMapLength,  buildSymmetric,  verbose,  neighborList_i,  neighborList_j
 #define buildNeighborhoodHashmap_arguments_t_  neighborCounters_,  neighborOffsets_,  neighborListLength_,  queryPositions_,  querySupports_,  synchronizedSupport_,  sortedPositions_,  sortedSupports_,  domainMin_,  domainMax_,  periodicity_,  hCell_,  offsets_,  cellBegin_,  cellEnd_,  cellIndices_,  cellLevel_,  cellResolutions_,  hashMapOffset_,  hashMapOccupancy_,  sortedCells_,  hashMapLength_,  buildSymmetric_,  verbose_,  neighborList_i_,  neighborList_j_
@@ -74,7 +74,7 @@ auto buildNeighborhoodHashmap_getFunctionArguments(bool useCuda, buildNeighborho
 	auto domainMin = getAccessor<scalar_t, 1>(domainMin_, "domainMin", useCuda, verbose_);
 	auto domainMax = getAccessor<scalar_t, 1>(domainMax_, "domainMax", useCuda, verbose_);
 	auto periodicity = getAccessor<bool, 1>(periodicity_, "periodicity", useCuda, verbose_);
-	auto hCell = hCell_;
+	auto hCell = (scalar_t) hCell_;
 	auto offsets = getAccessor<int32_t, 2>(offsets_, "offsets", useCuda, verbose_);
 	auto cellBegin = getAccessor<int32_t, 1>(cellBegin_, "cellBegin", useCuda, verbose_);
 	auto cellEnd = getAccessor<int32_t, 1>(cellEnd_, "cellEnd", useCuda, verbose_);
@@ -94,33 +94,35 @@ auto buildNeighborhoodHashmap_getFunctionArguments(bool useCuda, buildNeighborho
 // END GENERATE AUTO ACCESSORS
 // END OF CODE THAT IS PROCESSED BY AUTO-GENERATION
 
-std::pair<torch::Tensor, torch::Tensor> buildNeighborhoodHashmap(buildNeighborhoodHashmap_pyArguments_t);
+namespace TORCH_EXTENSION_NAME {
+	std::tuple<torch::Tensor, torch::Tensor> buildNeighborhoodHashmap(buildNeighborhoodHashmap_pyArguments_t);
+}
 void buildNeighborhoodHashmap_cuda(buildNeighborhoodHashmap_functionArguments_t);
 
-template<std::size_t dim = 2, typename scalar_t = float>
-deviceInline auto buildNeighborhoodHashmap_impl(int32_t i, buildNeighborhoodHashmap_computeArguments_t){
-        // Get the query position and support radius
-        auto pos_i = queryPositions[i];
-        auto h_i = querySupports[i];
-        auto hs_i = buildSymmetric ? synchronizedSupport[i] : h_i;
+template <std::size_t dim = 2, typename scalar_t = float>
+deviceInline auto buildNeighborhoodHashmap_impl(int32_t i, buildNeighborhoodHashmap_computeArguments_t) {
+    // Get the query position and support radius
+    auto pos_i = queryPositions[i];
+    auto h_i = querySupports[i];
+    auto hs_i = buildSymmetric ? synchronizedSupport[i] : h_i;
 
-        auto offset_i = neighborOffsets[i];
+    auto offset_i = neighborOffsets[i];
 
-        iterateCellHashed<dim>(pos_i, hs_i, domainMin, domainMax, periodicity, hCell, offsets, cellBegin, cellEnd, cellIndices, cellLevel, cellResolutions, hashMapOffset, hashMapOccupancy, sortedCells, hashMapLength, [&](int32_t j){
-            auto pos_j = sortedPositions[j];
-            auto h_j = sortedSupports[j];
-            // accessCounter++;
-            auto dist = modDistance<dim>(pos_i, pos_j, domainMin, domainMax, periodicity);
-            if(!buildSymmetric){
-                if(dist < h_i){
-                    neighborList_i[offset_i] = i;
-                    neighborList_j[offset_i] = j;
-                    offset_i++;
-                } 
-            } else if(dist < h_i || dist < h_j){
+    iterateCellHashed<dim>(pos_i, hs_i, domainMin, domainMax, periodicity, hCell, offsets, cellBegin, cellEnd, cellIndices, cellLevel, cellResolutions, hashMapOffset, hashMapOccupancy, sortedCells, hashMapLength, [&](int32_t j) {
+        auto pos_j = sortedPositions[j];
+        auto h_j = sortedSupports[j];
+        // accessCounter++;
+        auto dist = modDistance<dim>(pos_i, pos_j, domainMin, domainMax, periodicity);
+        if (!buildSymmetric) {
+            if (dist < h_i) {
                 neighborList_i[offset_i] = i;
                 neighborList_j[offset_i] = j;
                 offset_i++;
-            } 
-        });
+            }
+        } else if (dist < h_i || dist < h_j) {
+            neighborList_i[offset_i] = i;
+            neighborList_j[offset_i] = j;
+            offset_i++;
+        }
+    });
 }

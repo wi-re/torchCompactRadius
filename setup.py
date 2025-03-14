@@ -72,7 +72,7 @@ def get_extensions():
     # if 'cuda' in suffices and not WITH_CUDA:
         # raise ValueError('CUDA is not available. Please install CUDA.')
     
-    extra_compile_args = {'cxx': ['-O2']}
+    extra_compile_args = {'cxx': ['-O2', "-DPy_LIMITED_API=0x03090000"]}
     extra_link_args = ['-s']
 
     define_macros = []#[('CUDA_VERSION',None)] if WITH_CUDA else []
@@ -103,11 +103,13 @@ def get_extensions():
     extension = Extension(
         f'torchCompactRadius_{suffix}',
         main_files,
-        include_dirs=[extensions_dir],
+        include_dirs=[os.path.abspath(extensions_dir)],
         define_macros=define_macros,
         # undef_macros=undef_macros,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
+        
+        py_limited_api=True,
     )
     extensions += [extension]
     print(f'Added extension: {extension.name}')
@@ -153,8 +155,9 @@ setup(
     ext_modules=get_extensions() if not BUILD_DOCS else [],
     cmdclass={
         'build_ext':
-        BuildExtension.with_options(no_python_abi_suffix=True, use_ninja=False)
+        BuildExtension.with_options(no_python_abi_suffix=True, use_ninja=True)
     },
+    options={"bdist_wheel": {"py_limited_api": "cp39"}},
     packages=find_packages(),
     include_package_data=include_package_data,
 )

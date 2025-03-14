@@ -18,7 +18,10 @@ def transformToArgument(key, value, includeType = True, addUnderScore = False, i
                 ty = value['type'].split('[')[1].split(']')[0] if '[' in value['type'] else 'scalar_t'
                 type_str = f"{'c' if 'const' not in value or value['const'] else ''}ptr_t<{ty}, {1 if 'dim' not in value else value['dim']}>"
             else:
-                type_str = f"{value['type']}"
+                if value['type'] == 'double':
+                    type_str = 'scalar_t'
+                else:
+                    type_str = f"{value['type']}"
             
     else:
         type_str = ""
@@ -53,7 +56,10 @@ def generateTensorAccessors(parsedToml, optional = False):
                     dim = 1 if 'dim' not in value else value['dim']
                     out += [f"\tauto {key} = getAccessor<{ty}, {dim}>({key}_.value(), \"{key}\", useCuda, verbose_);\n"]
                 else:
-                    out += [f"\tauto {key} = {key}_.value();\n"]
+                    if value['type'] == 'double':
+                        out += [f"\tauto {key} = (scalar_t) {key}_;\n"]
+                    else:
+                        out += [f"\tauto {key} = {key}_.value();\n"]
         else:
             if 'optional' in value and value['optional']:
                 continue
@@ -64,7 +70,10 @@ def generateTensorAccessors(parsedToml, optional = False):
 
                 out += [f"\tauto {key} = getAccessor<{ty}, {dim}>({key}_, \"{key}\", useCuda, verbose_);\n"]
             else:
-                out += [f"\tauto {key} = {key}_;\n"]
+                if value['type'] == 'double':
+                    out += [f"\tauto {key} = (scalar_t) {key}_;\n"]
+                else:
+                    out += [f"\tauto {key} = {key}_;\n"]
     return out
 
 def process(fileName):

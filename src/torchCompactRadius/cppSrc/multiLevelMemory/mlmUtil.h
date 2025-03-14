@@ -203,7 +203,7 @@ template<std::size_t dim, typename Func, typename scalar_t = float>
 deviceInline auto iterateCellDense(
     tensor_t<scalar_t, 1> pos_i, scalar_t h_i, 
     cptr_t<scalar_t, 1> minDomain, cptr_t<scalar_t, 1> maxDomain, cptr_t<bool, 1> periodicity, 
-    scalar_t hCell, 
+    float hCell, 
     cptr_t<int32_t, 2> offsets,
     cptr_t<int32_t, 1> cellBegin, cptr_t<int32_t, 1> cellEnd, cptr_t<int32_t, 1> cellIndices, cptr_t<int32_t, 1> cellLevel, cptr_t<int32_t, 2> cellResolutions,
     Func&& queryFunction
@@ -235,7 +235,7 @@ template<std::size_t dim, typename Func, typename scalar_t = float>
 deviceInline auto iterateCellHashed(
     tensor_t<scalar_t, 1> pos_i, scalar_t h_i, 
     cptr_t<scalar_t, 1> minDomain, cptr_t<scalar_t, 1> maxDomain, cptr_t<bool, 1> periodicity, 
-    scalar_t hCell, 
+    float hCell, 
     cptr_t<int32_t, 2> offsets,
     cptr_t<int32_t, 1> cellBegin, cptr_t<int32_t, 1> cellEnd, cptr_t<int32_t, 1> cellIndices, cptr_t<int32_t, 1> cellLevel, cptr_t<int32_t, 2> cellResolutions,
     cptr_t<int32_t, 1> hashMapOffset, cptr_t<int32_t, 1> hashMapOccupancy, cptr_t<int32_t, 1> sortedCells, int32_t hashMapLength,
@@ -361,10 +361,10 @@ auto parallelCall(
     int32_t from, int32_t to,
     Ts&&... args
 ){
-    for(int32_t i = from; i < to; ++i){
-        invoke(f, i, std::forward<Ts>(args)...);
-    }
-    return;
+    // for(int32_t i = from; i < to; ++i){
+    //     invoke(f, i, std::forward<Ts>(args)...);
+    // }
+    // return;
     #ifdef OMP_VERSION
     #pragma omp parallel for
     for(int32_t i = from; i < to; ++i){
@@ -405,3 +405,44 @@ auto parallelCall(
     __VA_ARGS__();\
 }
 #endif
+
+
+template<typename T = float>
+deviceInline auto atomicCAS_(T* ptr, T compare, T val){
+    #ifdef __CUDA_ARCH__
+    if constexpr(std::is_integral_v<T>){
+        auto uptr = ptr;
+        auto comp = compare;
+        auto v = val;
+        return atomicCAS(uptr, comp, v);
+    }else if(std::is_floating_point_v<T>){
+        auto comp = __float_as_int (compare);
+        auto v = __float_as_int (val);
+        auto uptr = reinterpret_cast<decltype(comp)*>(ptr);
+        return atomicCAS(uptr, comp, v);
+    }
+    #else
+    std::atomic<T>* atomic = reinterpret_cast<std::atomic<T>*>(ptr);
+    return atomic->compare_exchange_weak(compare, val);
+    #endif
+}
+
+template<typename T = float>
+deviceInline auto atomicIncrement_(T* ptr){
+    #ifdef __CUDA_ARCH__
+    return atomicAdd(ptr, 1);
+    #else
+    std::atomic<T>* atomic = reinterpret_cast<std::atomic<T>*>(ptr);
+    return atomic->fetch_add(1, std::memory_order_relaxed);
+    #endif
+}
+template<typename T = float>
+deviceInline auto atomicMax_(T* ptr, T val){
+    T current = *ptr;
+    while (val > current &&
+           !atomicCAS_(ptr, current, val)) {
+            current = *ptr;
+        // Loop until the value is successfully updated
+    }
+    return current;
+}

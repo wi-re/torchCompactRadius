@@ -98,34 +98,36 @@ hostDeviceInline auto iterateOffsetCells(
 
 
 // Define the python bindings for the C++ functions
+namespace TORCH_EXTENSION_NAME {
 torch::Tensor countNeighbors(
-    torch::Tensor queryPositions_, torch::Tensor querySupport_, int32_t searchRange, 
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int64_t searchRange, 
     torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
-    torch::Tensor hashTable_, int32_t hashMapLength, 
+    torch::Tensor hashTable_, int64_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
 torch::Tensor countNeighborsFixed(
-    torch::Tensor queryPositions_, int32_t searchRange, 
+    torch::Tensor queryPositions_, int64_t searchRange, 
     torch::Tensor sortedPositions_, double support,
-    torch::Tensor hashTable_, int32_t hashMapLength, 
+    torch::Tensor hashTable_, int64_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
 
-std::pair<torch::Tensor, torch::Tensor> buildNeighborList(
-    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int32_t neighborListLength,
-    torch::Tensor queryPositions_, torch::Tensor querySupport_, int32_t searchRange, 
+std::tuple<torch::Tensor, torch::Tensor> buildNeighborList(
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int64_t neighborListLength,
+    torch::Tensor queryPositions_, torch::Tensor querySupport_, int64_t searchRange, 
     torch::Tensor sortedPositions_, torch::Tensor sortedSupport_,
-    torch::Tensor hashTable_, int32_t hashMapLength, 
+    torch::Tensor hashTable_, int64_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
-std::pair<torch::Tensor, torch::Tensor> buildNeighborListFixed(
-    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int32_t neighborListLength,
-    torch::Tensor queryPositions_, int32_t searchRange, 
+std::tuple<torch::Tensor, torch::Tensor> buildNeighborListFixed(
+    torch::Tensor neighborCounter_, torch::Tensor neighborOffsets_, int64_t neighborListLength,
+    torch::Tensor queryPositions_, int64_t searchRange, 
     torch::Tensor sortedPositions_, double support,
-    torch::Tensor hashTable_, int32_t hashMapLength, 
+    torch::Tensor hashTable_, int64_t hashMapLength, 
     torch::Tensor numCells_, torch::Tensor cellTable_,
     torch::Tensor qMin_, double hCell, torch::Tensor maxDomain_, torch::Tensor minDomain_, torch::Tensor periodicity_,
     std::string mode, bool verbose = false);
+}

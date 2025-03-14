@@ -19,7 +19,7 @@ domainMin.type = "tensor[scalar_t]"
 domainMax.type = "tensor[scalar_t]"
 periodicity.type = "tensor[bool]"
 
-hCell.type = "float"
+hCell.type = "double"
 
 offsets = {type = "tensor[int32_t]", dim = 2, pythonArg = false}
 
@@ -35,7 +35,7 @@ hashMapOccupancy.type = "tensor[int32_t]"
 hashMapOccupancy.optional = true
 sortedCells.type = "tensor[int32_t]"
 sortedCells.optional = true
-hashMapLength.type = "int32_t"
+hashMapLength.type = "int64_t"
 hashMapLength.optional = true
 
 verbose.type = "bool"

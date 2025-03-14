@@ -5,7 +5,7 @@
 #include <ATen/Parallel.h>
 #include <ATen/ParallelOpenMP.h>
 // #include <ATen/ParallelNativeTBB.h>
-#include <torch/extension.h>
+// #include <torch/extension.h>
 
 #include <vector>
 #include <iostream>

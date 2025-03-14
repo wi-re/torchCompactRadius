@@ -34,5 +34,6 @@ hostDeviceInline constexpr auto hashIndexing(std::array<int32_t, dim> cellIndice
 }
 
 void hashCellsCuda(torch::Tensor hashIndices, torch::Tensor cellIndices, uint32_t hashMapLength);
-
-torch::Tensor computeHashIndices(torch::Tensor cellIndices, int32_t hashMapLength);
+namespace TORCH_EXTENSION_NAME{ 
+    torch::Tensor computeHashIndices(torch::Tensor cellIndices, int64_t hashMapLength);
+}

@@ -51,6 +51,8 @@ torch::Tensor computeHashIndices_t(torch::Tensor cellIndices, uint32_t hashMapLe
 }
 
 
-torch::Tensor computeHashIndices(torch::Tensor cellIndices, int32_t hashMapLength){
-    return computeHashIndices_t(cellIndices, (uint32_t) hashMapLength);
+namespace TORCH_EXTENSION_NAME{
+    torch::Tensor computeHashIndices(torch::Tensor cellIndices, int64_t hashMapLength){
+        return computeHashIndices_t(cellIndices, (uint32_t) hashMapLength);
+    }
 }

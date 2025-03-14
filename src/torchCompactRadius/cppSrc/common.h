@@ -4,6 +4,16 @@
 #ifdef __INTELLISENSE__
 #define OMP_VERSION
 #endif
+#ifdef __INTELLISENSE__
+#ifndef TORCH_EXTENSION_NAME
+#define TORCH_EXTENSION_NAME torchCompactRadius
+#endif
+#endif
+#include <Python.h>
+#include <ATen/Operators.h>
+#include <torch/all.h>
+#include <torch/library.h>
+
 
 // #define _OPENMP
 #include <algorithm>
@@ -15,8 +25,6 @@
 #include <ATen/ParallelNativeTBB.h>
 #endif
 #include <ATen/Parallel.h>
-#include <torch/extension.h>
-
 #include <vector>
 #include <iostream>
 #include <cmath>
@@ -126,4 +134,4 @@ deviceInline auto modDistance2(ctensor_t<scalar_t,1> x_i, ctensor_t<scalar_t,1> 
     return sum;
 }
 
-#define DEV_VERSION
+// #define DEV_VERSION
