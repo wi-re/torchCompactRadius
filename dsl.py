@@ -2,9 +2,11 @@ import toml
 import sys
 
 
-def transformToArgument(key, value, includeType = True, addUnderScore = False, includeOptional = False, functionOnly = False, typeFormat = 'pyBind'):
+def transformToArgument(key, value, includeType = True, addUnderScore = False, includeOptional = False, functionOnly = False, typeFormat = 'pyBind', pyOnly = False):
     if not functionOnly and 'pythonArg' in value and value['pythonArg'] == False:
         return ""
+    if not pyOnly and 'cppArg' in value and value['cppArg'] == True:
+        return ""    
     if includeType:
         if typeFormat == 'pyBind':
             if 'tensor' in value['type']:
@@ -49,6 +51,8 @@ def generateFunctionArguments(parsedToml, **kwargs):
 def generateTensorAccessors(parsedToml, optional = False):
     out = []
     for key, value in parsedToml.items():
+        if 'cppArg' in value and value['cppArg'] == True:
+            continue
         if optional: # only output optional values
             if 'optional' in value and value['optional']:
                 if 'tensor' in value['type']:
@@ -128,17 +132,17 @@ def process(fileName):
 
     numOptionals = len([x for x in parsedToml.values() if 'optional' in x and x['optional']])
 
-    pyArguments = ', '.join(generateFunctionArguments(parsedToml, includeOptional = True, functionOnly = False, typeFormat = 'pyBind'))
-    fnArguments = ', '.join(generateFunctionArguments(parsedToml, includeOptional = False, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True))
-    computeArguments = ', '.join(generateFunctionArguments(parsedToml, includeOptional = False, functionOnly = True, typeFormat = 'compute', addUnderScore = False))
-    arguments = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = False, functionOnly = True, typeFormat = 'pyBind', addUnderScore = False))
-    arguments_ = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = False, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True))
+    pyArguments = ', '.join(generateFunctionArguments(parsedToml, includeOptional = True, functionOnly = False, typeFormat = 'pyBind', pyOnly = True))
+    fnArguments = ', '.join(generateFunctionArguments(parsedToml, includeOptional = False, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True, pyOnly = False))
+    computeArguments = ', '.join(generateFunctionArguments(parsedToml, includeOptional = False, functionOnly = True, typeFormat = 'compute', addUnderScore = False, pyOnly = False))
+    arguments = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = False, functionOnly = True, typeFormat = 'pyBind', addUnderScore = False, pyOnly = False))
+    arguments_ = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = False, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True, pyOnly = False))
 
     if numOptionals > 0:
-        fnArgumentsOptional = ', '.join(generateFunctionArguments(parsedToml, includeOptional = True, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True))
-        computeArgumentsOptional = ', '.join(generateFunctionArguments(parsedToml, includeOptional = True, functionOnly = True, typeFormat = 'compute', addUnderScore = False))
-        argumentsOptional = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = True, functionOnly = True, typeFormat = 'pyBind', addUnderScore = False))
-        argumentsOptional_ = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = True, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True))
+        fnArgumentsOptional = ', '.join(generateFunctionArguments(parsedToml, includeOptional = True, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True, pyOnly = False))
+        computeArgumentsOptional = ', '.join(generateFunctionArguments(parsedToml, includeOptional = True, functionOnly = True, typeFormat = 'compute', addUnderScore = False, pyOnly = False))
+        argumentsOptional = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = True, functionOnly = True, typeFormat = 'pyBind', addUnderScore = False, pyOnly = False))
+        argumentsOptional_ = ', '.join(generateFunctionArguments(parsedToml, includeType = False, includeOptional = True, functionOnly = True, typeFormat = 'pyBind', addUnderScore = True, pyOnly = False))
     else:
         fnArgumentsOptional = fnArguments
         computeArgumentsOptional = computeArguments

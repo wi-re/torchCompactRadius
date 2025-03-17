@@ -31,6 +31,7 @@ extern "C" {
 }
 
 #define GLUE_LIBRARY(...) TORCH_LIBRARY(__VA_ARGS__, m)
+#include <sparseOperations/scatter.h>
 
 namespace TORCH_EXTENSION_NAME{
 // Create the python bindings for the C++ functions
@@ -49,6 +50,12 @@ namespace TORCH_EXTENSION_NAME{
     m.def("buildNeighborhoodDense", &buildNeighborhoodDense);
     m.def("countNeighborsHashmap", &countNeighborsHashmap);
     m.def("buildNeighborhoodHashmap", &buildNeighborhoodHashmap);
+
+    m.def("scatter_sum", &scatter_sum);
+    m.def("scatter_mul", &scatter_mul);
+    m.def("scatter_mean", &scatter_mean);
+    m.def("scatter_min", &scatter_min);
+    m.def("scatter_max", &scatter_max);
   } 
 }
 
