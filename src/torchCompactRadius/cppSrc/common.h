@@ -14,7 +14,10 @@
 #include <torch/all.h>
 #include <torch/library.h>
 
-
+#include <algorithm>
+#include <optional>
+#include <tuple>
+#include <utility>
 // #define _OPENMP
 #include <algorithm>
 #ifdef OMP_VERSION
