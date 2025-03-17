@@ -131,7 +131,7 @@ def neighborSearchExisting(
     
 
 
-
+from torchCompactRadius.multiLevelMemory.wrapper import searchNeighbors_mlm
 
 def radiusSearch( 
         queryPointCloud: PointCloud,
@@ -144,7 +144,9 @@ def radiusSearch(
         algorithm: str = 'naive',
         verbose: bool = False,
         format: str = 'coo',
-        returnStructure : bool = False
+        returnStructure : bool = False,
+        useDenseMLM: bool = False,
+        hashMapLengthAlgorithm: str = 'primes'
         ):
     # if domain is not None:
     #     domainMin = domain.min
@@ -162,9 +164,9 @@ def radiusSearch(
     dimensionality = queryPointCloud.positions.shape[1]
 
     if hasClusterRadius:
-        assert algorithm in ['naive', 'small', 'compact', 'cluster'], f'algorithm = {algorithm} not supported'
+        assert algorithm in ['naive', 'small', 'compact', 'cluster', 'mlm'], f'algorithm = {algorithm} not supported'
     else:
-        assert algorithm in ['naive', 'small', 'compact'], f'algorithm = {algorithm} not supported'
+        assert algorithm in ['naive', 'small', 'compact', 'mlm'], f'algorithm = {algorithm} not supported'
     assert format in ['coo', 'csr'], f'format = {format} not supported'
     assert mode in ['symmetric', 'scatter', 'gather', 'superSymmetric'], f'mode = {mode} not supported'
     assert queryPointCloud is not None, f'referencePointCloud = {queryPointCloud} is None'
@@ -247,6 +249,17 @@ def radiusSearch(
                 i, j = j.to(queryPointCloud.positions.device), i.to(queryPointCloud.positions.device)
             else:
                 j, i = radius_cluster(x.positions, y.positions, supportOverride, max_num_neighbors=256)
+        elif algorithm == 'mlm':
+            queryPointCloud_ = PointCloud(queryPointCloud.positions, torch.ones_like(queryPointCloud.positions[:,0]) * supportOverride)
+            referencePointCloud_ = PointCloud(referencePointCloud.positions, torch.ones_like(referencePointCloud.positions[:,0]) * supportOverride)
+
+            neighbors  = searchNeighbors_mlm(queryPointCloud_, referencePointCloud_, domainInformation, 
+                                                dense = useDenseMLM, hashMapLength=hashMapLength, hashMapLengthAlgorithm=hashMapLengthAlgorithm, supportMode = mode, format = format, verbose = verbose)
+            if returnStructure:
+                return neighbors, None
+            else:
+                return neighbors
+
         else:
             raise ValueError(f'algorithm = {algorithm} not supported')
     else:
@@ -270,8 +283,18 @@ def radiusSearch(
             #     return i, j, ds
             # else:
             #     return i, j
+            
+
         elif algorithm == 'cluster':
             raise ValueError(f'algorithm = {algorithm} not supported for dynamic radius search')
+        elif algorithm == 'mlm':
+            neighbors  = searchNeighbors_mlm(queryPointCloud, referencePointCloud, domainInformation, 
+                                                dense = useDenseMLM, hashMapLength=hashMapLength, hashMapLengthAlgorithm=hashMapLengthAlgorithm, supportMode = mode, format = format, verbose = verbose)
+            if returnStructure:
+                return neighbors, None
+            else:
+                return neighbors
+
         else:
             raise ValueError(f'algorithm = {algorithm} not supported')
         
