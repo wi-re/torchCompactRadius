@@ -153,6 +153,40 @@ def searchNeighbors_mlm(
         format : str = 'coo',
         verbose: bool = False
 ):
+    if 'mps' in domainDescription.min.device:
+        queryParticles_cpu = PointCloud(
+            positions = queryParticles.positions.cpu(),
+            supports=queryParticles.supports.cpu()
+        )
+        referenceParticles_cpu = PointCloud(
+            positions = referenceParticles.positions.cpu(),
+            supports=referenceParticles.supports.cpu()
+        )
+        domain_cpu = DomainDescription(
+            min = domainDescription.min.cpu(),
+            max = domainDescription.max.cpu(),
+            periodicity = domainDescription.periodicity if isinstance(domainDescription.periodicity, bool) else domainDescription.periodicity.cpu(),
+            dim = domainDescription.dim
+        )
+
+        cpuNeighbors = searchNeighbors_mlm(
+            queryParticles_cpu, referenceParticles_cpu,
+            domain_cpu,
+            dense = dense,
+            hashMapLength = hashMapLength,
+            hashMapLengthAlgorithm = hashMapLengthAlgorithm,
+            supportMode = supportMode,
+            format = format,
+            verbose = verbose
+        )
+        return SparseCOO(
+            row = cpuNeighbors.row.to(queryParticles.positions.device),
+            col = cpuNeighbors.col.to(queryParticles.positions.device),
+            numRows = cpuNeighbors.numRows,
+            numCols = cpuNeighbors.numCols
+        )
+
+
     with record_function('[MlM] searchNeighbors'):
         if supportMode == 'scatter':
             return transposeCOO(searchNeighbors_mlm(referenceParticles, queryParticles, domainDescription, dense, hashMapLength, hashMapLengthAlgorithm, supportMode = 'gather'), True) if format == 'coo' else coo_to_csr(transposeCOO(searchNeighbors_mlm(referenceParticles, queryParticles, domainDescription, dense, hashMapLength, hashMapLengthAlgorithm, supportMode = 'gather'), True))
