@@ -153,7 +153,7 @@ def searchNeighbors_mlm(
         format : str = 'coo',
         verbose: bool = False
 ):
-    if 'mps' in domainDescription.min.device:
+    if 'mps' in domainDescription.min.device.type:
         queryParticles_cpu = PointCloud(
             positions = queryParticles.positions.cpu(),
             supports=queryParticles.supports.cpu()
