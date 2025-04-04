@@ -100,11 +100,7 @@ def buildDataStructure(
     
     assert hashMapLength > 0, f'hashMapLength = {hashMapLength} <= 0'
 
-    if domain is not None:
-        if isinstance(domain.periodicity, bool):
-            domain.periodicity = torch.tensor([domain.periodicity] * referencePointCloud.positions.shape[1], dtype = torch.bool, device = referencePointCloud.positions.device)
-
-    assert domain.periodicity.shape[0] == referencePointCloud.positions.shape[1] if isinstance(domain.periodicity, torch.Tensor) else True, f'len(periodicity) = {len(domain.periodicity)} != referencePositions.shape[1] = {referencePointCloud.positions.shape[1]}'
+    assert domain.periodic.shape[0] == referencePointCloud.positions.shape[1]
     assert domain.min.shape[0] == referencePointCloud.positions.shape[1] if domain.min is not None else True, f'domainMin.shape[0] = {domain.min.shape[0]} != referencePositions.shape[1] = {referencePointCloud.positions.shape[1]}'
     assert domain.max.shape[0] == referencePointCloud.positions.shape[1] if domain.max is not None else True, f'domainMax.shape[0] = {domain.max.shape[0]} != referencePositions.shape[1] = {referencePointCloud.positions.shape[1]}'
 
@@ -131,4 +127,4 @@ def buildDataStructure(
     # if domainMax is None:
         # domainMax = torch.ones(referencePositions.shape[1], device = referencePositions.device)
 
-    return neighborSearchDataStructure(y.positions, y.supports, fixedSupport, (domain.min, domain.max), domain.periodicity, hashMapLength, verbose = verbose)
+    return neighborSearchDataStructure(y.positions, y.supports, fixedSupport, (domain.min, domain.max), domain.periodic, hashMapLength, verbose = verbose)

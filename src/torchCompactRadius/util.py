@@ -277,6 +277,7 @@ from typing import NamedTuple, Union
 from typing import NamedTuple
 
 from dataclasses import dataclass
+@torch.jit.script
 @dataclass(slots=True)
 class DomainDescription:
     """
@@ -284,20 +285,28 @@ class DomainDescription:
     """
     min: torch.Tensor
     max: torch.Tensor
-    periodicity: Union[bool,torch.Tensor]
+    periodic: torch.Tensor
     dim: int
+
+    def __ne__(self, other: 'DomainDescription') -> bool:
+        return not self.__eq__(other)
     
-@dataclass(slots=True)
+@torch.jit.script
+@dataclass#(slots=True)
 class PointCloud:
     """
     A named tuple containing the positions of the particles and the number of particles.
     """
     positions: torch.Tensor
-    supports: Optional[torch.Tensor] = None
+    supports: torch.Tensor
+
+    def __ne__(self, other: 'PointCloud') -> bool:
+        return not self.__eq__(other)
 
 
     
-@dataclass(slots=True)
+@torch.jit.script
+@dataclass#(slots=True)
 class SparseCOO:
     """
     A named tuple containing the neighbor list in coo format and the number of neighbors for each particle.
@@ -308,8 +317,9 @@ class SparseCOO:
     numRows: int
     numCols: int
 
-    
-@dataclass(slots=True)
+
+@torch.jit.script    
+@dataclass#(slots=True)
 class SparseCSR:
     """
     A named tuple containing the neighbor list in csr format and the number of neighbors for each particle.
@@ -371,9 +381,9 @@ def getPeriodicPointCloud(
     else:
         domainMin = domain.min
         domainMax = domain.max
-        periodic = domain.periodicity
-        if isinstance(periodic, bool):
-            periodic = [periodic] * queryPointCloud.positions.shape[1]
+        periodic = domain.periodic
+        # if isinstance(periodic, bool):
+            # periodic = [periodic] * queryPointCloud.positions.shape[1]
         return PointCloud(torch.stack([queryPointCloud.positions[:,i] if not periodic_i else torch.remainder(queryPointCloud.positions[:,i] - domainMin[i], domainMax[i] - domainMin[i]) + domainMin[i] for i, periodic_i in enumerate(periodic)], dim = 1), queryPointCloud.supports)
 
 
@@ -381,7 +391,5 @@ def getPeriodicPointCloud(
 def mod(x, min : float, max : float):
     h = max - min
     return ((x + h / 2.0) - torch.floor((x + h / 2.0) / h) * h) - h / 2.0
-def moduloDistance(xij, periodicity, min, max):
-    if isinstance(periodicity, bool):
-        periodicity = [periodicity] * xij.shape[-1]
+def moduloDistance(xij, periodic, min, max):
     return torch.stack([xij[:,i] if not periodic else mod(xij[:,i], min[i], max[i]) for i, periodic in enumerate(periodicity)], dim = -1)

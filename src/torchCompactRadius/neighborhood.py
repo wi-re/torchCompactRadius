@@ -78,7 +78,7 @@ def neighborSearchExisting(
 
     sortedPositions = hashMap.sortedPositions
     sortedSupports = hashMap.sortedSupports
-    periodicity = hashMap.periodicity
+    periodicity = hashMap.periodic
     sortIndex = hashMap.sortIndex
     hashTable = hashMap.hashTable
     hashMapLength = hashMap.hashMapLength
@@ -188,11 +188,12 @@ def radiusSearch(
     support = (queryPointCloud.supports if queryPointCloud.supports is not None else None, referencePointCloud.supports if referencePointCloud.supports is not None else None)
     domainInformation = None
     if domain is not None:
-        domainInformation = DomainDescription(domain.min, domain.max, domain.periodicity, queryPointCloud.positions.shape[0])
-        if isinstance(domain.periodicity, bool):
-            domainInformation = DomainDescription(domain.min, domain.max, torch.tensor([domain.periodicity] * dimensionality, dtype = torch.bool, device = queryPointCloud.positions.device), queryPointCloud.positions.shape[0])
+        domainInformation = DomainDescription(domain.min, domain.max, domain.periodic, queryPointCloud.positions.shape[0])
     else:
-        domainInformation = DomainDescription(torch.tensor([0.0] * dimensionality, device = queryPointCloud.positions.device), torch.tensor([1.0] * dimensionality, device = queryPointCloud.positions.device), torch.tensor([False] * dimensionality, dtype = torch.bool, device = queryPointCloud.positions.device), queryPointCloud.positions.shape[0])
+        domainInformation = DomainDescription(
+            torch.tensor([0.0] * dimensionality, device = queryPointCloud.positions.device), 
+            torch.tensor([1.0] * dimensionality, device = queryPointCloud.positions.device), 
+            torch.tensor([False] * dimensionality, dtype = torch.bool, device = queryPointCloud.positions.device), queryPointCloud.positions.shape[0])
     # if torch.any(periodicTensor):
         # if algorithm == 'cluster':
             # raise ValueError(f'algorithm = {algorithm} not supported for periodic search')
@@ -236,7 +237,7 @@ def radiusSearch(
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch')
-            (i, j), ds = neighborSearch((x.positions, y.positions), None, supportOverride, (domainInformation.min, domainInformation.max), domainInformation.periodicity, hashMapLength, mode, 'cpp')
+            (i, j), ds = neighborSearch((x.positions, y.positions), None, supportOverride, (domainInformation.min, domainInformation.max), domainInformation.periodic, hashMapLength, mode, 'cpp')
             # if returnStructure:
             #     return i, j, ds
             # else:
@@ -266,19 +267,19 @@ def radiusSearch(
         if algorithm == 'naive':
             if verbose:
                 print('Calling radiusNaive')
-            i, j =  radiusNaive(x.positions, y.positions, x.supports, y.supports, domainInformation.periodicity, domainInformation.min, domainInformation.max, mode)
+            i, j =  radiusNaive(x.positions, y.positions, x.supports, y.supports, domainInformation.periodic, domainInformation.min, domainInformation.max, mode)
         elif algorithm == 'small':
             if verbose:
                 print('Calling neighborSearchSmall')
             if x.positions.device.type == 'mps':
-                i, j =  neighborSearchSmall(x.cpu(), x.supports.cpu(), y.positions.cpu(), None if y.supports is None else y.supports.cpu(), domainInformation.min.cpu(), domainInformation.max.cpu(), domainInformation.periodicity.cpu(), mode)
+                i, j =  neighborSearchSmall(x.cpu(), x.supports.cpu(), y.positions.cpu(), None if y.supports is None else y.supports.cpu(), domainInformation.min.cpu(), domainInformation.max.cpu(), domainInformation.periodic.cpu(), mode)
                 i, j = i.to(x.positions.device), j.to(x.positions.device)
             else:
-                i, j = neighborSearchSmall(x.positions, x.supports, y.positions, y.supports, domainInformation.min, domainInformation.max, domainInformation.periodicity, mode)
+                i, j = neighborSearchSmall(x.positions, x.supports, y.positions, y.supports, domainInformation.min, domainInformation.max, domainInformation.periodic, mode)
         elif algorithm == 'compact':
             if verbose:
                 print('Calling neighborSearch, arguments:')
-            (i,j), ds = neighborSearch((x.positions, y.positions), (x.supports, y.supports), None, (domainInformation.min, domainInformation.max), domainInformation.periodicity, hashMapLength, mode, 'cpp')
+            (i,j), ds = neighborSearch((x.positions, y.positions), (x.supports, y.supports), None, (domainInformation.min, domainInformation.max), domainInformation.periodic, hashMapLength, mode, 'cpp')
             # if returnStructure:
             #     return i, j, ds
             # else:
@@ -322,7 +323,7 @@ def radius(queryPositions : torch.Tensor,
     if domain is not None:
         domainMin = domain.min
         domainMax = domain.max
-        periodicity = domain.periodicity
+        periodicity = domain.periodic
     else:
         domainMin = None
         domainMax = None

@@ -59,7 +59,7 @@ def searchDataStructureDense(
             # print(f'\tcBegin {cBegin}, cEnd {cEnd}')
             for j in range(cBegin, cEnd):
                 pos_j = referencePositions[j]
-                x_ij = moduloDistance(pos_i.view(1,-1) - pos_j.view(1,-1), domain.periodicity, domain.min, domain.max)
+                x_ij = moduloDistance(pos_i.view(1,-1) - pos_j.view(1,-1), domain.periodic, domain.min, domain.max)
                 r_ij = torch.linalg.norm(x_ij, dim = -1)
                 cond = r_ij[0] < h_i
                 # print(f'\t\tj = {j}, pos = {pos_j}, h = {h_i}, x = {x_ij}, r = {r_ij}, neighbors = {cond.sum()}')
@@ -73,7 +73,7 @@ def searchDataStructureDense(
         row = torch.tensor([i] * len(neighbors))
         col = torch.tensor(neighbors)
 
-        x_ij = moduloDistance(positions[row] - referencePositions[col], domain.periodicity, domain.min, domain.max)
+        x_ij = moduloDistance(positions[row] - referencePositions[col], domain.periodic, domain.min, domain.max)
         r_ij = torch.linalg.norm(x_ij, dim = -1)
         if torch.any(r_ij > h_i):
             raise ValueError(f'r_ij = {r_ij}, h_i = {h_i}')
@@ -180,7 +180,7 @@ def searchDataStructureHashed(
                 # print(f'\tcBegin {cBegin}, cEnd {cEnd}')
                 for j in range(cBegin, cEnd):
                     pos_j = sortedPositions[j]
-                    x_ij = moduloDistance(pos_i.view(1,-1) - pos_j.view(1,-1), domain.periodicity, domain.min, domain.max)
+                    x_ij = moduloDistance(pos_i.view(1,-1) - pos_j.view(1,-1), domain.periodic, domain.min, domain.max)
                     r_ij = torch.linalg.norm(x_ij, dim = -1)
                     cond = r_ij < h_i
                     # print(f'\t\tj = {j}, pos = {pos_j}, h = {h_i}, r = {r_ij}, neighbors = {cond.sum()}')

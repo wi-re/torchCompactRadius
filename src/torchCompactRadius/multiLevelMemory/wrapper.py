@@ -165,7 +165,7 @@ def searchNeighbors_mlm(
         domain_cpu = DomainDescription(
             min = domainDescription.min.cpu(),
             max = domainDescription.max.cpu(),
-            periodicity = domainDescription.periodicity if isinstance(domainDescription.periodicity, bool) else domainDescription.periodicity.cpu(),
+            periodicity = domainDescription.periodic.cpu(),
             dim = domainDescription.dim
         )
 
@@ -191,7 +191,7 @@ def searchNeighbors_mlm(
         if supportMode == 'scatter':
             return transposeCOO(searchNeighbors_mlm(referenceParticles, queryParticles, domainDescription, dense, hashMapLength, hashMapLengthAlgorithm, supportMode = 'gather'), True) if format == 'coo' else coo_to_csr(transposeCOO(searchNeighbors_mlm(referenceParticles, queryParticles, domainDescription, dense, hashMapLength, hashMapLengthAlgorithm, supportMode = 'gather'), True))
         device = queryParticles.positions.device
-        with record_function('[MlM] searchNeighbors - Periodicity'):
+        with record_function('[MlM] searchNeighbors - Periodic'):
             pointCloudX_periodic = getPeriodicPointCloud(queryParticles, domainDescription)
             pointCloudY_periodic = getPeriodicPointCloud(referenceParticles, domainDescription)
 
@@ -206,7 +206,7 @@ def searchNeighbors_mlm(
         )
 
         with record_function('[MlM] searchNeighbors - countNeighbors'):
-            periodicTensor = torch.tensor([domainDescription.periodicity] * domainDescription.dim, device = device, dtype = torch.bool) if isinstance(domainDescription.periodicity, bool) else domainDescription.periodicity
+            periodicTensor = domainDescription.periodic
             inverse_sorting_indices = torch.empty_like(mlmData.sortingIndices)
             inverse_sorting_indices[mlmData.sortingIndices] = torch.arange(len(mlmData.sortingIndices), device=device)
             unsortedSupports = mlmData.sortedSupports[inverse_sorting_indices]
