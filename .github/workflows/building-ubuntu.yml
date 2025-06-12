@@ -12,11 +12,11 @@ jobs:
       matrix:
         os: [ubuntu-20.04] #, windows-2019]
         python-version: ['3.11'] #, '3.12', '3.9']
-        torch-version: [2.5.1] #, 2.5.1]  # [2.3.0, 2.4.0, 2.5.0]
-        cuda-version: ['cpu', 'cu118', 'cu121', 'cu124']
+        torch-version: [2.7.1] #, 2.5.1]  # [2.3.0, 2.4.0, 2.5.0]
+        cuda-version: ['cpu', 'cu118', 'cu126', 'cu128']
         exclude:
-          - torch-version: 2.5.0
-            python-version: '3.8'
+          - torch-version: 2.7.1
+            python-version: '3.11'
           - torch-version: 2.3.0
             cuda-version: 'cu124'
           - os: macos-14

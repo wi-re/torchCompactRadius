@@ -22,22 +22,31 @@ git restore setup.py
 git restore src/torchCompactRadius/__init__.py
 
 VERSION=`sed -n "s/^__version__ = '\(.*\)'/\1/p" setup.py`
-PYTORCH_VERSION=`python -c "import torch; print(torch.__version__)"`
-TORCH_VERSION=`echo "pt$PYTORCH_VERSION" | sed "s/..$//" | sed "s/\.//g"`
+PYTORCH_VERSION=`python -c "import torch; print(torch.__version__)"| sed "s/\.//g"| sed "s/+/-/g"`
+PYTORCH_VERSION2=`python -c "import torch; print(torch.__version__)"`
+TORCH_VERSION=`echo "pt$PYTORCH_VERSION" | sed "s/..$//" | sed "s/\.//g" | sed "s/+/-/g"`
 if [ "${CUDA_VERSION}" = "cpu" ]; then
     CUDA_VERSION="cpu"
 else
     CUDA_VERSION=`python -c "import torch; print(torch.version.cuda)" | sed "s/\.//g"`
 fi
 
-echo "Building torch-$PYTORCH_VERSION+cu$CUDA_VERSION"
+echo "Building torch-$PYTORCH_VERSION"
 if [ "${CUDA_VERSION}" = "cpu" ]; then
-    VERSION_TAG=`echo "$VERSION+${TORCH_VERSION}cpu"`
+    VERSION_TAG=`echo "$VERSION+pt${PYTORCH_VERSION}"`
 else
-    VERSION_TAG=`echo "$VERSION+${TORCH_VERSION}cu${CUDA_VERSION}"`
+    VERSION_TAG=`echo "$VERSION+pt${PYTORCH_VERSION}"`
 fi
 
+
+
 echo "Version tag: $VERSION_TAG"
+echo "TORCH_VERSION: $TORCH_VERSION"
+echo "CUDA_VERSION: $CUDA_VERSION"
+echo "PYTORCH_VERSION: $PYTORCH_VERSION2"
+
+# exit()
+
 sed -i "s/$VERSION/$VERSION_TAG/" setup.py
 sed -i "s/$VERSION/$VERSION_TAG/" src/torchCompactRadius/__init__.py
 if [ "${CUDA_VERSION}" = "cpu" ]; then
@@ -53,11 +62,11 @@ fi
 python setup.py bdist_wheel --dist-dir=dist
 
 if [ "${CUDA_VERSION}" = "cpu" ]; then
-    mkdir -p wheels/torch-$PYTORCH_VERSION+cpu
-    mv dist/* wheels/torch-$PYTORCH_VERSION+cpu
+    mkdir -p wheels/torch-$PYTORCH_VERSION2
+    mv dist/* wheels/torch-$PYTORCH_VERSION2
 else
-    mkdir -p wheels/torch-$PYTORCH_VERSION+cu$CUDA_VERSION
-    mv dist/* wheels/torch-$PYTORCH_VERSION+cu$CUDA_VERSION
+    mkdir -p wheels/torch-$PYTORCH_VERSION2
+    mv dist/* wheels/torch-$PYTORCH_VERSION2
 fi
 
 conda/torchCompactRadius/build_conda.sh 3.11 $1 $2
