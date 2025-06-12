@@ -13,7 +13,7 @@ from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
 
 import dsl
 
-__version__ = '0.3.1'
+__version__ = '0.5.0'
 URL = 'https://github.com/wi-re/torchCompactRadius'
 
 WITH_CUDA = False
