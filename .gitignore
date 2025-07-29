@@ -53,3 +53,5 @@ test.csv
 *.tar.gz
 *egg
 *.egg*
+
+test_env/
