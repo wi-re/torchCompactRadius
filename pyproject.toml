@@ -40,9 +40,14 @@ requires = [
     "setuptools>=61.0", 
     "wheel",
     "torch>=1.9.0",
-    "toml"
+    "toml",
+    "numpy"  # Often needed for torch extensions
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Force setuptools to include extension modules from setup.py
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"] 

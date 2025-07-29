@@ -58,14 +58,34 @@ def get_extensions():
     try:
         from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
                                               CUDAExtension)
+        
+        # Import dsl with proper path handling
+        import sys
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        if current_dir not in sys.path:
+            sys.path.insert(0, current_dir)
+        
         import dsl
+        
     except ImportError as e:
         print(f"Warning: Could not import required dependencies: {e}")
+        return []
+    
+    # Check if we're in documentation build mode
+    if BUILD_DOCS:
+        print("Documentation build mode - skipping extensions")
         return []
     
     extensions = []
 
     extensions_dir = osp.join('src/torchCompactRadius/cppSrc')
+    
+    # Check if extensions directory exists
+    if not os.path.exists(extensions_dir):
+        print(f"Warning: Extensions directory {extensions_dir} not found")
+        return []
+    
     main_files = []
 
     for subfolder in os.listdir(extensions_dir):
@@ -88,13 +108,17 @@ def get_extensions():
     print(f'Building with CUDA: {WITH_CUDA}')
     print(f'Building suffices: {suffices}')
 
+    # Process headers with dsl
     header_files = glob.glob(osp.join(extensions_dir, '*.h'))
     for subfolder in os.listdir(extensions_dir):
         if os.path.isdir(os.path.join(extensions_dir, subfolder)):
             header_files += glob.glob(osp.join(extensions_dir, subfolder, '*.h'))
     for header in header_files:
         print(f'Processing {header}.')
-        dsl.process(header)
+        try:
+            dsl.process(header)
+        except Exception as e:
+            print(f'Warning: Failed to process {header}: {e}')
 
     suffix = 'cuda' if 'cuda' in suffices else 'cpu'
     # if 'cuda' in suffices and not WITH_CUDA:
@@ -163,6 +187,18 @@ try:
 except ImportError:
     pass  # Default to True if torch not available
 
+# Get extensions - this MUST be called during setup
+print("=" * 60)
+print("SETUP.PY: Starting extension building process...")
+print("=" * 60)
+
+extensions_list = get_extensions()
+print(f"SETUP.PY: Generated {len(extensions_list)} extensions")
+for ext in extensions_list:
+    print(f"SETUP.PY: Extension: {ext.name}")
+
+print("=" * 60)
+
 def get_build_extension():
     """Get BuildExtension class, importing only when needed."""
     try:
@@ -172,31 +208,33 @@ def get_build_extension():
         print("Warning: torch not available, using default build extension")
         return None
 
-setup(
-    name='torchCompactRadius',
-    version=__version__,
-    description=('PyTorch Extension Library for compact hash map based neighbor searching '
-                 'Algorithms'),
-    author='Rene Winchenbach',
-    author_email='contact@fluids.dev',
-    url=URL,
-    download_url=f'{URL}/archive/{__version__}.tar.gz',
-    keywords=[
-        'pytorch',
-        'geometric-deep-learning',
-        'graph-neural-networks',
-        'cluster-algorithms',
-    ],
-    # python_requires='>=3.8',
-    install_requires=install_requires,
-    # extras_require={
-    #     'test': test_requires,
-    # },
-    ext_modules=get_extensions() if not BUILD_DOCS else [],
-    cmdclass={
-        'build_ext': get_build_extension()
-    } if get_build_extension() is not None else {},
-    options={"bdist_wheel": {"py_limited_api": "cp39"}},
-    packages=find_packages(),
-    include_package_data=include_package_data,
-)
+# Only run setup() if this script is executed directly (not imported)
+if __name__ == "__main__":
+    setup(
+        name='torchCompactRadius',
+        version=__version__,
+        description=('PyTorch Extension Library for compact hash map based neighbor searching '
+                     'Algorithms'),
+        author='Rene Winchenbach',
+        author_email='contact@fluids.dev',
+        url=URL,
+        download_url=f'{URL}/archive/{__version__}.tar.gz',
+        keywords=[
+            'pytorch',
+            'geometric-deep-learning',
+            'graph-neural-networks',
+            'cluster-algorithms',
+        ],
+        # python_requires='>=3.8',
+        install_requires=install_requires,
+        # extras_require={
+        #     'test': test_requires,
+        # },
+        ext_modules=extensions_list,  # Use the pre-built list
+        cmdclass={
+            'build_ext': get_build_extension()
+        } if get_build_extension() is not None else {},
+        options={"bdist_wheel": {"py_limited_api": "cp39"}},
+        packages=find_packages(),
+        include_package_data=include_package_data,
+    )
