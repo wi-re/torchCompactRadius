@@ -25,7 +25,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-  "torch", "numpy"
+    "torch>=1.9.0", 
+    "numpy",
+    "scipy"
 ]
 license = {file = "LICENSE"}
 
@@ -34,11 +36,20 @@ Repository = "https://github.com/wi-re/torchCompactRadius"
 Issues = "https://github.com/wi-re/torchCompactRadius/issues"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.0", 
+    "wheel",
+    "torch>=1.9.0",
+    "toml"
+]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["src"] # <-- this changed
+where = ["src"] 
 
 [tool.setuptools.package-data]
-"*" = ["*.*"] # <-- this changed
+"*" = ["*.*"] 
+
+# Add metadata to indicate this package should be built from source
+[project.optional-dependencies]
+dev = ["pytest", "twine", "build"]

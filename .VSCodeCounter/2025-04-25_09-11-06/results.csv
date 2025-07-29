@@ -1,0 +1,150 @@
+"filename", "language", "Python", "Markdown", "HTML", "JSON", "YAML", "Shell Script", "Log", "C++", "CUDA C++", "comment", "blank", "total"
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda-macos.yml", "YAML", 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 12, 76
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda-ubuntu.yml", "YAML", 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 12, 76
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda-windows.yml", "YAML", 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 12, 76
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda.yml", "YAML", 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 12, 76
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building-macos.yml", "YAML", 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 18, 146
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building-ubuntu.yml", "YAML", 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 18, 146
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building-windows.yml", "YAML", 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 18, 146
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/building.yml", "YAML", 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 18, 146
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cpu-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 3, 7
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 5, 5, 21
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 5, 5, 21
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Linux-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Linux.sh", "Shell Script", 0, 0, 0, 0, 0, 10, 0, 0, 0, 1, 5, 16
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Windows-env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 3, 9
+"/home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Windows.sh", "Shell Script", 0, 0, 0, 0, 0, 11, 0, 0, 0, 4, 4, 19
+"/home/winchenbach/dev/torchCompactRadius/Benchmark.ipynb", "JSON", 0, 0, 0, 1244, 0, 0, 0, 0, 0, 0, 1, 1245
+"/home/winchenbach/dev/torchCompactRadius/README.md", "Markdown", 0, 142, 0, 0, 0, 0, 0, 0, 0, 24, 59, 225
+"/home/winchenbach/dev/torchCompactRadius/bak/buildNeighborhood_mlm.h", "C++", 0, 0, 0, 0, 0, 0, 0, 152, 0, 7, 23, 182
+"/home/winchenbach/dev/torchCompactRadius/bak/buildNeighborhood_mlm_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 43, 0, 3, 9, 55
+"/home/winchenbach/dev/torchCompactRadius/bak/buildNeighborhood_mlm_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 4, 23
+"/home/winchenbach/dev/torchCompactRadius/bak/countNeighbors_mlm.h", "C++", 0, 0, 0, 0, 0, 0, 0, 140, 0, 60, 29, 229
+"/home/winchenbach/dev/torchCompactRadius/bak/countNeighbors_mlm_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 45, 0, 1, 6, 52
+"/home/winchenbach/dev/torchCompactRadius/bak/countNeighbors_mlm_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 4, 23
+"/home/winchenbach/dev/torchCompactRadius/bak/mlmUtil.h", "C++", 0, 0, 0, 0, 0, 0, 0, 337, 0, 21, 34, 392
+"/home/winchenbach/dev/torchCompactRadius/build.sh", "Shell Script", 0, 0, 0, 0, 0, 44, 0, 0, 0, 8, 11, 63
+"/home/winchenbach/dev/torchCompactRadius/build2.sh", "Shell Script", 0, 0, 0, 0, 0, 14, 0, 0, 0, 1, 7, 22
+"/home/winchenbach/dev/torchCompactRadius/conda/torchCompactRadius/README.md", "Markdown", 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"/home/winchenbach/dev/torchCompactRadius/conda/torchCompactRadius/build_conda.sh", "Shell Script", 0, 0, 0, 0, 0, 56, 0, 0, 0, 1, 6, 63
+"/home/winchenbach/dev/torchCompactRadius/conda/torchCompactRadius/meta.yaml", "YAML", 0, 0, 0, 0, 33, 0, 0, 0, 0, 0, 8, 41
+"/home/winchenbach/dev/torchCompactRadius/dsl.py", "Python", 142, 0, 0, 0, 0, 0, 0, 0, 0, 3, 37, 182
+"/home/winchenbach/dev/torchCompactRadius/dynamo.log", "Log", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+"/home/winchenbach/dev/torchCompactRadius/env.sh", "Shell Script", 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 1, 6
+"/home/winchenbach/dev/torchCompactRadius/genhtmls.py", "Python", 16, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 21
+"/home/winchenbach/dev/torchCompactRadius/index.html", "HTML", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/home/winchenbach/dev/torchCompactRadius/scripts/benchmark.py", "Python", 139, 0, 0, 0, 0, 0, 0, 0, 0, 43, 44, 226
+"/home/winchenbach/dev/torchCompactRadius/scripts/demo.py", "Python", 32, 0, 0, 0, 0, 0, 0, 0, 0, 5, 2, 39
+"/home/winchenbach/dev/torchCompactRadius/scripts/test copy.py", "Python", 162, 0, 0, 0, 0, 0, 0, 0, 0, 53, 27, 242
+"/home/winchenbach/dev/torchCompactRadius/scripts/test.py", "Python", 191, 0, 0, 0, 0, 0, 0, 0, 0, 19, 26, 236
+"/home/winchenbach/dev/torchCompactRadius/setup.py", "Python", 122, 0, 0, 0, 0, 0, 0, 0, 0, 15, 26, 163
+"/home/winchenbach/dev/torchCompactRadius/setup_envs.sh", "Shell Script", 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 4, 21
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/__init__.py", "Python", 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/cellTable.py", "Python", 66, 0, 0, 0, 0, 0, 0, 0, 0, 7, 8, 81
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/cppSearch.py", "Python", 200, 0, 0, 0, 0, 0, 0, 0, 0, 80, 20, 300
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/cppWrapper.py", "Python", 53, 0, 0, 0, 0, 0, 0, 0, 0, 22, 13, 88
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/datastructure.py", "Python", 86, 0, 0, 0, 0, 0, 0, 0, 0, 22, 22, 130
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/hashTable.py", "Python", 90, 0, 0, 0, 0, 0, 0, 0, 0, 39, 26, 155
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compiler.py", "Python", 189, 0, 0, 0, 0, 0, 0, 0, 0, 51, 40, 280
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/common.h", "C++", 0, 0, 0, 0, 0, 0, 0, 88, 0, 42, 11, 141
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/cppWrapper.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 42, 0, 10, 10, 62
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/hashing.h", "C++", 0, 0, 0, 0, 0, 0, 0, 25, 0, 10, 4, 39
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/hashing_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 47, 0, 5, 6, 58
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/hashing_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 36, 1, 6, 43
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodDense.h", "C++", 0, 0, 0, 0, 0, 0, 0, 66, 0, 45, 8, 119
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodDense_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 36, 0, 3, 10, 49
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodDense_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 4, 16
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodHashmap.h", "C++", 0, 0, 0, 0, 0, 0, 0, 70, 0, 50, 9, 129
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodHashmap_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 36, 0, 3, 10, 49
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodHashmap_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 4, 16
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsDense.h", "C++", 0, 0, 0, 0, 0, 0, 0, 63, 0, 44, 12, 119
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsDense_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 39, 0, 1, 7, 47
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsDense_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 4, 16
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsHashmap.h", "C++", 0, 0, 0, 0, 0, 0, 0, 66, 0, 48, 11, 125
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsHashmap_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 39, 0, 1, 7, 47
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsHashmap_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 4, 16
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/mlmUtil.h", "C++", 0, 0, 0, 0, 0, 0, 0, 383, 0, 26, 39, 448
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhood.h", "C++", 0, 0, 0, 0, 0, 0, 0, 86, 0, 35, 12, 133
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodDynamic.h", "C++", 0, 0, 0, 0, 0, 0, 0, 94, 0, 31, 8, 133
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodDynamic_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 396, 0, 109, 42, 547
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodDynamic_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 119, 25, 18, 162
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodFixed.h", "C++", 0, 0, 0, 0, 0, 0, 0, 0, 0, 92, 10, 102
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodFixed_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 0, 0, 445, 45, 490
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodFixed_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 0, 118, 13, 131
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodSmall.h", "C++", 0, 0, 0, 0, 0, 0, 0, 0, 0, 48, 9, 57
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodSmall_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 0, 0, 265, 38, 303
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodSmall_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 0, 239, 28, 267
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/atomics.cuh", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 303, 0, 6, 309
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/index_info.cuh", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 15, 2, 2, 19
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/index_info.h", "C++", 0, 0, 0, 0, 0, 0, 0, 53, 0, 0, 10, 63
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/reducer.cuh", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 104, 0, 10, 114
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/reducer.h", "C++", 0, 0, 0, 0, 0, 0, 0, 77, 0, 0, 7, 84
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter.h", "C++", 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 6, 35
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatterWrapper.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 239, 0, 0, 28, 267
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cpu.cpp", "C++", 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 13, 87
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cpu.h", "C++", 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 2, 8
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cuda.cu", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 112, 0, 26, 138
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cuda.h", "C++", 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 2, 8
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/utils.cuh", "CUDA C++", 0, 0, 0, 0, 0, 0, 0, 0, 33, 0, 7, 40
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/utils.h", "C++", 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2, 6
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/cellData.py", "Python", 44, 0, 0, 0, 0, 0, 0, 0, 0, 7, 19, 70
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/cellOp.py", "Python", 40, 0, 0, 0, 0, 0, 0, 0, 0, 8, 17, 65
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/hashData.py", "Python", 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 40
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/indexing.py", "Python", 106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 118
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/pySearch.py", "Python", 165, 0, 0, 0, 0, 0, 0, 0, 0, 25, 37, 227
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/wrapper.py", "Python", 263, 0, 0, 0, 0, 0, 0, 0, 0, 4, 41, 308
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/neighborhood.py", "Python", 293, 0, 0, 0, 0, 0, 0, 0, 0, 34, 38, 365
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/compactSearch.py", "Python", 115, 0, 0, 0, 0, 0, 0, 0, 0, 37, 19, 171
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/pythonSearch.py", "Python", 244, 0, 0, 0, 0, 0, 0, 0, 0, 89, 50, 383
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/pythonSearchDynamic.py", "Python", 81, 0, 0, 0, 0, 0, 0, 0, 0, 21, 16, 118
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/pythonSearchFixed.py", "Python", 172, 0, 0, 0, 0, 0, 0, 0, 0, 25, 32, 229
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/radiusNaive.py", "Python", 42, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13, 58
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/setup.py", "Python", 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13
+"/home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/util.py", "Python", 289, 0, 0, 0, 0, 0, 0, 0, 0, 29, 78, 396
+"/home/winchenbach/dev/torchCompactRadius/test copy.ipynb", "JSON", 0, 0, 0, 2567, 0, 0, 0, 0, 0, 0, 1, 2568
+"/home/winchenbach/dev/torchCompactRadius/test.h", "C++", 0, 0, 0, 0, 0, 0, 0, 140, 0, 60, 29, 229
+"/home/winchenbach/dev/torchCompactRadius/test.ipynb", "JSON", 0, 0, 0, 2233, 0, 0, 0, 0, 0, 0, 1, 2234
+"/home/winchenbach/dev/torchCompactRadius/toml.ipynb", "JSON", 0, 0, 0, 392, 0, 0, 0, 0, 0, 0, 1, 393
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cpu/index.html", "HTML", 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 13
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cu118/index.html", "HTML", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 9
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cu121/index.html", "HTML", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 9
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cu124/index.html", "HTML", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 9
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cpu/index.html", "HTML", 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 8
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cu118/index.html", "HTML", 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 8
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cu121/index.html", "HTML", 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 8
+"/home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cu124/index.html", "HTML", 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 8
+"Total", "-", 3385, 145, 73, 6436, 801, 449, 0, 2921, 808, 2600, 1705, 19323

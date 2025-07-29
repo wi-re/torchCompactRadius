@@ -1,0 +1,208 @@
+Date : 2025-04-25 09:11:06
+Directory : /home/winchenbach/dev/torchCompactRadius
+Total : 148 files,  15018 codes, 2600 comments, 1705 blanks, all 19323 lines
+
+Languages
++--------------+------------+------------+------------+------------+------------+
+| language     | files      | code       | comment    | blank      | total      |
++--------------+------------+------------+------------+------------+------------+
+| JSON         |          4 |      6,436 |          0 |          4 |      6,440 |
+| Python       |         28 |      3,385 |        643 |        680 |      4,708 |
+| C++          |         34 |      2,921 |      1,465 |        508 |      4,894 |
+| CUDA C++     |         15 |        808 |        385 |        140 |      1,333 |
+| YAML         |          9 |        801 |          0 |        128 |        929 |
+| Shell Script |         46 |        449 |         83 |        184 |        716 |
+| Markdown     |          2 |        145 |         24 |         60 |        229 |
+| HTML         |          9 |         73 |          0 |          0 |         73 |
+| Log          |          1 |          0 |          0 |          1 |          1 |
++--------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                     | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                        |        148 |     15,018 |      2,600 |      1,705 |     19,323 |
+| . (Files)                                                                                                                |         15 |      7,079 |        113 |        182 |      7,374 |
+| .github                                                                                                                  |         49 |      1,081 |         73 |        275 |      1,429 |
+| .github/workflows                                                                                                        |         49 |      1,081 |         73 |        275 |      1,429 |
+| .github/workflows (Files)                                                                                                |          8 |        768 |          0 |        120 |        888 |
+| .github/workflows/cuda                                                                                                   |         41 |        313 |         73 |        155 |        541 |
+| bak                                                                                                                      |          7 |        755 |         92 |        109 |        956 |
+| conda                                                                                                                    |          3 |         92 |          1 |         15 |        108 |
+| conda/torchCompactRadius                                                                                                 |          3 |         92 |          1 |         15 |        108 |
+| scripts                                                                                                                  |          4 |        524 |        120 |         99 |        743 |
+| src                                                                                                                      |         62 |      5,415 |      2,201 |      1,025 |      8,641 |
+| src/torchCompactRadius                                                                                                   |         62 |      5,415 |      2,201 |      1,025 |      8,641 |
+| src/torchCompactRadius (Files)                                                                                           |          5 |        785 |        114 |        159 |      1,058 |
+| src/torchCompactRadius/compactHashing                                                                                    |          5 |        495 |        170 |         89 |        754 |
+| src/torchCompactRadius/cppSrc                                                                                            |         41 |      2,834 |      1,698 |        510 |      5,042 |
+| src/torchCompactRadius/cppSrc (Files)                                                                                    |         15 |        933 |      1,475 |        260 |      2,668 |
+| src/torchCompactRadius/cppSrc/multiLevelMemory                                                                           |         13 |        846 |        221 |        129 |      1,196 |
+| src/torchCompactRadius/cppSrc/sparseOperations                                                                           |         13 |      1,055 |          2 |        121 |      1,178 |
+| src/torchCompactRadius/multiLevelMemory                                                                                  |          6 |        647 |         44 |        137 |        828 |
+| src/torchCompactRadius/searchAlgorithms                                                                                  |          5 |        654 |        175 |        130 |        959 |
+| wheels                                                                                                                   |          8 |         72 |          0 |          0 |         72 |
+| wheels/torch-2.5.0+cpu                                                                                                   |          1 |         13 |          0 |          0 |         13 |
+| wheels/torch-2.5.0+cu118                                                                                                 |          1 |          9 |          0 |          0 |          9 |
+| wheels/torch-2.5.0+cu121                                                                                                 |          1 |          9 |          0 |          0 |          9 |
+| wheels/torch-2.5.0+cu124                                                                                                 |          1 |          9 |          0 |          0 |          9 |
+| wheels/torch-2.5.1+cpu                                                                                                   |          1 |          8 |          0 |          0 |          8 |
+| wheels/torch-2.5.1+cu118                                                                                                 |          1 |          8 |          0 |          0 |          8 |
+| wheels/torch-2.5.1+cu121                                                                                                 |          1 |          8 |          0 |          0 |          8 |
+| wheels/torch-2.5.1+cu124                                                                                                 |          1 |          8 |          0 |          0 |          8 |
++--------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------------------------------------------+--------------+------------+------------+------------+------------+
+| filename                                                                                                                 | language     | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------------+--------------+------------+------------+------------+------------+
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda-macos.yml                                      | YAML         |         64 |          0 |         12 |         76 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda-ubuntu.yml                                     | YAML         |         64 |          0 |         12 |         76 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda-windows.yml                                    | YAML         |         64 |          0 |         12 |         76 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building-conda.yml                                            | YAML         |         64 |          0 |         12 |         76 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building-macos.yml                                            | YAML         |        128 |          0 |         18 |        146 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building-ubuntu.yml                                           | YAML         |        128 |          0 |         18 |        146 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building-windows.yml                                          | YAML         |        128 |          0 |         18 |        146 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/building.yml                                                  | YAML         |        128 |          0 |         18 |        146 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cpu-Linux-env.sh                                         | Shell Script |          3 |          1 |          3 |          7 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu101-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu102-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu111-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu113-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu115-Windows.sh                                         | Shell Script |         11 |          5 |          5 |         21 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu116-Windows.sh                                         | Shell Script |         11 |          5 |          5 |         21 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu117-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu118-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu121-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Linux-env.sh                                       | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Linux.sh                                           | Shell Script |         10 |          1 |          5 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Windows-env.sh                                     | Shell Script |          5 |          1 |          3 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/.github/workflows/cuda/cu124-Windows.sh                                         | Shell Script |         11 |          4 |          4 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/Benchmark.ipynb                                                                 | JSON         |      1,244 |          0 |          1 |      1,245 |
+| /home/winchenbach/dev/torchCompactRadius/README.md                                                                       | Markdown     |        142 |         24 |         59 |        225 |
+| /home/winchenbach/dev/torchCompactRadius/bak/buildNeighborhood_mlm.h                                                     | C++          |        152 |          7 |         23 |        182 |
+| /home/winchenbach/dev/torchCompactRadius/bak/buildNeighborhood_mlm_cpu.cpp                                               | C++          |         43 |          3 |          9 |         55 |
+| /home/winchenbach/dev/torchCompactRadius/bak/buildNeighborhood_mlm_cuda.cu                                               | CUDA C++     |         19 |          0 |          4 |         23 |
+| /home/winchenbach/dev/torchCompactRadius/bak/countNeighbors_mlm.h                                                        | C++          |        140 |         60 |         29 |        229 |
+| /home/winchenbach/dev/torchCompactRadius/bak/countNeighbors_mlm_cpu.cpp                                                  | C++          |         45 |          1 |          6 |         52 |
+| /home/winchenbach/dev/torchCompactRadius/bak/countNeighbors_mlm_cuda.cu                                                  | CUDA C++     |         19 |          0 |          4 |         23 |
+| /home/winchenbach/dev/torchCompactRadius/bak/mlmUtil.h                                                                   | C++          |        337 |         21 |         34 |        392 |
+| /home/winchenbach/dev/torchCompactRadius/build.sh                                                                        | Shell Script |         44 |          8 |         11 |         63 |
+| /home/winchenbach/dev/torchCompactRadius/build2.sh                                                                       | Shell Script |         14 |          1 |          7 |         22 |
+| /home/winchenbach/dev/torchCompactRadius/conda/torchCompactRadius/README.md                                              | Markdown     |          3 |          0 |          1 |          4 |
+| /home/winchenbach/dev/torchCompactRadius/conda/torchCompactRadius/build_conda.sh                                         | Shell Script |         56 |          1 |          6 |         63 |
+| /home/winchenbach/dev/torchCompactRadius/conda/torchCompactRadius/meta.yaml                                              | YAML         |         33 |          0 |          8 |         41 |
+| /home/winchenbach/dev/torchCompactRadius/dsl.py                                                                          | Python       |        142 |          3 |         37 |        182 |
+| /home/winchenbach/dev/torchCompactRadius/dynamo.log                                                                      | Log          |          0 |          0 |          1 |          1 |
+| /home/winchenbach/dev/torchCompactRadius/env.sh                                                                          | Shell Script |          5 |          0 |          1 |          6 |
+| /home/winchenbach/dev/torchCompactRadius/genhtmls.py                                                                     | Python       |         16 |          2 |          3 |         21 |
+| /home/winchenbach/dev/torchCompactRadius/index.html                                                                      | HTML         |          1 |          0 |          0 |          1 |
+| /home/winchenbach/dev/torchCompactRadius/scripts/benchmark.py                                                            | Python       |        139 |         43 |         44 |        226 |
+| /home/winchenbach/dev/torchCompactRadius/scripts/demo.py                                                                 | Python       |         32 |          5 |          2 |         39 |
+| /home/winchenbach/dev/torchCompactRadius/scripts/test copy.py                                                            | Python       |        162 |         53 |         27 |        242 |
+| /home/winchenbach/dev/torchCompactRadius/scripts/test.py                                                                 | Python       |        191 |         19 |         26 |        236 |
+| /home/winchenbach/dev/torchCompactRadius/setup.py                                                                        | Python       |        122 |         15 |         26 |        163 |
+| /home/winchenbach/dev/torchCompactRadius/setup_envs.sh                                                                   | Shell Script |         17 |          0 |          4 |         21 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/__init__.py                                              | Python       |          3 |          0 |          1 |          4 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/cellTable.py                              | Python       |         66 |          7 |          8 |         81 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/cppSearch.py                              | Python       |        200 |         80 |         20 |        300 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/cppWrapper.py                             | Python       |         53 |         22 |         13 |         88 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/datastructure.py                          | Python       |         86 |         22 |         22 |        130 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compactHashing/hashTable.py                              | Python       |         90 |         39 |         26 |        155 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/compiler.py                                              | Python       |        189 |         51 |         40 |        280 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/common.h                                          | C++          |         88 |         42 |         11 |        141 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/cppWrapper.cpp                                    | C++          |         42 |         10 |         10 |         62 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/hashing.h                                         | C++          |         25 |         10 |          4 |         39 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/hashing_cpu.cpp                                   | C++          |         47 |          5 |          6 |         58 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/hashing_cuda.cu                                   | CUDA C++     |         36 |          1 |          6 |         43 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodDense.h         | C++          |         66 |         45 |          8 |        119 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodDense_cpu.cpp   | C++          |         36 |          3 |         10 |         49 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodDense_cuda.cu   | CUDA C++     |         12 |          0 |          4 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodHashmap.h       | C++          |         70 |         50 |          9 |        129 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodHashmap_cpu.cpp | C++          |         36 |          3 |         10 |         49 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/buildNeighborhoodHashmap_cuda.cu | CUDA C++     |         12 |          0 |          4 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsDense.h            | C++          |         63 |         44 |         12 |        119 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsDense_cpu.cpp      | C++          |         39 |          1 |          7 |         47 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsDense_cuda.cu      | CUDA C++     |         12 |          0 |          4 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsHashmap.h          | C++          |         66 |         48 |         11 |        125 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsHashmap_cpu.cpp    | C++          |         39 |          1 |          7 |         47 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/countNeighborsHashmap_cuda.cu    | CUDA C++     |         12 |          0 |          4 |         16 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/multiLevelMemory/mlmUtil.h                        | C++          |        383 |         26 |         39 |        448 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhood.h                                    | C++          |         86 |         35 |         12 |        133 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodDynamic.h                             | C++          |         94 |         31 |          8 |        133 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodDynamic_cpu.cpp                       | C++          |        396 |        109 |         42 |        547 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodDynamic_cuda.cu                       | CUDA C++     |        119 |         25 |         18 |        162 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodFixed.h                               | C++          |          0 |         92 |         10 |        102 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodFixed_cpu.cpp                         | C++          |          0 |        445 |         45 |        490 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodFixed_cuda.cu                         | CUDA C++     |          0 |        118 |         13 |        131 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodSmall.h                               | C++          |          0 |         48 |          9 |         57 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodSmall_cpu.cpp                         | C++          |          0 |        265 |         38 |        303 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/neighborhoodSmall_cuda.cu                         | CUDA C++     |          0 |        239 |         28 |        267 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/atomics.cuh                      | CUDA C++     |        303 |          0 |          6 |        309 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/index_info.cuh                   | CUDA C++     |         15 |          2 |          2 |         19 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/index_info.h                     | C++          |         53 |          0 |         10 |         63 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/reducer.cuh                      | CUDA C++     |        104 |          0 |         10 |        114 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/reducer.h                        | C++          |         77 |          0 |          7 |         84 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter.h                        | C++          |         29 |          0 |          6 |         35 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatterWrapper.cpp               | C++          |        239 |          0 |         28 |        267 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cpu.cpp                  | C++          |         74 |          0 |         13 |         87 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cpu.h                    | C++          |          6 |          0 |          2 |          8 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cuda.cu                  | CUDA C++     |        112 |          0 |         26 |        138 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/scatter_cuda.h                   | C++          |          6 |          0 |          2 |          8 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/utils.cuh                        | CUDA C++     |         33 |          0 |          7 |         40 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/cppSrc/sparseOperations/utils.h                          | C++          |          4 |          0 |          2 |          6 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/cellData.py                             | Python       |         44 |          7 |         19 |         70 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/cellOp.py                               | Python       |         40 |          8 |         17 |         65 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/hashData.py                             | Python       |         29 |          0 |         11 |         40 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/indexing.py                             | Python       |        106 |          0 |         12 |        118 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/pySearch.py                             | Python       |        165 |         25 |         37 |        227 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/multiLevelMemory/wrapper.py                              | Python       |        263 |          4 |         41 |        308 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/neighborhood.py                                          | Python       |        293 |         34 |         38 |        365 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/compactSearch.py                        | Python       |        115 |         37 |         19 |        171 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/pythonSearch.py                         | Python       |        244 |         89 |         50 |        383 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/pythonSearchDynamic.py                  | Python       |         81 |         21 |         16 |        118 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/pythonSearchFixed.py                    | Python       |        172 |         25 |         32 |        229 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/searchAlgorithms/radiusNaive.py                          | Python       |         42 |          3 |         13 |         58 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/setup.py                                                 | Python       |         11 |          0 |          2 |         13 |
+| /home/winchenbach/dev/torchCompactRadius/src/torchCompactRadius/util.py                                                  | Python       |        289 |         29 |         78 |        396 |
+| /home/winchenbach/dev/torchCompactRadius/test copy.ipynb                                                                 | JSON         |      2,567 |          0 |          1 |      2,568 |
+| /home/winchenbach/dev/torchCompactRadius/test.h                                                                          | C++          |        140 |         60 |         29 |        229 |
+| /home/winchenbach/dev/torchCompactRadius/test.ipynb                                                                      | JSON         |      2,233 |          0 |          1 |      2,234 |
+| /home/winchenbach/dev/torchCompactRadius/toml.ipynb                                                                      | JSON         |        392 |          0 |          1 |        393 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cpu/index.html                                               | HTML         |         13 |          0 |          0 |         13 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cu118/index.html                                             | HTML         |          9 |          0 |          0 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cu121/index.html                                             | HTML         |          9 |          0 |          0 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.0+cu124/index.html                                             | HTML         |          9 |          0 |          0 |          9 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cpu/index.html                                               | HTML         |          8 |          0 |          0 |          8 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cu118/index.html                                             | HTML         |          8 |          0 |          0 |          8 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cu121/index.html                                             | HTML         |          8 |          0 |          0 |          8 |
+| /home/winchenbach/dev/torchCompactRadius/wheels/torch-2.5.1+cu124/index.html                                             | HTML         |          8 |          0 |          0 |          8 |
+| Total                                                                                                                    |              |     15,018 |      2,600 |      1,705 |     19,323 |
++--------------------------------------------------------------------------------------------------------------------------+--------------+------------+------------+------------+------------+

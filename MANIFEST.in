@@ -1,0 +1,20 @@
+# Include all necessary files for source distribution
+include README.md
+include LICENSE
+include pyproject.toml
+include setup.py
+include dsl.py
+include INSTALL.md
+include check_environment.py
+
+# Include all source code
+recursive-include src *.py *.cpp *.cu *.h *.hpp
+recursive-include src *.toml
+
+# Exclude build artifacts and cache
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.so
+global-exclude *.egg-info
+global-exclude build
+global-exclude dist

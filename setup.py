@@ -5,20 +5,39 @@ import platform
 import sys
 from itertools import product
 
-import torch
 from setuptools import find_packages, setup
-from torch.__config__ import parallel_info
-from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
-                                       CUDAExtension)
 
-import dsl
+# Defer torch and dsl imports until needed
+# import torch
+# import dsl
 
 __version__ = '0.5.0'
 URL = 'https://github.com/wi-re/torchCompactRadius'
 
-WITH_CUDA = False
-if torch.cuda.is_available():
-    WITH_CUDA = CUDA_HOME is not None or torch.version.hip
+def get_cuda_config():
+    """Get CUDA configuration, importing torch only when needed."""
+    try:
+        import torch
+        from torch.utils.cpp_extension import CUDA_HOME
+        
+        WITH_CUDA = False
+        if torch.cuda.is_available():
+            WITH_CUDA = CUDA_HOME is not None or torch.version.hip
+        
+        # Print build configuration for transparency
+        print(f"PyTorch version: {torch.__version__}")
+        if WITH_CUDA:
+            print(f"CUDA version: {torch.version.cuda}")
+            print(f"CUDA_HOME: {CUDA_HOME}")
+        else:
+            print("Building CPU-only version")
+        
+        return WITH_CUDA, torch
+    except ImportError:
+        print("Warning: torch not available during setup, building CPU-only version")
+        return False, None
+
+WITH_CUDA, torch_module = get_cuda_config()
 
 suffices = ['cpu', 'cuda'] if WITH_CUDA else ['cpu']
 if os.getenv('FORCE_CUDA', '0') == '1':
@@ -35,6 +54,15 @@ if 'cuda' not in suffices:
     WITH_CUDA = False
 
 def get_extensions():
+    # Import torch extensions only when building
+    try:
+        from torch.utils.cpp_extension import (CUDA_HOME, BuildExtension, CppExtension,
+                                              CUDAExtension)
+        import dsl
+    except ImportError as e:
+        print(f"Warning: Could not import required dependencies: {e}")
+        return []
+    
     extensions = []
 
     extensions_dir = osp.join('src/torchCompactRadius/cppSrc')
@@ -122,15 +150,27 @@ install_requires = [
     'torch',
 ]
 
-# test_requires = [
-#     'pytest',
-#     'pytest-cov',
-# ]
+build_requires = [
+    'pytest'
+]
 
 # work-around hipify abs paths
 include_package_data = True
-if torch.cuda.is_available() and torch.version.hip:
-    include_package_data = False
+try:
+    import torch
+    if torch.cuda.is_available() and torch.version.hip:
+        include_package_data = False
+except ImportError:
+    pass  # Default to True if torch not available
+
+def get_build_extension():
+    """Get BuildExtension class, importing only when needed."""
+    try:
+        from torch.utils.cpp_extension import BuildExtension
+        return BuildExtension.with_options(no_python_abi_suffix=True, use_ninja=True)
+    except ImportError:
+        print("Warning: torch not available, using default build extension")
+        return None
 
 setup(
     name='torchCompactRadius',
@@ -154,9 +194,8 @@ setup(
     # },
     ext_modules=get_extensions() if not BUILD_DOCS else [],
     cmdclass={
-        'build_ext':
-        BuildExtension.with_options(no_python_abi_suffix=True, use_ninja=True)
-    },
+        'build_ext': get_build_extension()
+    } if get_build_extension() is not None else {},
     options={"bdist_wheel": {"py_limited_api": "cp39"}},
     packages=find_packages(),
     include_package_data=include_package_data,
